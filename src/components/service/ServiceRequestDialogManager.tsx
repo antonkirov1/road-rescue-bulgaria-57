@@ -14,7 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ServiceRequestState } from '@/services/serviceRequestManager';
+import { ServiceRequestState } from '@/services/serviceRequest/types';
 import { ServiceType } from '@/components/service/types/serviceRequestState';
 import { useTranslation } from '@/utils/translations';
 import { useApp } from '@/contexts/AppContext';

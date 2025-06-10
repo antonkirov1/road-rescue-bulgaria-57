@@ -1,6 +1,5 @@
-
 import { useMemo, useEffect, useState } from 'react';
-import { ServiceRequestState } from '@/services/serviceRequestManager';
+import { ServiceRequestState } from '@/services/serviceRequest/types';
 
 interface DialogVisibility {
   showPriceQuoteDialog: boolean;
