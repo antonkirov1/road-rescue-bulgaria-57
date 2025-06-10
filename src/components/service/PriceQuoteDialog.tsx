@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -47,6 +48,17 @@ const PriceQuoteDialog: React.FC<PriceQuoteDialogProps> = ({
     showWaitingForRevision 
   });
 
+  // Force dialog to stay open and log when it opens
+  useEffect(() => {
+    if (open) {
+      console.log('PriceQuoteDialog - OPENED AUTOMATICALLY:', {
+        priceQuote,
+        employeeName,
+        hasDeclinedOnce
+      });
+    }
+  }, [open, priceQuote, employeeName, hasDeclinedOnce]);
+
   const handleCancelRequest = () => {
     console.log('handleCancelRequest called');
     setShowCancelConfirm(true);
@@ -80,13 +92,11 @@ const PriceQuoteDialog: React.FC<PriceQuoteDialogProps> = ({
     onAccept();
   };
 
-  // Prevent dialog from closing when clicking outside - only allow programmatic closing
-  const handleOpenChange = (open: boolean) => {
-    // Only allow closing if it's being closed programmatically (open = false)
-    // Don't allow backdrop clicks to close the dialog
-    if (!open) {
-      console.log('Dialog close attempted - preventing backdrop close');
-      return; // Prevent closing via backdrop click
+  // Completely prevent dialog from closing unless programmatically controlled
+  const handleOpenChange = (openState: boolean) => {
+    if (!openState) {
+      console.log('PriceQuoteDialog - Prevented automatic close');
+      return; // Block all close attempts
     }
   };
 
@@ -107,8 +117,14 @@ const PriceQuoteDialog: React.FC<PriceQuoteDialogProps> = ({
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent 
           className="max-w-md"
-          onPointerDownOutside={(e) => e.preventDefault()} // Prevent backdrop clicks
-          onEscapeKeyDown={(e) => e.preventDefault()} // Prevent ESC key closing
+          onPointerDownOutside={(e) => {
+            e.preventDefault(); // Prevent backdrop clicks
+            console.log('PriceQuoteDialog - Backdrop click prevented');
+          }}
+          onEscapeKeyDown={(e) => {
+            e.preventDefault(); // Prevent ESC key closing
+            console.log('PriceQuoteDialog - ESC key prevented');
+          }}
         >
           <DialogHeader>
             <DialogTitle>

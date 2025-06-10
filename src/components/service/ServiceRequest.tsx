@@ -45,41 +45,74 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCancelConfirmDialog, setShowCancelConfirmDialog] = useState(false);
   
-  // Simplified dialog visibility logic - price quote takes priority
-  const showPriceQuoteDialog = React.useMemo(() => {
-    // Always show price quote when quote is received - this is the main fix
-    return currentRequest?.status === 'quote_received' && !!currentRequest?.currentQuote;
-  }, [currentRequest?.status, currentRequest?.currentQuote]);
+  // Enhanced dialog visibility with forced re-evaluation
+  const [dialogKey, setDialogKey] = useState(0);
   
+  // Force dialog refresh when quote status changes
+  useEffect(() => {
+    if (currentRequest?.status === 'quote_received' && currentRequest?.currentQuote) {
+      console.log('ServiceRequest - Quote received, forcing dialog refresh');
+      setDialogKey(prev => prev + 1);
+    }
+  }, [currentRequest?.status, currentRequest?.currentQuote?.amount]);
+  
+  // Price quote dialog should show automatically when quote is received
+  const showPriceQuoteDialog = React.useMemo(() => {
+    const shouldShow = !!(currentRequest?.status === 'quote_received' && currentRequest?.currentQuote);
+    console.log('ServiceRequest - Price quote dialog visibility:', {
+      status: currentRequest?.status,
+      hasQuote: !!currentRequest?.currentQuote,
+      shouldShow,
+      quoteAmount: currentRequest?.currentQuote?.amount
+    });
+    return shouldShow;
+  }, [currentRequest?.status, currentRequest?.currentQuote, dialogKey]);
+  
+  // Status dialog for accepted/in-progress states (but not when price quote is showing)
   const showStatusDialog = React.useMemo(() => {
-    // Only show status if no price quote to show
     if (showPriceQuoteDialog) return false;
     
-    // Show for accepted or in_progress states
-    return currentRequest?.status === 'request_accepted' || currentRequest?.status === 'in_progress';
+    const shouldShow = currentRequest?.status === 'request_accepted' || currentRequest?.status === 'in_progress';
+    console.log('ServiceRequest - Status dialog visibility:', {
+      status: currentRequest?.status,
+      showingPriceQuote: showPriceQuoteDialog,
+      shouldShow
+    });
+    return shouldShow;
   }, [currentRequest?.status, showPriceQuoteDialog]);
   
+  // Form dialog for new requests
   const showFormDialog = React.useMemo(() => {
-    // Only show form if no other dialogs and dialog is opened manually
-    return open && !currentRequest && !showPriceQuoteDialog && !showStatusDialog;
+    const shouldShow = open && !currentRequest && !showPriceQuoteDialog && !showStatusDialog;
+    console.log('ServiceRequest - Form dialog visibility:', {
+      open,
+      hasCurrentRequest: !!currentRequest,
+      showingPriceQuote: showPriceQuoteDialog,
+      showingStatus: showStatusDialog,
+      shouldShow
+    });
+    return shouldShow;
   }, [open, currentRequest, showPriceQuoteDialog, showStatusDialog]);
   
-  // Debug logging
+  // Debug logging for all dialog states
   useEffect(() => {
-    console.log('ServiceRequest - Dialog visibility state:', {
+    console.log('ServiceRequest - Complete dialog state:', {
       open,
       currentRequest: currentRequest ? {
         id: currentRequest.id,
         status: currentRequest.status,
         hasQuote: !!currentRequest.currentQuote,
-        quoteAmount: currentRequest.currentQuote?.amount
+        quoteAmount: currentRequest.currentQuote?.amount,
+        employeeName: currentRequest.assignedEmployee?.name
       } : null,
-      shouldShowPriceQuote,
-      showPriceQuoteDialog,
-      showStatusDialog,
-      showFormDialog
+      dialogs: {
+        showPriceQuoteDialog,
+        showStatusDialog,
+        showFormDialog
+      },
+      dialogKey
     });
-  }, [open, currentRequest, shouldShowPriceQuote, showPriceQuoteDialog, showStatusDialog, showFormDialog]);
+  }, [open, currentRequest, showPriceQuoteDialog, showStatusDialog, showFormDialog, dialogKey]);
   
   // Close dialog when service is completed
   useEffect(() => {
@@ -125,9 +158,9 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
   };
   
   const handleDialogClose = () => {
-    // Prevent closing if price quote is active
+    // Never allow closing if price quote is active - this is critical
     if (showPriceQuoteDialog) {
-      console.log('ServiceRequest - Preventing close while price quote is showing');
+      console.log('ServiceRequest - BLOCKING close while price quote is showing');
       return;
     }
     
@@ -239,11 +272,15 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
         </ServiceRequestDialog>
       )}
 
-      {/* Price Quote Dialog - shows automatically when quote received */}
+      {/* Price Quote Dialog - AUTOMATIC OPENING - this is the key fix */}
       {showPriceQuoteDialog && currentRequest?.currentQuote && (
         <PriceQuoteDialog
+          key={`price-quote-${dialogKey}`} // Force re-render on quote changes
           open={showPriceQuoteDialog}
-          onClose={() => {}} // Prevent manual closing
+          onClose={() => {
+            // Completely block manual closing of price quote dialog
+            console.log('PriceQuoteDialog - Manual close blocked');
+          }}
           serviceType={type}
           priceQuote={currentRequest.currentQuote.amount}
           onAccept={handleAcceptQuote}

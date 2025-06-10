@@ -67,8 +67,17 @@ export class ServiceRequestManager {
   }
   
   private notifyListeners() {
-    console.log('ServiceRequestManager: Notifying listeners with state:', this.currentRequest);
-    this.listeners.forEach(listener => listener(this.currentRequest));
+    console.log('ServiceRequestManager: Notifying listeners with state:', {
+      id: this.currentRequest?.id,
+      status: this.currentRequest?.status,
+      hasQuote: !!this.currentRequest?.currentQuote,
+      quoteAmount: this.currentRequest?.currentQuote?.amount
+    });
+    
+    // Use setTimeout to ensure UI updates happen after state is fully set
+    setTimeout(() => {
+      this.listeners.forEach(listener => listener(this.currentRequest));
+    }, 0);
   }
   
   // Create new service request
@@ -182,9 +191,13 @@ export class ServiceRequestManager {
     this.currentRequest.status = 'quote_received';
     this.currentRequest.updatedAt = new Date().toISOString();
     
-    console.log('Quote generated:', finalPrice, 'from', this.currentRequest.assignedEmployee.name);
-    console.log('Updated request state:', this.currentRequest);
+    console.log('QUOTE GENERATED - triggering UI update:', {
+      status: this.currentRequest.status,
+      quote: finalPrice,
+      employee: this.currentRequest.assignedEmployee.name
+    });
     
+    // Force UI update for quote received
     this.notifyListeners();
   }
   
@@ -250,9 +263,13 @@ export class ServiceRequestManager {
     this.currentRequest.status = 'quote_received';
     this.currentRequest.updatedAt = new Date().toISOString();
     
-    console.log('Revised quote generated:', revisedAmount, 'from', this.currentRequest.assignedEmployee.name);
-    console.log('Updated request state for revised quote:', this.currentRequest);
+    console.log('REVISED QUOTE GENERATED - triggering UI update:', {
+      status: this.currentRequest.status,
+      revisedQuote: revisedAmount,
+      employee: this.currentRequest.assignedEmployee.name
+    });
     
+    // Force UI update for revised quote
     this.notifyListeners();
     
     toast({
