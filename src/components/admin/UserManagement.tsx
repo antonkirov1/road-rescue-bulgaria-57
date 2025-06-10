@@ -49,8 +49,13 @@ const UserManagement: React.FC<UserManagementProps> = ({ onBack }) => {
   const loadUsers = async () => {
     try {
       const userData = await UserAccountService.getExistingUsers();
-      setUsers(userData || []);
-      setFilteredUsers(userData || []);
+      // Transform the data to match our interface types
+      const transformedUsers: UserAccount[] = (userData || []).map(user => ({
+        ...user,
+        status: (user.status === 'banned' ? 'banned' : 'active') as 'active' | 'banned'
+      }));
+      setUsers(transformedUsers);
+      setFilteredUsers(transformedUsers);
     } catch (error) {
       console.error('Error loading users:', error);
       toast({
