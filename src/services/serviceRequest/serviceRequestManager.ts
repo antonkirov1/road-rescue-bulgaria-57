@@ -1,48 +1,16 @@
+
 import { toast } from "@/components/ui/use-toast";
 import { ServiceType } from '@/components/service/types/serviceRequestState';
-import { SimulatedEmployeeBlacklistService } from '@/services/simulatedEmployeeBlacklistService';
-import { UserHistoryService } from '@/services/userHistoryService';
-
-export interface ServiceRequestState {
-  id: string;
-  type: ServiceType;
-  userLocation: { lat: number; lng: number };
-  status: 'request_accepted' | 'quote_received' | 'quote_declined' | 'quote_accepted' | 'in_progress' | 'completed' | 'cancelled';
-  
-  // Employee data
-  assignedEmployee: {
-    name: string;
-    id: string;
-    location?: { lat: number; lng: number };
-  } | null;
-  
-  // Quote data
-  currentQuote: {
-    amount: number;
-    employeeName: string;
-    isRevised: boolean;
-  } | null;
-  
-  // Tracking data
-  declineCount: number;
-  blacklistedEmployees: string[];
-  hasReceivedRevision: boolean;
-  
-  // Timestamps
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface EmployeeSimulationFunctions {
-  loadEmployees: () => Promise<void>;
-  getRandomEmployee: (blacklisted: string[]) => any;
-}
+import { ServiceRequestState, EmployeeSimulationFunctions, ServiceRequestListener } from './types';
+import { QuoteGenerator } from './quoteGenerator';
+import { EmployeeAssignmentService } from './employeeAssignment';
+import { RequestLifecycleManager } from './requestLifecycle';
 
 export class ServiceRequestManager {
   private static instance: ServiceRequestManager;
   private currentRequest: ServiceRequestState | null = null;
-  private listeners: Array<(request: ServiceRequestState | null) => void> = [];
-  private employeeSimulation: EmployeeSimulationFunctions | null = null;
+  private listeners: Array<ServiceRequestListener> = [];
+  private employeeAssignment = new EmployeeAssignmentService();
   
   private constructor() {}
   
@@ -55,11 +23,11 @@ export class ServiceRequestManager {
   
   // Initialize with employee simulation functions
   initialize(employeeSimulation: EmployeeSimulationFunctions): void {
-    this.employeeSimulation = employeeSimulation;
+    this.employeeAssignment.initialize(employeeSimulation);
   }
   
   // Subscribe to state changes
-  subscribe(listener: (request: ServiceRequestState | null) => void): () => void {
+  subscribe(listener: ServiceRequestListener): () => void {
     this.listeners.push(listener);
     return () => {
       this.listeners = this.listeners.filter(l => l !== listener);
@@ -88,19 +56,7 @@ export class ServiceRequestManager {
   ): Promise<string> {
     const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
-    this.currentRequest = {
-      id: requestId,
-      type,
-      userLocation,
-      status: 'request_accepted',
-      assignedEmployee: null,
-      currentQuote: null,
-      declineCount: 0,
-      blacklistedEmployees: [],
-      hasReceivedRevision: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
+    this.currentRequest = RequestLifecycleManager.createRequest(requestId, type, userLocation);
     
     console.log('ServiceRequestManager: Created new request:', this.currentRequest);
     this.notifyListeners();
@@ -113,45 +69,22 @@ export class ServiceRequestManager {
   
   // Find available employee (not blacklisted)
   private async findAvailableEmployee(): Promise<void> {
-    if (!this.currentRequest || !this.employeeSimulation) return;
+    if (!this.currentRequest) return;
     
     try {
-      const { loadEmployees, getRandomEmployee } = this.employeeSimulation;
-      await loadEmployees();
-      
-      // Get blacklisted employees from database
-      const dbBlacklisted = await SimulatedEmployeeBlacklistService.getBlacklistedEmployees(this.currentRequest.id);
-      const allBlacklisted = [...this.currentRequest.blacklistedEmployees, ...dbBlacklisted];
-      
-      console.log('Finding employee, blacklisted:', allBlacklisted);
-      
-      const employee = getRandomEmployee(allBlacklisted);
+      const employee = await this.employeeAssignment.findAvailableEmployee(this.currentRequest);
       
       if (!employee) {
-        // No available employees
         this.updateRequestStatus('cancelled');
-        toast({
-          title: "No employees available",
-          description: "All employees are currently busy. Please try again later.",
-          variant: "destructive"
-        });
         return;
       }
       
       // Assign employee
-      this.currentRequest.assignedEmployee = {
-        name: employee.full_name,
-        id: employee.id.toString(),
-        location: {
-          lat: this.currentRequest.userLocation.lat + (Math.random() - 0.5) * 0.02,
-          lng: this.currentRequest.userLocation.lng + (Math.random() - 0.5) * 0.02
-        }
-      };
-      
-      this.currentRequest.updatedAt = new Date().toISOString();
+      this.currentRequest.assignedEmployee = employee;
+      RequestLifecycleManager.updateRequestTimestamp(this.currentRequest);
       this.notifyListeners();
       
-      console.log('Employee assigned:', employee.full_name);
+      console.log('Employee assigned:', employee.name);
       
       // Simulate employee response time (2-5 seconds)
       setTimeout(() => {
@@ -168,28 +101,15 @@ export class ServiceRequestManager {
   private generateQuote(): void {
     if (!this.currentRequest || !this.currentRequest.assignedEmployee) return;
     
-    const basePrices = {
-      'flat-tyre': 40,
-      'out-of-fuel': 30,
-      'car-battery': 60,
-      'tow-truck': 100,
-      'emergency': 80,
-      'other-car-problems': 50,
-      'support': 50
-    };
+    const finalPrice = QuoteGenerator.generateQuote(this.currentRequest.type);
     
-    const basePrice = basePrices[this.currentRequest.type] || 50;
-    const randomPrice = basePrice + Math.floor(Math.random() * 20) - 10;
-    const finalPrice = Math.max(20, randomPrice);
-    
-    this.currentRequest.currentQuote = {
-      amount: finalPrice,
-      employeeName: this.currentRequest.assignedEmployee.name,
-      isRevised: false
-    };
+    this.currentRequest.currentQuote = QuoteGenerator.createQuoteObject(
+      finalPrice,
+      this.currentRequest.assignedEmployee.name
+    );
     
     this.currentRequest.status = 'quote_received';
-    this.currentRequest.updatedAt = new Date().toISOString();
+    RequestLifecycleManager.updateRequestTimestamp(this.currentRequest);
     
     console.log('QUOTE GENERATED - triggering UI update:', {
       status: this.currentRequest.status,
@@ -206,7 +126,7 @@ export class ServiceRequestManager {
     if (!this.currentRequest || !this.currentRequest.currentQuote || !this.currentRequest.assignedEmployee) return;
     
     this.currentRequest.status = 'quote_accepted';
-    this.currentRequest.updatedAt = new Date().toISOString();
+    RequestLifecycleManager.updateRequestTimestamp(this.currentRequest);
     this.notifyListeners();
     
     toast({
@@ -228,7 +148,7 @@ export class ServiceRequestManager {
       // First decline - same employee sends revision
       this.currentRequest.hasReceivedRevision = true;
       this.currentRequest.status = 'quote_declined';
-      this.currentRequest.updatedAt = new Date().toISOString();
+      RequestLifecycleManager.updateRequestTimestamp(this.currentRequest);
       this.notifyListeners();
       
       toast({
@@ -251,17 +171,16 @@ export class ServiceRequestManager {
   private generateRevisedQuote(): void {
     if (!this.currentRequest || !this.currentRequest.currentQuote || !this.currentRequest.assignedEmployee) return;
     
-    // Lower the price by 5-15 BGN
-    const revisedAmount = Math.max(10, this.currentRequest.currentQuote.amount - Math.floor(Math.random() * 15) - 5);
+    const revisedAmount = QuoteGenerator.generateRevisedQuote(this.currentRequest.currentQuote.amount);
     
-    this.currentRequest.currentQuote = {
-      amount: revisedAmount,
-      employeeName: this.currentRequest.assignedEmployee.name,
-      isRevised: true
-    };
+    this.currentRequest.currentQuote = QuoteGenerator.createQuoteObject(
+      revisedAmount,
+      this.currentRequest.assignedEmployee.name,
+      true
+    );
     
     this.currentRequest.status = 'quote_received';
-    this.currentRequest.updatedAt = new Date().toISOString();
+    RequestLifecycleManager.updateRequestTimestamp(this.currentRequest);
     
     console.log('REVISED QUOTE GENERATED - triggering UI update:', {
       status: this.currentRequest.status,
@@ -286,11 +205,7 @@ export class ServiceRequestManager {
     
     try {
       // Add to database blacklist
-      await SimulatedEmployeeBlacklistService.addToBlacklist(
-        this.currentRequest.id,
-        employeeToBlacklist,
-        'current_user' // This should be actual user ID
-      );
+      await this.employeeAssignment.blacklistEmployee(this.currentRequest.id, employeeToBlacklist);
       
       // Add to local blacklist
       this.currentRequest.blacklistedEmployees.push(employeeToBlacklist);
@@ -301,10 +216,8 @@ export class ServiceRequestManager {
       this.currentRequest.declineCount = 0;
       this.currentRequest.hasReceivedRevision = false;
       this.currentRequest.status = 'request_accepted';
-      this.currentRequest.updatedAt = new Date().toISOString();
+      RequestLifecycleManager.updateRequestTimestamp(this.currentRequest);
       this.notifyListeners();
-      
-      console.log('Employee blacklisted:', employeeToBlacklist);
       
       toast({
         title: "Quote Declined",
@@ -324,7 +237,7 @@ export class ServiceRequestManager {
     if (!this.currentRequest) return;
     
     this.currentRequest.status = 'in_progress';
-    this.currentRequest.updatedAt = new Date().toISOString();
+    RequestLifecycleManager.updateRequestTimestamp(this.currentRequest);
     this.notifyListeners();
     
     // Complete service after 15 seconds
@@ -338,29 +251,10 @@ export class ServiceRequestManager {
     if (!this.currentRequest || !this.currentRequest.assignedEmployee || !this.currentRequest.currentQuote) return;
     
     this.currentRequest.status = 'completed';
-    this.currentRequest.updatedAt = new Date().toISOString();
+    RequestLifecycleManager.updateRequestTimestamp(this.currentRequest);
     this.notifyListeners();
     
-    try {
-      // Add to user history
-      await UserHistoryService.addHistoryEntry({
-        user_id: 'current_user', // This should be actual user ID
-        username: 'current_user',
-        service_type: this.currentRequest.type,
-        status: 'completed',
-        employee_name: this.currentRequest.assignedEmployee.name,
-        price_paid: this.currentRequest.currentQuote.amount,
-        service_fee: 5,
-        total_price: this.currentRequest.currentQuote.amount + 5,
-        request_date: this.currentRequest.createdAt,
-        completion_date: new Date().toISOString(),
-        address_street: 'Sofia Center, Bulgaria',
-        latitude: this.currentRequest.userLocation.lat,
-        longitude: this.currentRequest.userLocation.lng
-      });
-    } catch (error) {
-      console.error('Error recording completion:', error);
-    }
+    await RequestLifecycleManager.recordCompletion(this.currentRequest);
     
     toast({
       title: "Service Completed",
@@ -378,7 +272,7 @@ export class ServiceRequestManager {
     if (!this.currentRequest) return;
     
     // Clear blacklist for this request
-    await SimulatedEmployeeBlacklistService.clearBlacklistForRequest(this.currentRequest.id);
+    await RequestLifecycleManager.cleanupCancelledRequest(this.currentRequest.id);
     
     this.updateRequestStatus('cancelled');
     
@@ -395,7 +289,7 @@ export class ServiceRequestManager {
     if (!this.currentRequest) return;
     
     this.currentRequest.status = status;
-    this.currentRequest.updatedAt = new Date().toISOString();
+    RequestLifecycleManager.updateRequestTimestamp(this.currentRequest);
     this.notifyListeners();
   }
   
@@ -410,3 +304,6 @@ export class ServiceRequestManager {
     return this.currentRequest;
   }
 }
+
+// Re-export types for backward compatibility
+export type { ServiceRequestState } from './types';

@@ -1,5 +1,6 @@
+
 import { useState, useEffect, useCallback } from 'react';
-import { ServiceRequestManager, ServiceRequestState } from '@/services/serviceRequestManager';
+import { ServiceRequestManager, ServiceRequestState } from '@/services/serviceRequest/serviceRequestManager';
 import { ServiceType } from '@/components/service/types/serviceRequestState';
 import { useEmployeeSimulation } from '@/hooks/useEmployeeSimulation';
 
