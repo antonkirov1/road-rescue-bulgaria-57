@@ -16,6 +16,7 @@ export type Database = {
           email: string
           employee_role: string | null
           id: string
+          password_hash: string | null
           phone_number: string | null
           real_name: string | null
           status: string | null
@@ -27,6 +28,7 @@ export type Database = {
           email: string
           employee_role?: string | null
           id?: string
+          password_hash?: string | null
           phone_number?: string | null
           real_name?: string | null
           status?: string | null
@@ -38,6 +40,7 @@ export type Database = {
           email?: string
           employee_role?: string | null
           id?: string
+          password_hash?: string | null
           phone_number?: string | null
           real_name?: string | null
           status?: string | null
@@ -117,6 +120,7 @@ export type Database = {
           secret_answer_2: string | null
           secret_question_1: string | null
           secret_question_2: string | null
+          status: string | null
           username: string
         }
         Insert: {
@@ -134,6 +138,7 @@ export type Database = {
           secret_answer_2?: string | null
           secret_question_1?: string | null
           secret_question_2?: string | null
+          status?: string | null
           username: string
         }
         Update: {
@@ -151,6 +156,7 @@ export type Database = {
           secret_answer_2?: string | null
           secret_question_1?: string | null
           secret_question_2?: string | null
+          status?: string | null
           username?: string
         }
         Relationships: []
