@@ -44,30 +44,23 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
   const [message, setMessage] = useState(() => serviceMessages[type] || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCancelConfirmDialog, setShowCancelConfirmDialog] = useState(false);
-  const [forceShowPriceQuote, setForceShowPriceQuote] = useState(false);
   
-  // Determine which dialog to show - simplified logic
+  // Determine which dialog to show with automatic price quote opening
   const showPriceQuoteDialog = React.useMemo(() => {
+    // Auto show when quote is received (this is the key fix)
+    if (currentRequest?.status === 'quote_received' && currentRequest?.currentQuote) {
+      console.log('ServiceRequest - Auto showing price quote for quote_received status');
+      return true;
+    }
+    
     // Force show if triggered from dashboard
     if (shouldShowPriceQuote && currentRequest?.currentQuote) {
       console.log('ServiceRequest - Force showing price quote from dashboard trigger');
       return true;
     }
     
-    // Force show if manually triggered
-    if (forceShowPriceQuote && currentRequest?.currentQuote) {
-      console.log('ServiceRequest - Force showing price quote from manual trigger');
-      return true;
-    }
-    
-    // Auto show when quote received
-    if (currentRequest?.status === 'quote_received' && currentRequest?.currentQuote) {
-      console.log('ServiceRequest - Auto showing price quote for quote_received status');
-      return true;
-    }
-    
     return false;
-  }, [currentRequest?.status, currentRequest?.currentQuote, shouldShowPriceQuote, forceShowPriceQuote]);
+  }, [currentRequest?.status, currentRequest?.currentQuote, shouldShowPriceQuote]);
   
   const showStatusDialog = React.useMemo(() => {
     // Don't show status if price quote should be shown
@@ -108,12 +101,11 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
         quoteAmount: currentRequest.currentQuote?.amount
       } : null,
       shouldShowPriceQuote,
-      forceShowPriceQuote,
       showPriceQuoteDialog,
       showStatusDialog,
       showFormDialog
     });
-  }, [open, currentRequest, shouldShowPriceQuote, forceShowPriceQuote, showPriceQuoteDialog, showStatusDialog, showFormDialog]);
+  }, [open, currentRequest, shouldShowPriceQuote, showPriceQuoteDialog, showStatusDialog, showFormDialog]);
   
   // Close dialog when service is completed
   useEffect(() => {
@@ -122,20 +114,6 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
       onClose();
     }
   }, [currentRequest?.status, onClose]);
-  
-  // Reset force show when dialog closes
-  useEffect(() => {
-    if (!open) {
-      setForceShowPriceQuote(false);
-    }
-  }, [open]);
-  
-  // Set force show when shouldShowPriceQuote changes
-  useEffect(() => {
-    if (shouldShowPriceQuote) {
-      setForceShowPriceQuote(true);
-    }
-  }, [shouldShowPriceQuote]);
   
   const handleSubmit = async () => {
     if (!validateMessage(message, type)) {
@@ -194,14 +172,13 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
   
   const handleAcceptQuote = async () => {
     console.log('ServiceRequest - Accepting quote...');
-    setForceShowPriceQuote(false);
     await acceptQuote();
   };
   
   const handleDeclineQuote = async () => {
     console.log('ServiceRequest - Declining quote...');
-    setForceShowPriceQuote(false);
     await declineQuote();
+    // Note: The revised quote will automatically show when status becomes 'quote_received' again
   };
   
   const handleContactSupport = () => {
@@ -280,7 +257,7 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
             employeeName={currentRequest?.assignedEmployee?.name || ''}
             onContactSupport={handleContactSupport}
             onClose={handleDialogClose}
-            onReviewPriceQuote={() => setForceShowPriceQuote(true)}
+            onReviewPriceQuote={() => {}} // Removed this functionality since price quote shows automatically
             hasPriceQuote={!!currentRequest?.currentQuote}
             hasStoredSnapshot={false}
             onShowStoredPriceQuote={() => {}}
@@ -288,7 +265,7 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
         </ServiceRequestDialog>
       )}
 
-      {/* Price Quote Dialog - highest priority */}
+      {/* Price Quote Dialog - shows automatically when quote received */}
       {showPriceQuoteDialog && currentRequest?.currentQuote && (
         <PriceQuoteDialog
           open={showPriceQuoteDialog}
