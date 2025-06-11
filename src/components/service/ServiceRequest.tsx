@@ -113,8 +113,15 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
     }
   };
   
-  const handleDialogClose = () => {
-    console.log('ServiceRequest - handleDialogClose called', {
+  // Simple close handler - just closes without complex logic
+  const handleSimpleClose = () => {
+    console.log('ServiceRequest - Simple close called');
+    onClose();
+  };
+  
+  // Complex close handler for buttons (not backdrop clicks)
+  const handleComplexClose = () => {
+    console.log('ServiceRequest - Complex close called', {
       currentRequestStatus: currentRequest?.status,
       hasQuote: !!currentRequest?.currentQuote,
       shouldShowQuoteDialog
@@ -245,7 +252,7 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
         <ServiceRequestDialog
           type={type}
           open={true}
-          onClose={handleDialogClose}
+          onClose={handleSimpleClose}
           showRealTimeUpdate={false}
         >
           <ServiceRequestForm
@@ -255,7 +262,7 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
             userLocation={userLocation}
             isSubmitting={isSubmitting}
             onSubmit={handleSubmit}
-            onCancel={handleDialogClose}
+            onCancel={handleComplexClose}
           />
         </ServiceRequestDialog>
       )}
@@ -265,7 +272,7 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
         <ServiceRequestDialog
           type={type}
           open={true}
-          onClose={handleDialogClose}
+          onClose={handleSimpleClose}
           showRealTimeUpdate={true}
         >
           <ServiceRequestStatus
@@ -277,7 +284,7 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
             eta={currentRequest.status === 'in_progress' ? '05:00' : null}
             employeeName={currentRequest.assignedEmployee?.name || ''}
             onContactSupport={handleContactSupport}
-            onClose={handleDialogClose}
+            onClose={handleComplexClose}
             onReviewPriceQuote={() => {}}
             hasPriceQuote={!!currentRequest.currentQuote}
             hasStoredSnapshot={false}
@@ -290,10 +297,7 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
       {shouldShowQuoteDialog && currentRequest?.currentQuote && (
         <PriceQuoteDialog
           open={true}
-          onClose={() => {
-            console.log('PriceQuoteDialog - Close blocked - must respond to quote');
-            // Don't actually close - user must respond
-          }}
+          onClose={handleSimpleClose}
           serviceType={type}
           priceQuote={currentRequest.currentQuote.amount}
           onAccept={handleAcceptQuote}

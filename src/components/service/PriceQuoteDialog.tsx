@@ -92,11 +92,12 @@ const PriceQuoteDialog: React.FC<PriceQuoteDialogProps> = ({
     onAccept();
   };
 
-  // Completely prevent dialog from closing unless programmatically controlled
-  const handleOpenChange = (openState: boolean) => {
-    if (!openState) {
-      console.log('PriceQuoteDialog - Prevented automatic close');
-      return; // Block all close attempts
+  // For price quote dialogs, clicking outside should NOT close - user must respond
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      console.log('PriceQuoteDialog - Backdrop click blocked - user must respond to quote');
+      // Don't close - force user to make a choice
+      return;
     }
   };
 
@@ -105,7 +106,7 @@ const PriceQuoteDialog: React.FC<PriceQuoteDialogProps> = ({
     return (
       <WaitingForRevisionDialog
         open={open}
-        onOpenChange={() => {}} // Prevent closing via backdrop
+        onOpenChange={handleOpenChange}
         employeeName={employeeName}
         onCancelRequest={handleCancelRequest}
       />
@@ -117,9 +118,9 @@ const PriceQuoteDialog: React.FC<PriceQuoteDialogProps> = ({
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent 
           className="max-w-md"
-          onPointerDownOutside={(e) => {
-            e.preventDefault(); // Prevent backdrop clicks
-            console.log('PriceQuoteDialog - Backdrop click prevented');
+          onInteractOutside={(e) => {
+            e.preventDefault(); // Block backdrop clicks for price quotes
+            console.log('PriceQuoteDialog - Backdrop click prevented - user must respond');
           }}
           onEscapeKeyDown={(e) => {
             e.preventDefault(); // Prevent ESC key closing

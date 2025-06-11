@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Dialog,
@@ -26,9 +27,22 @@ const ServiceRequestDialog: React.FC<ServiceRequestDialogProps> = ({
   const { language } = useApp();
   const t = useTranslation(language);
 
+  // Simple close handler that only closes the dialog
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      onClose();
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent 
+        className="max-w-lg max-h-[90vh] overflow-hidden flex flex-col"
+        onInteractOutside={(e) => {
+          // Allow backdrop clicks to close the dialog normally
+          console.log('ServiceRequestDialog - Backdrop click, closing dialog');
+        }}
+      >
         <DialogHeader>
           <DialogTitle className={showRealTimeUpdate ? "sr-only" : ""}>
             {t(type)}
