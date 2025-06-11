@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import EmployeeHeader from '@/components/employee/EmployeeHeader';
 import ServiceRequestList from '@/components/employee/ServiceRequestList';
 import RequestDetailsDialog from '@/components/employee/RequestDetailsDialog';
+import EmployeeSettingsMenu from '@/components/employee/EmployeeSettingsMenu';
 import { ServiceRequest } from '@/types/serviceRequest';
 import { useApp } from '@/contexts/AppContext';
 
@@ -59,6 +60,10 @@ const EmployeeDashboard: React.FC = () => {
 
   const handleSettingsOpen = () => {
     setShowSettings(true);
+  };
+
+  const handleSettingsClose = () => {
+    setShowSettings(false);
   };
 
   const handleRequestSelect = (request: ServiceRequest) => {
@@ -136,6 +141,13 @@ const EmployeeDashboard: React.FC = () => {
           language={language}
         />
       )}
+
+      <EmployeeSettingsMenu
+        open={showSettings}
+        onClose={handleSettingsClose}
+        onLanguageChange={handleLanguageChange}
+        currentLanguage={language}
+      />
     </div>
   );
 };

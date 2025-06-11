@@ -15,6 +15,7 @@ interface ServiceRequestDialogProps {
   onClose: () => void;
   showRealTimeUpdate: boolean;
   children: React.ReactNode;
+  onCancel?: () => void;
 }
 
 const ServiceRequestDialog: React.FC<ServiceRequestDialogProps> = ({
@@ -22,15 +23,28 @@ const ServiceRequestDialog: React.FC<ServiceRequestDialogProps> = ({
   open,
   onClose,
   showRealTimeUpdate,
-  children
+  children,
+  onCancel
 }) => {
   const { language } = useApp();
   const t = useTranslation(language);
 
-  // Simple close handler that only closes the dialog
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
-      onClose();
+      // If there's an onCancel handler and we're showing real-time updates, show cancel confirmation
+      if (showRealTimeUpdate && onCancel) {
+        onCancel();
+      } else {
+        onClose();
+      }
+    }
+  };
+
+  const handleInteractOutside = (e: Event) => {
+    // If showing real-time updates, prevent closing and show cancel confirmation
+    if (showRealTimeUpdate && onCancel) {
+      e.preventDefault();
+      onCancel();
     }
   };
 
@@ -38,10 +52,7 @@ const ServiceRequestDialog: React.FC<ServiceRequestDialogProps> = ({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent 
         className="max-w-lg max-h-[90vh] overflow-hidden flex flex-col"
-        onInteractOutside={(e) => {
-          // Allow backdrop clicks to close the dialog normally
-          console.log('ServiceRequestDialog - Backdrop click, closing dialog');
-        }}
+        onInteractOutside={handleInteractOutside}
       >
         <DialogHeader>
           <DialogTitle className={showRealTimeUpdate ? "sr-only" : ""}>

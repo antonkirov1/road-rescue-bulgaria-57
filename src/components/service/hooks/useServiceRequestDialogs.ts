@@ -21,6 +21,16 @@ export const useServiceRequestDialogs = (
       setDialogKey(prev => prev + 1);
     }
   }, [currentRequest?.status, currentRequest?.currentQuote?.amount]);
+
+  // Auto-open dialog when request is accepted
+  useEffect(() => {
+    if (currentRequest?.status === 'request_accepted' || 
+        currentRequest?.status === 'quote_accepted' ||
+        currentRequest?.status === 'in_progress') {
+      console.log('useServiceRequestDialogs - Auto-opening dialog for status:', currentRequest.status);
+      setDialogKey(prev => prev + 1);
+    }
+  }, [currentRequest?.status]);
   
   // Price quote dialog - HIGHEST PRIORITY - shows when quote is received
   const showPriceQuoteDialog = useMemo(() => {
@@ -45,7 +55,8 @@ export const useServiceRequestDialogs = (
     
     const shouldShow = currentRequest.status === 'request_accepted' || 
                       currentRequest.status === 'in_progress' ||
-                      currentRequest.status === 'quote_accepted';
+                      currentRequest.status === 'quote_accepted' ||
+                      currentRequest.status === 'quote_declined';
     
     console.log('useServiceRequestDialogs - Status dialog visibility:', {
       open,
