@@ -1,9 +1,9 @@
 
-import { translations } from './consolidated';
+import { allTranslations } from './consolidated';
 
 export const useTranslation = (language: 'en' | 'bg') => {
   return (key: string): string => {
-    const translation = translations[key];
+    const translation = allTranslations[key];
     if (!translation) {
       console.warn(`Translation key "${key}" not found`);
       // Convert kebab-case to proper text format
