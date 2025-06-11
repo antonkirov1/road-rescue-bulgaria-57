@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,6 +33,7 @@ import {
 import { UserAccountService } from '@/services/userAccountService';
 import { EmployeeAccountService } from '@/services/employeeAccountService';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/components/ui/use-toast';
 import UserManagement from './UserManagement';
 import EmployeeManagement from './EmployeeManagement';
 import SimulationManagement from './SimulationManagement';
@@ -45,6 +47,8 @@ interface DashboardStats {
   activeRequests: number;
   completedToday: number;
   revenue: number;
+  bannedUsers: number;
+  suspendedEmployees: number;
 }
 
 interface MaterialDashboardProps {
@@ -61,13 +65,16 @@ const MaterialDashboard: React.FC<MaterialDashboardProps> = ({ onViewChange, cur
     totalRequests: 0,
     activeRequests: 0,
     completedToday: 0,
-    revenue: 0
+    revenue: 0,
+    bannedUsers: 0,
+    suspendedEmployees: 0
   });
   const [isLoading, setIsLoading] = useState(true);
 
   const refreshStats = async () => {
     setIsLoading(true);
     try {
+      // Get real data from database
       const [pendingUsers, employees, existingUsers] = await Promise.all([
         UserAccountService.getPendingNewUsers(), 
         EmployeeAccountService.getAllEmployees(),
@@ -79,24 +86,60 @@ const MaterialDashboard: React.FC<MaterialDashboardProps> = ({ onViewChange, cur
         .from('employee_simulation')
         .select('*');
 
-      // Get request statistics (mock data for demo)
-      const totalRequests = 1247;
-      const activeRequests = 23;
-      const completedToday = 45;
-      const revenue = 12450.75;
+      // Get user history for requests statistics
+      const { data: userHistory } = await supabase
+        .from('user_history')
+        .select('*');
+
+      // Get completed requests from today
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const { data: completedToday } = await supabase
+        .from('user_history')
+        .select('*')
+        .eq('status', 'completed')
+        .gte('completion_date', today.toISOString());
+
+      // Get price quote snapshots for revenue calculation
+      const { data: priceQuotes } = await supabase
+        .from('price_quote_snapshots')
+        .select('total_price')
+        .eq('status', 'accepted');
+
+      // Calculate revenue from completed requests
+      const totalRevenue = priceQuotes?.reduce((sum, quote) => sum + (Number(quote.total_price) || 0), 0) || 0;
+
+      // Count banned users and suspended employees
+      const bannedUsers = existingUsers?.filter(user => user.status === 'banned').length || 0;
+      const suspendedEmployees = employees.filter(emp => emp.status === 'suspended').length || 0;
       
       setStats({
         pendingUsers: pendingUsers.length,
         existingUsers: existingUsers?.length || 0,
         employees: employees.length,
         simulationEmployees: simulationEmployees?.length || 0,
-        totalRequests,
-        activeRequests,
-        completedToday,
-        revenue
+        totalRequests: userHistory?.length || 0,
+        activeRequests: 0, // We'll need to track active requests separately
+        completedToday: completedToday?.length || 0,
+        revenue: totalRevenue,
+        bannedUsers,
+        suspendedEmployees
       });
+
+      console.log('Dashboard stats updated:', {
+        existingUsers: existingUsers?.length,
+        employees: employees.length,
+        totalRequests: userHistory?.length,
+        revenue: totalRevenue
+      });
+
     } catch (error) {
       console.error('Error refreshing stats:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load dashboard statistics",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -145,6 +188,7 @@ const MaterialDashboard: React.FC<MaterialDashboardProps> = ({ onViewChange, cur
           color === 'green' ? 'from-green-500 to-green-600' :
           color === 'purple' ? 'from-purple-500 to-purple-600' :
           color === 'orange' ? 'from-orange-500 to-orange-600' :
+          color === 'red' ? 'from-red-500 to-red-600' :
           'from-gray-500 to-gray-600'
         }`}>
           <Icon className="h-4 w-4 text-white" />
@@ -244,7 +288,7 @@ const MaterialDashboard: React.FC<MaterialDashboardProps> = ({ onViewChange, cur
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Grid */}
+        {/* Main Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard
             title="Total Users"
@@ -271,7 +315,7 @@ const MaterialDashboard: React.FC<MaterialDashboardProps> = ({ onViewChange, cur
           />
           <StatCard
             title="Revenue"
-            value={`$${stats.revenue.toLocaleString()}`}
+            value={`${stats.revenue.toFixed(2)} BGN`}
             change="+18% from last month"
             icon={TrendingUp}
             color="orange"
@@ -279,10 +323,10 @@ const MaterialDashboard: React.FC<MaterialDashboardProps> = ({ onViewChange, cur
         </div>
 
         {/* Secondary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <StatCard
-            title="Active Requests"
-            value={stats.activeRequests}
+            title="Pending Users"
+            value={stats.pendingUsers}
             icon={Clock}
             color="blue"
           />
@@ -299,6 +343,12 @@ const MaterialDashboard: React.FC<MaterialDashboardProps> = ({ onViewChange, cur
             color="purple"
             onClick={() => onViewChange('simulation')}
           />
+          <StatCard
+            title="Issues"
+            value={stats.bannedUsers + stats.suspendedEmployees}
+            icon={UserCheck}
+            color="red"
+          />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -314,15 +364,15 @@ const MaterialDashboard: React.FC<MaterialDashboardProps> = ({ onViewChange, cur
               </CardHeader>
               <CardContent className="space-y-4">
                 <QuickActionCard
-                  title="Create User"
-                  description="Add a new user account"
+                  title="Manage Users"
+                  description="View and manage user accounts"
                   icon={Users}
                   color="from-green-500 to-green-600"
                   onClick={() => onViewChange('users')}
                 />
                 <QuickActionCard
-                  title="Add Employee"
-                  description="Register new employee"
+                  title="Manage Employees"
+                  description="View and manage employees"
                   icon={UserCheck}
                   color="from-blue-500 to-blue-600"
                   onClick={() => onViewChange('employees')}
@@ -351,34 +401,34 @@ const MaterialDashboard: React.FC<MaterialDashboardProps> = ({ onViewChange, cur
               <CardContent>
                 <div className="space-y-2">
                   <RecentActivityItem
-                    action="New user registered"
-                    user="john.doe@example.com"
-                    time="2 min ago"
+                    action="Users in system"
+                    user={`${stats.existingUsers} total users`}
+                    time="Live"
                     type="user"
                   />
                   <RecentActivityItem
-                    action="Employee account created"
-                    user="Jane Smith - Technician"
-                    time="15 min ago"
+                    action="Employees registered"
+                    user={`${stats.employees} active employees`}
+                    time="Live"
                     type="employee"
                   />
                   <RecentActivityItem
-                    action="Service request completed"
-                    user="Request #1247 - Flat Tire"
-                    time="32 min ago"
+                    action="Requests completed"
+                    user={`${stats.totalRequests} total requests`}
+                    time="Live"
                     type="request"
                   />
                   <RecentActivityItem
-                    action="New user registered"
-                    user="alice.johnson@example.com"
-                    time="1 hour ago"
-                    type="user"
+                    action="Revenue generated"
+                    user={`${stats.revenue.toFixed(2)} BGN total`}
+                    time="Live"
+                    type="request"
                   />
                   <RecentActivityItem
-                    action="Employee status updated"
-                    user="Mike Wilson - Active"
-                    time="2 hours ago"
-                    type="employee"
+                    action="Completed today"
+                    user={`${stats.completedToday} requests finished`}
+                    time="Live"
+                    type="request"
                   />
                 </div>
               </CardContent>
@@ -392,16 +442,27 @@ const MaterialDashboard: React.FC<MaterialDashboardProps> = ({ onViewChange, cur
             <CardHeader>
               <CardTitle className="flex items-center">
                 <BarChart3 className="h-5 w-5 mr-2" />
-                Request Volume
+                Platform Statistics
               </CardTitle>
-              <CardDescription>Service requests over the last 7 days</CardDescription>
+              <CardDescription>Current platform status overview</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-64 flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg">
-                <div className="text-center">
-                  <BarChart3 className="h-12 w-12 text-blue-500 mx-auto mb-4" />
-                  <p className="text-gray-600">Chart visualization would go here</p>
-                  <p className="text-sm text-gray-500">Integration with charting library needed</p>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Total Users</span>
+                  <span className="text-2xl font-bold text-blue-600">{stats.existingUsers}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Active Employees</span>
+                  <span className="text-2xl font-bold text-green-600">{stats.employees}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Total Requests</span>
+                  <span className="text-2xl font-bold text-purple-600">{stats.totalRequests}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Revenue</span>
+                  <span className="text-2xl font-bold text-orange-600">{stats.revenue.toFixed(2)} BGN</span>
                 </div>
               </div>
             </CardContent>
@@ -411,45 +472,31 @@ const MaterialDashboard: React.FC<MaterialDashboardProps> = ({ onViewChange, cur
             <CardHeader>
               <CardTitle className="flex items-center">
                 <PieChart className="h-5 w-5 mr-2" />
-                Service Distribution
+                System Health
               </CardTitle>
-              <CardDescription>Breakdown of service types requested</CardDescription>
+              <CardDescription>Platform status indicators</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-64 flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100 rounded-lg">
-                <div className="text-center">
-                  <PieChart className="h-12 w-12 text-green-500 mx-auto mb-4" />
-                  <p className="text-gray-600">Service type distribution chart</p>
-                  <div className="mt-4 space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="flex items-center">
-                        <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-                        Flat Tire
-                      </span>
-                      <span>35%</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="flex items-center">
-                        <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                        Out of Fuel
-                      </span>
-                      <span>28%</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="flex items-center">
-                        <div className="w-3 h-3 bg-purple-500 rounded-full mr-2"></div>
-                        Battery Issues
-                      </span>
-                      <span>22%</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="flex items-center">
-                        <div className="w-3 h-3 bg-orange-500 rounded-full mr-2"></div>
-                        Other
-                      </span>
-                      <span>15%</span>
-                    </div>
-                  </div>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Active Users</span>
+                  <Badge variant="default">{stats.existingUsers - stats.bannedUsers}</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Banned Users</span>
+                  <Badge variant="destructive">{stats.bannedUsers}</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Active Employees</span>
+                  <Badge variant="default">{stats.employees - stats.suspendedEmployees}</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Suspended Employees</span>
+                  <Badge variant="destructive">{stats.suspendedEmployees}</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Simulation Employees</span>
+                  <Badge variant="outline">{stats.simulationEmployees}</Badge>
                 </div>
               </div>
             </CardContent>

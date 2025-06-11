@@ -3,13 +3,7 @@ import React from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MoreVertical, Edit, Eye, EyeOff, Ban, UserCheck } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Edit, Eye, EyeOff, UserX, UserCheck } from 'lucide-react';
 
 interface UserAccount {
   id: string;
@@ -40,68 +34,63 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
   onBan,
   onUnban
 }) => {
+  const isBanned = user.status === 'banned';
+
   return (
-    <TableRow className="hover:bg-gray-50">
-      <TableCell className="font-medium">{user.full_name || 'N/A'}</TableCell>
-      <TableCell className="font-medium">{user.username}</TableCell>
+    <TableRow>
+      <TableCell className="font-medium">
+        {user.full_name || user.username}
+      </TableCell>
+      <TableCell>{user.username}</TableCell>
       <TableCell>{user.email}</TableCell>
       <TableCell>{user.phone_number || 'N/A'}</TableCell>
       <TableCell>{user.gender || 'N/A'}</TableCell>
       <TableCell>
-        <Badge 
-          variant={user.status === 'banned' ? 'destructive' : 'default'}
-          className={user.status === 'banned' ? '' : 'bg-green-100 text-green-800 hover:bg-green-200'}
-        >
-          {user.status === 'banned' ? 'Banned' : 'Active'}
-        </Badge>
-      </TableCell>
-      <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
-      <TableCell>
-        <Badge 
-          variant="outline"
-          className={user.created_by_admin ? 'border-purple-200 text-purple-700 bg-purple-50' : 'border-green-200 text-green-700 bg-green-50'}
-        >
-          {user.created_by_admin ? 'Admin Created' : 'Self Registered'}
+        <Badge variant={isBanned ? "destructive" : "default"}>
+          {isBanned ? 'Banned' : 'Active'}
         </Badge>
       </TableCell>
       <TableCell>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm">
-              <MoreVertical className="h-4 w-4" />
+        {new Date(user.created_at).toLocaleDateString()}
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onEdit(user)}
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onTogglePassword(user.id)}
+          >
+            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </Button>
+          
+          {isBanned ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onUnban(user)}
+              className="text-green-600 hover:text-green-700"
+            >
+              <UserCheck className="h-4 w-4" />
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onEdit(user)}>
-              <Edit className="h-4 w-4 mr-2" />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onTogglePassword(user.id)}>
-              {showPassword ? (
-                <>
-                  <EyeOff className="h-4 w-4 mr-2" />
-                  Hide Password
-                </>
-              ) : (
-                <>
-                  <Eye className="h-4 w-4 mr-2" />
-                  Show Password
-                </>
-              )}
-            </DropdownMenuItem>
-            {user.status === 'banned' ? (
-              <DropdownMenuItem onClick={() => onUnban(user)} className="text-green-600">
-                <UserCheck className="h-4 w-4 mr-2" />
-                Unban
-              </DropdownMenuItem>
-            ) : (
-              <DropdownMenuItem onClick={() => onBan(user)} className="text-red-600">
-                <Ban className="h-4 w-4 mr-2" />
-                Ban
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onBan(user)}
+              className="text-red-600 hover:text-red-700"
+            >
+              <UserX className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </TableCell>
     </TableRow>
   );

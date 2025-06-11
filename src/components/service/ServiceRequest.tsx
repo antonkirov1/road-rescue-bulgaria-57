@@ -43,41 +43,55 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCancelConfirmDialog, setShowCancelConfirmDialog] = useState(false);
   
-  // Determine what should be visible based on current request state
-  const shouldShowPriceQuote = open && currentRequest && 
-    currentRequest.status === 'quote_received' && 
-    !!currentRequest.currentQuote;
-    
-  const shouldShowStatus = open && currentRequest && 
-    (currentRequest.status === 'quote_accepted' || 
-     currentRequest.status === 'in_progress') &&
-    !shouldShowPriceQuote;
-    
-  const shouldShowForm = open && !currentRequest;
-  
-  console.log('ServiceRequest - Dialog visibility:', {
+  console.log('ServiceRequest - Current request state:', {
     open,
     currentRequest: currentRequest ? {
       id: currentRequest.id,
       status: currentRequest.status,
       hasQuote: !!currentRequest.currentQuote,
-      quoteAmount: currentRequest.currentQuote?.amount
-    } : null,
-    shouldShowForm,
-    shouldShowStatus,
-    shouldShowPriceQuote
+      quoteAmount: currentRequest.currentQuote?.amount,
+      employeeName: currentRequest.assignedEmployee?.name
+    } : null
   });
-  
-  // Auto-close when service is completed
+
+  // Auto-close when service is completed or cancelled
   useEffect(() => {
-    if (currentRequest?.status === 'completed') {
-      console.log('ServiceRequest - Service completed, auto-closing');
+    if (currentRequest?.status === 'completed' || currentRequest?.status === 'cancelled') {
+      console.log('ServiceRequest - Service completed/cancelled, auto-closing in 2 seconds');
       setTimeout(() => {
         onClose();
       }, 2000);
     }
   }, [currentRequest?.status, onClose]);
+
+  // Determine which dialog should be shown based on current state
+  const getActiveDialog = () => {
+    if (!open) return null;
+    
+    if (!currentRequest) {
+      return 'form'; // Show form for new requests
+    }
+
+    // Show price quote dialog when quote is received
+    if (currentRequest.status === 'quote_received' && currentRequest.currentQuote) {
+      return 'price-quote';
+    }
+
+    // Show status dialog for all other states (request_accepted, quote_accepted, in_progress)
+    if (currentRequest.status === 'request_accepted' || 
+        currentRequest.status === 'quote_accepted' || 
+        currentRequest.status === 'in_progress' ||
+        currentRequest.status === 'completed') {
+      return 'status';
+    }
+
+    return null;
+  };
+
+  const activeDialog = getActiveDialog();
   
+  console.log('ServiceRequest - Active dialog:', activeDialog, 'Status:', currentRequest?.status);
+
   const handleSubmit = async () => {
     if (!validateMessage(message, type)) {
       return;
@@ -113,22 +127,15 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
     }
   };
   
-  // Simple close for backdrop clicks (only closes dialog)
-  const handleSimpleClose = () => {
-    console.log('ServiceRequest - Simple close called');
-    onClose();
-  };
-  
-  // Complex close for button clicks (handles cancellation logic)
-  const handleComplexClose = () => {
-    console.log('ServiceRequest - Complex close called', {
-      currentRequestStatus: currentRequest?.status,
-      hasQuote: !!currentRequest?.currentQuote,
-      shouldShowPriceQuote
+  const handleDialogClose = () => {
+    console.log('ServiceRequest - Dialog close requested, current state:', {
+      activeDialog,
+      status: currentRequest?.status,
+      hasQuote: !!currentRequest?.currentQuote
     });
     
-    // Block closing during active price quote
-    if (shouldShowPriceQuote) {
+    // Block closing during active price quote - user must respond
+    if (activeDialog === 'price-quote') {
       console.log('ServiceRequest - BLOCKING close - must respond to price quote');
       toast({
         title: "Response Required",
@@ -138,7 +145,7 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
       return;
     }
     
-    // For any other ongoing request, show cancel confirmation
+    // For ongoing requests, show cancel confirmation
     if (currentRequest && 
         currentRequest.status !== 'completed' && 
         currentRequest.status !== 'cancelled') {
@@ -172,10 +179,7 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
     console.log('ServiceRequest - Accepting quote...');
     try {
       await acceptQuote();
-      toast({
-        title: "Quote Accepted",
-        description: "The service provider is on their way!"
-      });
+      // Don't show toast here - ServiceRequestManager handles it
     } catch (error) {
       console.error('Error accepting quote:', error);
       toast({
@@ -190,10 +194,7 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
     console.log('ServiceRequest - Declining quote...');
     try {
       await declineQuote();
-      toast({
-        title: "Quote Declined",
-        description: "Looking for alternative options..."
-      });
+      // Don't show toast here - ServiceRequestManager handles it
     } catch (error) {
       console.error('Error declining quote:', error);
       toast({
@@ -239,7 +240,7 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
     }
     return '';
   };
-  
+
   // Don't render anything if dialog should not be open
   if (!open) {
     return null;
@@ -248,11 +249,11 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
   return (
     <>
       {/* FORM DIALOG - New requests only */}
-      {shouldShowForm && (
+      {activeDialog === 'form' && (
         <ServiceRequestDialog
           type={type}
           open={true}
-          onClose={handleSimpleClose}
+          onClose={handleDialogClose}
           showRealTimeUpdate={false}
         >
           <ServiceRequestForm
@@ -262,17 +263,17 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
             userLocation={userLocation}
             isSubmitting={isSubmitting}
             onSubmit={handleSubmit}
-            onCancel={handleComplexClose}
+            onCancel={handleDialogClose}
           />
         </ServiceRequestDialog>
       )}
 
-      {/* STATUS DIALOG - Ongoing requests (accepted/in-progress) */}
-      {shouldShowStatus && currentRequest && (
+      {/* STATUS DIALOG - Request accepted, quote accepted, in progress, completed */}
+      {activeDialog === 'status' && currentRequest && (
         <ServiceRequestDialog
           type={type}
           open={true}
-          onClose={handleSimpleClose}
+          onClose={handleDialogClose}
           showRealTimeUpdate={true}
         >
           <ServiceRequestStatus
@@ -284,7 +285,7 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
             eta={currentRequest.status === 'in_progress' ? '05:00' : null}
             employeeName={currentRequest.assignedEmployee?.name || ''}
             onContactSupport={handleContactSupport}
-            onClose={handleComplexClose}
+            onClose={handleDialogClose}
             onReviewPriceQuote={() => {}}
             hasPriceQuote={!!currentRequest.currentQuote}
             hasStoredSnapshot={false}
@@ -293,8 +294,8 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
         </ServiceRequestDialog>
       )}
 
-      {/* PRICE QUOTE DIALOG - HIGHEST PRIORITY - Shows for all quote_received status */}
-      {shouldShowPriceQuote && currentRequest?.currentQuote && (
+      {/* PRICE QUOTE DIALOG - Quote received state */}
+      {activeDialog === 'price-quote' && currentRequest?.currentQuote && (
         <PriceQuoteDialog
           open={true}
           onClose={() => {

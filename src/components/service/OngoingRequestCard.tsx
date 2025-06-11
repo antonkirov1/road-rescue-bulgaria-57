@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Clock, MapPin, Phone, Eye, Star } from "lucide-react";
+import { Clock, MapPin, Phone, Eye } from "lucide-react";
 import { useApp } from '@/contexts/AppContext';
 import { useTranslation } from '@/utils/translations';
 import { useServiceRequestManager } from '@/hooks/useServiceRequestManager';
@@ -32,9 +32,12 @@ const OngoingRequestCard: React.FC<OngoingRequestCardProps> = ({
   const getStatusDisplay = () => {
     switch (currentRequest.status) {
       case 'request_accepted':
+        if (currentRequest.assignedEmployee) {
+          return 'Technician assigned';
+        }
         return 'Finding technician...';
       case 'quote_received':
-        return 'Quote received';
+        return 'Quote received - Action required';
       case 'quote_declined':
         return 'Finding alternative...';
       case 'quote_accepted':
@@ -56,7 +59,7 @@ const OngoingRequestCard: React.FC<OngoingRequestCardProps> = ({
       case 'quote_declined':
         return 'text-yellow-600';
       case 'quote_received':
-        return 'text-blue-600';
+        return 'text-blue-600 font-semibold';
       case 'quote_accepted':
       case 'in_progress':
         return 'text-green-600';
@@ -69,7 +72,6 @@ const OngoingRequestCard: React.FC<OngoingRequestCardProps> = ({
     }
   };
 
-  const shouldShowQuoteAction = currentRequest.status === 'quote_received' && currentRequest.currentQuote;
   const shouldShowTrackAction = currentRequest.status === 'quote_accepted' || currentRequest.status === 'in_progress';
 
   return (
@@ -124,18 +126,6 @@ const OngoingRequestCard: React.FC<OngoingRequestCardProps> = ({
             <Eye className="h-3 w-3" />
             View Details
           </Button>
-
-          {shouldShowQuoteAction && (
-            <Button
-              variant="default"
-              size="sm"
-              onClick={onReviewQuote}
-              className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700"
-            >
-              <Star className="h-3 w-3" />
-              Review Quote
-            </Button>
-          )}
 
           {shouldShowTrackAction && currentRequest.assignedEmployee && (
             <>
