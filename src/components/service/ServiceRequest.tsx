@@ -45,18 +45,19 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCancelConfirmDialog, setShowCancelConfirmDialog] = useState(false);
   
-  // Determine what should be shown based on current state
+  // Determine what should be shown based on current state and props
   const shouldShowForm = open && !currentRequest;
   const shouldShowStatus = open && currentRequest && 
     (currentRequest.status === 'request_accepted' || 
      currentRequest.status === 'in_progress' || 
      currentRequest.status === 'quote_accepted');
-  const shouldShowPriceQuote = open && currentRequest && 
+  const shouldShowQuoteDialog = (open && currentRequest && 
     currentRequest.status === 'quote_received' && 
-    !!currentRequest.currentQuote;
+    !!currentRequest.currentQuote) || shouldShowPriceQuote;
   
   console.log('ServiceRequest - Current state:', {
     open,
+    shouldShowPriceQuote,
     currentRequest: currentRequest ? {
       id: currentRequest.id,
       status: currentRequest.status,
@@ -64,7 +65,7 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
     } : null,
     shouldShowForm,
     shouldShowStatus,
-    shouldShowPriceQuote
+    shouldShowQuoteDialog
   });
   
   // Auto-close when service is completed
@@ -115,11 +116,12 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
   const handleDialogClose = () => {
     console.log('ServiceRequest - handleDialogClose called', {
       currentRequestStatus: currentRequest?.status,
-      hasQuote: !!currentRequest?.currentQuote
+      hasQuote: !!currentRequest?.currentQuote,
+      shouldShowQuoteDialog
     });
     
     // Block closing ONLY during active price quote
-    if (shouldShowPriceQuote) {
+    if (shouldShowQuoteDialog) {
       console.log('ServiceRequest - BLOCKING close - must respond to price quote');
       toast({
         title: "Response Required",
@@ -285,7 +287,7 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
       )}
 
       {/* PRICE QUOTE DIALOG - HIGHEST PRIORITY - Blocks all other dialogs */}
-      {shouldShowPriceQuote && currentRequest?.currentQuote && (
+      {shouldShowQuoteDialog && currentRequest?.currentQuote && (
         <PriceQuoteDialog
           open={true}
           onClose={() => {
