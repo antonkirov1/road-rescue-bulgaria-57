@@ -43,8 +43,9 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCancelConfirmDialog, setShowCancelConfirmDialog] = useState(false);
   
-  console.log('ServiceRequest - Current state:', {
+  console.log('ServiceRequest - Render:', {
     open,
+    type,
     currentRequest: currentRequest ? {
       id: currentRequest.id,
       status: currentRequest.status,
@@ -58,27 +59,29 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
   useEffect(() => {
     if (currentRequest?.status === 'completed' || currentRequest?.status === 'cancelled') {
       console.log('ServiceRequest - Service completed/cancelled, auto-closing');
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         onClose();
       }, 3000);
+      return () => clearTimeout(timer);
     }
   }, [currentRequest?.status, onClose]);
 
-  // Determine active dialog based on current state
+  // Determine which dialog to show based on current state
   const getActiveDialog = () => {
     if (!open) return null;
     
-    // No current request = show form
+    // No current request = show form dialog
     if (!currentRequest) {
       return 'form';
     }
 
     // Quote received = show price quote dialog (HIGHEST PRIORITY)
     if (currentRequest.status === 'quote_received' && currentRequest.currentQuote) {
+      console.log('ServiceRequest - Should show price quote dialog');
       return 'price-quote';
     }
 
-    // All other active states = show status dialog
+    // Show waiting/status dialog for other states
     if (['request_accepted', 'quote_declined', 'quote_accepted', 'in_progress', 'completed'].includes(currentRequest.status)) {
       return 'status';
     }
@@ -88,7 +91,12 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
 
   const activeDialog = getActiveDialog();
   
-  console.log('ServiceRequest - Active dialog:', activeDialog, 'Status:', currentRequest?.status);
+  console.log('ServiceRequest - Active dialog determination:', {
+    activeDialog,
+    status: currentRequest?.status,
+    hasQuote: !!currentRequest?.currentQuote,
+    open
+  });
 
   const handleSubmit = async () => {
     if (!validateMessage(message, type)) {
@@ -107,6 +115,7 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
     setIsSubmitting(true);
     
     try {
+      console.log('ServiceRequest - Creating new request:', { type, userLocation, message });
       await createRequest(type, userLocation, message);
       
       toast({
@@ -126,12 +135,9 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
   };
   
   const handleDialogClose = () => {
-    console.log('ServiceRequest - Dialog close requested, current state:', {
-      activeDialog,
-      status: currentRequest?.status
-    });
+    console.log('ServiceRequest - Dialog close requested, activeDialog:', activeDialog);
     
-    // Block closing during price quote - user must respond
+    // For price quote dialog - user must respond, can't close
     if (activeDialog === 'price-quote') {
       console.log('ServiceRequest - BLOCKING close - must respond to price quote');
       toast({
@@ -150,7 +156,7 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
       return;
     }
     
-    // Normal close
+    // Normal close for form dialog or completed requests
     console.log('ServiceRequest - Closing normally');
     onClose();
   };
@@ -233,6 +239,7 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
     return '';
   };
 
+  // Don't render anything if dialog is not open
   if (!open) {
     return null;
   }
@@ -259,13 +266,13 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
         </ServiceRequestDialog>
       )}
 
-      {/* STATUS DIALOG - Request accepted, in progress, completed */}
+      {/* STATUS DIALOG - Request processing, accepted, in progress */}
       {activeDialog === 'status' && currentRequest && (
         <ServiceRequestDialog
           type={type}
           open={true}
           onClose={handleDialogClose}
-          showRealTimeUpdate={true}
+          showRealTimeUpdate={currentRequest.status === 'request_accepted' && !currentRequest.assignedEmployee}
         >
           <ServiceRequestStatus
             message={message}
@@ -277,8 +284,8 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
             employeeName={currentRequest.assignedEmployee?.name || ''}
             onContactSupport={handleContactSupport}
             onClose={handleDialogClose}
-            onReviewPriceQuote={() => {}}
-            hasPriceQuote={!!currentRequest.currentQuote}
+            onReviewPriceQuote={() => {}} // Not used anymore
+            hasPriceQuote={false} // Price quote is handled separately
             hasStoredSnapshot={false}
             onShowStoredPriceQuote={() => {}}
           />
@@ -290,7 +297,8 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
         <PriceQuoteDialog
           open={true}
           onClose={() => {
-            // Don't close - user must respond
+            // Price quote dialog cannot be closed - user must respond
+            console.log('PriceQuoteDialog close blocked - user must respond');
           }}
           serviceType={type}
           priceQuote={currentRequest.currentQuote.amount}
@@ -304,29 +312,27 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
       )}
 
       {/* CANCEL CONFIRMATION DIALOG */}
-      {showCancelConfirmDialog && (
-        <AlertDialog open={showCancelConfirmDialog} onOpenChange={setShowCancelConfirmDialog}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>{t("confirm-cancellation-title")}</AlertDialogTitle>
-              <AlertDialogDescription>
-                {t("confirm-cancellation-desc")}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setShowCancelConfirmDialog(false)}>
-                {t("no")}
-              </AlertDialogCancel>
-              <AlertDialogAction 
-                onClick={confirmCancelRequest} 
-                className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
-              >
-                {t("yes-cancel")}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
+      <AlertDialog open={showCancelConfirmDialog} onOpenChange={setShowCancelConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("confirm-cancellation-title")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("confirm-cancellation-desc")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowCancelConfirmDialog(false)}>
+              {t("no")}
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmCancelRequest} 
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+            >
+              {t("yes-cancel")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };

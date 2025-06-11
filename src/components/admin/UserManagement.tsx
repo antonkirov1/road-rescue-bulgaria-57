@@ -46,12 +46,12 @@ const UserManagement: React.FC<UserManagementProps> = ({ onBack }) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showBanDialog, setShowBanDialog] = useState(false);
   const [showUnbanDialog, setShowUnbanDialog] = useState(false);
+  const [showRemoveDialog, setShowRemoveDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserAccount | null>(null);
 
   const loadUsers = async () => {
     try {
       const userData = await UserAccountService.getExistingUsers();
-      // Transform the data to match our interface types
       const transformedUsers: UserAccount[] = (userData || []).map(user => ({
         ...user,
         status: (user.status === 'banned' ? 'banned' : 'active') as 'active' | 'banned'
@@ -107,6 +107,11 @@ const UserManagement: React.FC<UserManagementProps> = ({ onBack }) => {
     setShowUnbanDialog(true);
   };
 
+  const handleRemoveUser = (user: UserAccount) => {
+    setSelectedUser(user);
+    setShowRemoveDialog(true);
+  };
+
   const confirmBanUser = async () => {
     if (!selectedUser) return;
 
@@ -153,6 +158,29 @@ const UserManagement: React.FC<UserManagementProps> = ({ onBack }) => {
     }
   };
 
+  const confirmRemoveUser = async () => {
+    if (!selectedUser) return;
+
+    try {
+      await UserAccountService.deleteUser(selectedUser.id);
+      toast({
+        title: "User Removed",
+        description: `${selectedUser.username} has been permanently removed`
+      });
+      loadUsers();
+    } catch (error) {
+      console.error('Error removing user:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove user",
+        variant: "destructive"
+      });
+    } finally {
+      setShowRemoveDialog(false);
+      setSelectedUser(null);
+    }
+  };
+
   const togglePasswordVisibility = (userId: string) => {
     setShowPasswords(prev => ({
       ...prev,
@@ -161,7 +189,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ onBack }) => {
   };
 
   return (
-    <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
+    <div className="p-4 md:p-6 space-y-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
       <UserManagementHeader 
         onBack={onBack}
         onCreateUser={() => setShowCreateModal(true)}
@@ -179,6 +207,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ onBack }) => {
         onTogglePassword={togglePasswordVisibility}
         onBan={handleBanUser}
         onUnban={handleUnbanUser}
+        onRemove={handleRemoveUser}
       />
 
       {/* Modals */}
@@ -221,6 +250,30 @@ const UserManagement: React.FC<UserManagementProps> = ({ onBack }) => {
         userName={selectedUser?.username || ''}
         type="user"
       />
+
+      {/* Remove Confirmation Dialog */}
+      <AlertDialog open={showRemoveDialog} onOpenChange={setShowRemoveDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove User</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to permanently remove {selectedUser?.username}? 
+              This action cannot be undone and will delete all user data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowRemoveDialog(false)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmRemoveUser}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Remove User
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

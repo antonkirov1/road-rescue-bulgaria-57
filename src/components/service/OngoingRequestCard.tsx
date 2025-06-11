@@ -11,14 +11,12 @@ interface OngoingRequestCardProps {
   onViewDetails: () => void;
   onCallEmployee: () => void;
   onTrackLocation: () => void;
-  onReviewQuote: () => void;
 }
 
 const OngoingRequestCard: React.FC<OngoingRequestCardProps> = ({
   onViewDetails,
   onCallEmployee,
-  onTrackLocation,
-  onReviewQuote
+  onTrackLocation
 }) => {
   const { language } = useApp();
   const t = useTranslation(language);
