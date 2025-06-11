@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmployeeAccountService } from '@/services/employeeAccountService';
@@ -11,6 +10,16 @@ import EmployeeHeader from './employee/EmployeeHeader';
 import EmployeeStatsCards from './employee/EmployeeStatsCards';
 import EmployeeFilters from './employee/EmployeeFilters';
 import EmployeeTable from './employee/EmployeeTable';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface EmployeeAccount {
   id: string;
@@ -38,6 +47,7 @@ const EmployeeManagement: React.FC<EmployeeManagementProps> = ({ onBack }) => {
   const [showBanDialog, setShowBanDialog] = useState(false);
   const [showUnbanDialog, setShowUnbanDialog] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeAccount | null>(null);
+  const [showRemoveDialog, setShowRemoveDialog] = useState(false);
 
   const loadEmployees = async () => {
     try {
@@ -93,6 +103,11 @@ const EmployeeManagement: React.FC<EmployeeManagementProps> = ({ onBack }) => {
     setShowUnbanDialog(true);
   };
 
+  const handleRemoveEmployee = (employee: EmployeeAccount) => {
+    setSelectedEmployee(employee);
+    setShowRemoveDialog(true);
+  };
+
   const confirmBanEmployee = async () => {
     if (!selectedEmployee) return;
 
@@ -139,6 +154,29 @@ const EmployeeManagement: React.FC<EmployeeManagementProps> = ({ onBack }) => {
     }
   };
 
+  const confirmRemoveEmployee = async () => {
+    if (!selectedEmployee) return;
+
+    try {
+      await EmployeeAccountService.deleteEmployee(selectedEmployee.id);
+      toast({
+        title: "Employee Removed",
+        description: `${selectedEmployee.username} has been permanently removed`
+      });
+      loadEmployees();
+    } catch (error) {
+      console.error('Error removing employee:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove employee",
+        variant: "destructive"
+      });
+    } finally {
+      setShowRemoveDialog(false);
+      setSelectedEmployee(null);
+    }
+  };
+
   const togglePasswordVisibility = (employeeId: string) => {
     setShowPasswords(prev => ({
       ...prev,
@@ -173,6 +211,7 @@ const EmployeeManagement: React.FC<EmployeeManagementProps> = ({ onBack }) => {
             onTogglePassword={togglePasswordVisibility}
             onBanEmployee={handleBanEmployee}
             onUnbanEmployee={handleUnbanEmployee}
+            onRemoveEmployee={handleRemoveEmployee}
           />
         </CardContent>
       </Card>
@@ -216,6 +255,30 @@ const EmployeeManagement: React.FC<EmployeeManagementProps> = ({ onBack }) => {
         userName={selectedEmployee?.username || ''}
         type="employee"
       />
+
+      {/* Remove Confirmation Dialog */}
+      <AlertDialog open={showRemoveDialog} onOpenChange={setShowRemoveDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Employee</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to permanently remove {selectedEmployee?.username}? 
+              This action cannot be undone and will delete all employee data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowRemoveDialog(false)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmRemoveEmployee}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Remove Employee
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

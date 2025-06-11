@@ -86,7 +86,6 @@ const OngoingRequestsDialog: React.FC<OngoingRequestsDialogProps> = ({
                 onViewDetails={handleViewDetails}
                 onCallEmployee={handleCallEmployee}
                 onTrackLocation={handleTrackLocation}
-                onReviewQuote={handleReviewQuote}
               />
             )}
           </div>

@@ -23,6 +23,7 @@ interface EmployeeTableProps {
   onTogglePassword: (employeeId: string) => void;
   onBanEmployee: (employee: EmployeeAccount) => void;
   onUnbanEmployee: (employee: EmployeeAccount) => void;
+  onRemoveEmployee: (employee: EmployeeAccount) => void;
 }
 
 const EmployeeTable: React.FC<EmployeeTableProps> = ({
@@ -32,7 +33,8 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
   onEditEmployee,
   onTogglePassword,
   onBanEmployee,
-  onUnbanEmployee
+  onUnbanEmployee,
+  onRemoveEmployee
 }) => {
   if (loading) {
     return (
@@ -77,6 +79,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
               onTogglePassword={onTogglePassword}
               onBan={onBanEmployee}
               onUnban={onUnbanEmployee}
+              onRemove={onRemoveEmployee}
             />
           ))}
         </TableBody>

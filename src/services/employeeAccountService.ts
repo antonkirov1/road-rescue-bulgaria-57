@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import bcrypt from 'bcryptjs';
 
 export interface EmployeeAccount {
   username: string;
@@ -159,6 +160,29 @@ export class EmployeeAccountService {
       return data || [];
     } catch (error) {
       console.error('Error in getActiveEmployees:', error);
+      throw error;
+    }
+  }
+
+  // Delete employee account
+  static async deleteEmployee(employeeId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('employee_accounts')
+        .delete()
+        .eq('id', employeeId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error deleting employee:', error);
+        throw error;
+      }
+
+      console.log('Employee deleted successfully:', data);
+      return data;
+    } catch (error) {
+      console.error('Error in deleteEmployee:', error);
       throw error;
     }
   }

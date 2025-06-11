@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import bcrypt from 'bcryptjs';
 
@@ -232,6 +231,29 @@ export class UserAccountService {
       return { success: true, userId, status };
     } catch (error) {
       console.error('Error updating user status:', error);
+      throw error;
+    }
+  }
+
+  // Delete user account
+  static async deleteUser(userId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('existing_user_accounts')
+        .delete()
+        .eq('id', userId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error deleting user:', error);
+        throw error;
+      }
+
+      console.log('User deleted successfully:', data);
+      return data;
+    } catch (error) {
+      console.error('Error in deleteUser:', error);
       throw error;
     }
   }
