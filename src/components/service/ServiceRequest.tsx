@@ -26,15 +26,13 @@ interface ServiceRequestProps {
   open: boolean;
   onClose: () => void;
   userLocation: { lat: number; lng: number };
-  shouldShowPriceQuote?: boolean;
 }
 
 const ServiceRequest: React.FC<ServiceRequestProps> = ({ 
   type, 
   open, 
   onClose, 
-  userLocation, 
-  shouldShowPriceQuote = false 
+  userLocation
 }) => {
   const { language } = useApp();
   const t = useTranslation(language);
@@ -45,27 +43,30 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCancelConfirmDialog, setShowCancelConfirmDialog] = useState(false);
   
-  // Determine what should be shown based on current state and props
-  const shouldShowForm = open && !currentRequest;
+  // Determine dialog visibility - SIMPLIFIED LOGIC
+  const shouldShowPriceQuote = open && currentRequest && 
+    currentRequest.status === 'quote_received' && 
+    !!currentRequest.currentQuote;
+    
   const shouldShowStatus = open && currentRequest && 
     (currentRequest.status === 'request_accepted' || 
      currentRequest.status === 'in_progress' || 
-     currentRequest.status === 'quote_accepted');
-  const shouldShowQuoteDialog = (open && currentRequest && 
-    currentRequest.status === 'quote_received' && 
-    !!currentRequest.currentQuote) || shouldShowPriceQuote;
+     currentRequest.status === 'quote_accepted') &&
+    !shouldShowPriceQuote;
+    
+  const shouldShowForm = open && !currentRequest;
   
   console.log('ServiceRequest - Current state:', {
     open,
-    shouldShowPriceQuote,
     currentRequest: currentRequest ? {
       id: currentRequest.id,
       status: currentRequest.status,
-      hasQuote: !!currentRequest.currentQuote
+      hasQuote: !!currentRequest.currentQuote,
+      quoteAmount: currentRequest.currentQuote?.amount
     } : null,
     shouldShowForm,
     shouldShowStatus,
-    shouldShowQuoteDialog
+    shouldShowPriceQuote
   });
   
   // Auto-close when service is completed
@@ -113,22 +114,22 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
     }
   };
   
-  // Simple close handler - just closes without complex logic
+  // Simple close for backdrop clicks (only closes dialog)
   const handleSimpleClose = () => {
     console.log('ServiceRequest - Simple close called');
     onClose();
   };
   
-  // Complex close handler for buttons (not backdrop clicks)
+  // Complex close for button clicks (handles cancellation logic)
   const handleComplexClose = () => {
     console.log('ServiceRequest - Complex close called', {
       currentRequestStatus: currentRequest?.status,
       hasQuote: !!currentRequest?.currentQuote,
-      shouldShowQuoteDialog
+      shouldShowPriceQuote
     });
     
-    // Block closing ONLY during active price quote
-    if (shouldShowQuoteDialog) {
+    // Block closing during active price quote (should never happen with price quote dialog blocking)
+    if (shouldShowPriceQuote) {
       console.log('ServiceRequest - BLOCKING close - must respond to price quote');
       toast({
         title: "Response Required",
@@ -293,11 +294,11 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
         </ServiceRequestDialog>
       )}
 
-      {/* PRICE QUOTE DIALOG - HIGHEST PRIORITY - Blocks all other dialogs */}
-      {shouldShowQuoteDialog && currentRequest?.currentQuote && (
+      {/* PRICE QUOTE DIALOG - HIGHEST PRIORITY - Shows for all quote_received status */}
+      {shouldShowPriceQuote && currentRequest?.currentQuote && (
         <PriceQuoteDialog
           open={true}
-          onClose={handleSimpleClose}
+          onClose={() => {}} // Blocked - user must respond
           serviceType={type}
           priceQuote={currentRequest.currentQuote.amount}
           onAccept={handleAcceptQuote}
