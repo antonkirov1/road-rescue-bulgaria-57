@@ -1,90 +1,96 @@
+
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Car, Globe, Database } from 'lucide-react';
-import { useApp } from '@/contexts/AppContext';
-import { useTranslation } from '@/utils/translations';
-import ThemeToggle from '@/components/ui/theme-toggle';
+import { Users, UserCheck, Shield } from 'lucide-react';
 
-const Index = () => {
-  const {
-    language,
-    setLanguage
-  } = useApp();
-  const t = useTranslation(language);
-
-  const handleLanguageToggle = () => {
-    const newLanguage = language === 'en' ? 'bg' : 'en';
-    setLanguage(newLanguage);
-  };
+const Index: React.FC = () => {
+  const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-green-600/20 to-background p-4 font-clash">
-      {/* Top right controls */}
-      <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
-        <ThemeToggle showLabels={false} size="sm" />
-        <div className="relative">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={handleLanguageToggle}
-            aria-label={t(language === 'en' ? 'switch-to-bulgarian' : 'switch-to-english')}
-            className="h-10 w-10 bg-green-600 text-white hover:bg-green-700"
-          >
-            <Globe className="h-4 w-4" />
-          </Button>
-          <span className="absolute -bottom-1 -right-1 text-xs bg-white text-green-600 px-1 rounded">
-            {language.toUpperCase()}
-          </span>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="max-w-4xl w-full">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Welcome to RoadSaver
+          </h1>
+          <p className="text-xl text-gray-600">
+            Choose your access portal
+          </p>
         </div>
-      </div>
-      <div className="w-full max-w-lg">
-        <div className="mb-8 text-center">
-          {/* DO NOT CHANGE THIS HEADING TO A TRANSLATION KEY UNLESS USER REQUESTS */}
-          <h1 className="text-4xl font-bold mb-2">RoadSaver</h1>
-          <p className="text-lg text-muted-foreground mb-2">{t('app-subtitle')}</p>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          {/* User Portal */}
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+            <CardHeader className="text-center">
+              <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                <Users className="h-6 w-6 text-blue-600" />
+              </div>
+              <CardTitle>Customer Portal</CardTitle>
+              <CardDescription>
+                Request roadside assistance and track your service
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                onClick={() => navigate('/user/auth')}
+                className="w-full"
+              >
+                Access Customer Portal
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Employee Portal */}
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+            <CardHeader className="text-center">
+              <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                <UserCheck className="h-6 w-6 text-green-600" />
+              </div>
+              <CardTitle>Employee Portal</CardTitle>
+              <CardDescription>
+                Manage service requests and assist customers
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                onClick={() => navigate('/employee/auth')}
+                className="w-full"
+                variant="outline"
+              >
+                Access Employee Portal
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Admin Portal */}
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+            <CardHeader className="text-center">
+              <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                <Shield className="h-6 w-6 text-red-600" />
+              </div>
+              <CardTitle>Admin Portal</CardTitle>
+              <CardDescription>
+                Manage users, employees and system settings
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                onClick={() => navigate('/admin/auth')}
+                className="w-full"
+                variant="destructive"
+              >
+                Access Admin Portal
+              </Button>
+            </CardContent>
+          </Card>
         </div>
-        <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('user-app')}</CardTitle>
-              <CardDescription>{t('for-customers')}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link to="/user">
-                <Button className="w-full bg-green-600 hover:bg-green-700">
-                  <User className="mr-2 h-5 w-5" /> {t('open-user-app')}
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('employee-app')}</CardTitle>
-              <CardDescription>{t('for-service-providers')}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link to="/employee">
-                <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                  <Car className="mr-2 h-5 w-5" /> {t('open-employee-app')}
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('account-manager-title')}</CardTitle>
-              <CardDescription>{t('account-manager-desc')}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link to="/admin">
-                <Button className="w-full bg-purple-600 hover:bg-purple-700">
-                  <Database className="mr-2 h-5 w-5" /> {t('open-account-manager')}
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+
+        <div className="text-center mt-8">
+          <p className="text-sm text-gray-500">
+            RoadSaver - Your trusted roadside assistance platform
+          </p>
         </div>
       </div>
     </div>

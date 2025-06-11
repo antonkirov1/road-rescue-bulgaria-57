@@ -21,12 +21,10 @@ export class ServiceRequestManager {
     return ServiceRequestManager.instance;
   }
   
-  // Initialize with employee simulation functions
   initialize(employeeSimulation: EmployeeSimulationFunctions): void {
     this.employeeAssignment.initialize(employeeSimulation);
   }
   
-  // Subscribe to state changes
   subscribe(listener: ServiceRequestListener): () => void {
     this.listeners.push(listener);
     return () => {
@@ -42,13 +40,10 @@ export class ServiceRequestManager {
       quoteAmount: this.currentRequest?.currentQuote?.amount
     });
     
-    // Use setTimeout to ensure UI updates happen after state is fully set
-    setTimeout(() => {
-      this.listeners.forEach(listener => listener(this.currentRequest));
-    }, 0);
+    // Immediate notification for UI updates
+    this.listeners.forEach(listener => listener(this.currentRequest));
   }
   
-  // Create new service request
   async createRequest(
     type: ServiceType,
     userLocation: { lat: number; lng: number },
@@ -61,13 +56,14 @@ export class ServiceRequestManager {
     console.log('ServiceRequestManager: Created new request:', this.currentRequest);
     this.notifyListeners();
     
-    // Start finding employee
-    await this.findAvailableEmployee();
+    // Start finding employee immediately
+    setTimeout(() => {
+      this.findAvailableEmployee();
+    }, 1000);
     
     return requestId;
   }
   
-  // Find available employee (not blacklisted)
   private async findAvailableEmployee(): Promise<void> {
     if (!this.currentRequest) return;
     
@@ -79,14 +75,13 @@ export class ServiceRequestManager {
         return;
       }
       
-      // Assign employee
       this.currentRequest.assignedEmployee = employee;
       RequestLifecycleManager.updateRequestTimestamp(this.currentRequest);
       this.notifyListeners();
       
       console.log('Employee assigned:', employee.name);
       
-      // Simulate employee response time (2-5 seconds)
+      // Generate quote after employee assignment
       setTimeout(() => {
         this.generateQuote();
       }, 2000 + Math.random() * 3000);
@@ -97,7 +92,6 @@ export class ServiceRequestManager {
     }
   }
   
-  // Generate price quote from assigned employee
   private generateQuote(): void {
     if (!this.currentRequest || !this.currentRequest.assignedEmployee) return;
     
@@ -111,24 +105,27 @@ export class ServiceRequestManager {
     this.currentRequest.status = 'quote_received';
     RequestLifecycleManager.updateRequestTimestamp(this.currentRequest);
     
-    console.log('QUOTE GENERATED - triggering UI update:', {
+    console.log('QUOTE GENERATED:', {
       status: this.currentRequest.status,
       quote: finalPrice,
       employee: this.currentRequest.assignedEmployee.name
     });
     
-    // Force UI update for quote received - ensure immediate visibility
     this.notifyListeners();
+    
+    toast({
+      title: "Price Quote Received",
+      description: `${this.currentRequest.assignedEmployee.name} sent you a quote of ${finalPrice} BGN.`
+    });
   }
   
-  // Accept quote
   async acceptQuote(): Promise<void> {
     if (!this.currentRequest || !this.currentRequest.currentQuote || !this.currentRequest.assignedEmployee) return;
     
     this.currentRequest.status = 'quote_accepted';
     RequestLifecycleManager.updateRequestTimestamp(this.currentRequest);
     
-    console.log('ServiceRequestManager - Quote accepted, updating to quote_accepted status');
+    console.log('ServiceRequestManager - Quote accepted');
     this.notifyListeners();
     
     toast({
@@ -136,20 +133,19 @@ export class ServiceRequestManager {
       description: `${this.currentRequest.assignedEmployee.name} is on the way to your location.`
     });
     
-    // Start service simulation immediately
+    // Start service progress
     setTimeout(() => {
       this.simulateServiceProgress();
-    }, 1000);
+    }, 2000);
   }
   
-  // Decline quote
   async declineQuote(): Promise<void> {
     if (!this.currentRequest || !this.currentRequest.assignedEmployee) return;
     
     this.currentRequest.declineCount++;
     
     if (this.currentRequest.declineCount === 1 && !this.currentRequest.hasReceivedRevision) {
-      // First decline - same employee sends revision
+      // First decline - generate revision
       this.currentRequest.hasReceivedRevision = true;
       this.currentRequest.status = 'quote_declined';
       RequestLifecycleManager.updateRequestTimestamp(this.currentRequest);
@@ -160,18 +156,17 @@ export class ServiceRequestManager {
         description: `${this.currentRequest.assignedEmployee.name} will send you a revised quote.`
       });
       
-      // Generate revised quote after 2 seconds
+      // Generate revised quote
       setTimeout(() => {
         this.generateRevisedQuote();
-      }, 2000);
+      }, 3000);
       
     } else {
-      // Second decline - blacklist employee and find new one
+      // Second decline - find new employee
       await this.blacklistCurrentEmployeeAndFindNew();
     }
   }
   
-  // Generate revised quote from same employee
   private generateRevisedQuote(): void {
     if (!this.currentRequest || !this.currentRequest.currentQuote || !this.currentRequest.assignedEmployee) return;
     
@@ -186,13 +181,12 @@ export class ServiceRequestManager {
     this.currentRequest.status = 'quote_received';
     RequestLifecycleManager.updateRequestTimestamp(this.currentRequest);
     
-    console.log('REVISED QUOTE GENERATED - triggering UI update:', {
+    console.log('REVISED QUOTE GENERATED:', {
       status: this.currentRequest.status,
       revisedQuote: revisedAmount,
       employee: this.currentRequest.assignedEmployee.name
     });
     
-    // Force UI update for revised quote - ensure immediate visibility
     this.notifyListeners();
     
     toast({
@@ -201,20 +195,15 @@ export class ServiceRequestManager {
     });
   }
   
-  // Blacklist current employee and find new one
   private async blacklistCurrentEmployeeAndFindNew(): Promise<void> {
     if (!this.currentRequest || !this.currentRequest.assignedEmployee) return;
     
     const employeeToBlacklist = this.currentRequest.assignedEmployee.name;
     
     try {
-      // Add to database blacklist
       await this.employeeAssignment.blacklistEmployee(this.currentRequest.id, employeeToBlacklist);
       
-      // Add to local blacklist
       this.currentRequest.blacklistedEmployees.push(employeeToBlacklist);
-      
-      // Reset employee assignment
       this.currentRequest.assignedEmployee = null;
       this.currentRequest.currentQuote = null;
       this.currentRequest.declineCount = 0;
@@ -229,22 +218,28 @@ export class ServiceRequestManager {
       });
       
       // Find new employee
-      await this.findAvailableEmployee();
+      setTimeout(() => {
+        this.findAvailableEmployee();
+      }, 2000);
       
     } catch (error) {
       console.error('Error blacklisting employee:', error);
     }
   }
   
-  // Simulate service progress
   private simulateServiceProgress(): void {
     if (!this.currentRequest) return;
     
     this.currentRequest.status = 'in_progress';
     RequestLifecycleManager.updateRequestTimestamp(this.currentRequest);
     
-    console.log('ServiceRequestManager - Service in progress, updating status');
+    console.log('ServiceRequestManager - Service in progress');
     this.notifyListeners();
+    
+    toast({
+      title: "Service Started",
+      description: "Your service is now in progress."
+    });
     
     // Complete service after 15 seconds
     setTimeout(() => {
@@ -252,14 +247,13 @@ export class ServiceRequestManager {
     }, 15000);
   }
   
-  // Complete service
   private async completeService(): Promise<void> {
     if (!this.currentRequest || !this.currentRequest.assignedEmployee || !this.currentRequest.currentQuote) return;
     
     this.currentRequest.status = 'completed';
     RequestLifecycleManager.updateRequestTimestamp(this.currentRequest);
     
-    console.log('ServiceRequestManager - Service completed, updating status');
+    console.log('ServiceRequestManager - Service completed');
     this.notifyListeners();
     
     await RequestLifecycleManager.recordCompletion(this.currentRequest);
@@ -269,17 +263,15 @@ export class ServiceRequestManager {
       description: `Your ${this.currentRequest.type} service has been completed successfully.`
     });
     
-    // Clear request after a delay to allow UI to show completion
+    // Clear request after showing completion
     setTimeout(() => {
       this.clearRequest();
-    }, 3000);
+    }, 5000);
   }
   
-  // Cancel request
   async cancelRequest(): Promise<void> {
     if (!this.currentRequest) return;
     
-    // Clear blacklist for this request
     await RequestLifecycleManager.cleanupCancelledRequest(this.currentRequest.id);
     
     this.updateRequestStatus('cancelled');
@@ -289,10 +281,11 @@ export class ServiceRequestManager {
       description: "Your service request has been cancelled."
     });
     
-    this.clearRequest();
+    setTimeout(() => {
+      this.clearRequest();
+    }, 2000);
   }
   
-  // Update request status
   private updateRequestStatus(status: ServiceRequestState['status']): void {
     if (!this.currentRequest) return;
     
@@ -301,18 +294,15 @@ export class ServiceRequestManager {
     this.notifyListeners();
   }
   
-  // Clear current request
   private clearRequest(): void {
     console.log('ServiceRequestManager - Clearing current request');
     this.currentRequest = null;
     this.notifyListeners();
   }
   
-  // Get current request
   getCurrentRequest(): ServiceRequestState | null {
     return this.currentRequest;
   }
 }
 
-// Re-export types for backward compatibility
 export type { ServiceRequestState } from './types';

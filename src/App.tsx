@@ -1,48 +1,74 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AppProvider } from './contexts/AppContext';
-import { ThemeProvider } from './contexts/ThemeContext';
-import GoogleMapsSetup from './components/GoogleMapsSetup';
-import Index from "./pages/Index";
-import UserAuth from "./pages/user/Auth";
-import UserDashboard from "./pages/user/Dashboard";
-import EmployeeAuth from "./pages/employee/EmployeeAuth";
-import EmployeeDashboard from "./pages/employee/EmployeeDashboard";
-import AdminAuth from "./pages/admin/AdminAuth";
-import MigrationPanel from "./components/admin/MigrationPanel";
-import NotFound from "./pages/NotFound";
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AppProvider } from '@/contexts/AppContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
+import { Toaster } from '@/components/ui/toaster';
 
-const queryClient = new QueryClient();
+// User pages
+import UserAuth from '@/pages/user/Auth';
+import UserDashboard from '@/pages/user/Dashboard';
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <GoogleMapsSetup>
+// Employee pages  
+import EmployeeAuth from '@/pages/employee/EmployeeAuth';
+import EmployeeDashboard from '@/pages/employee/EmployeeDashboard';
+
+// Admin pages
+import AdminAuth from '@/pages/admin/AdminAuth';
+import AdminDashboard from '@/pages/admin/AdminDashboard';
+
+// Shared pages
+import NotFound from '@/pages/NotFound';
+import Index from '@/pages/Index';
+
+import './App.css';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 1,
+    },
+  },
+});
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AppProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
+          <Router>
+            <div className="App">
               <Routes>
+                {/* Root route */}
                 <Route path="/" element={<Index />} />
-                <Route path="/user" element={<UserAuth />} />
+                
+                {/* User routes */}
+                <Route path="/user/auth" element={<UserAuth />} />
                 <Route path="/user/dashboard" element={<UserDashboard />} />
-                <Route path="/employee" element={<EmployeeAuth />} />
+                
+                {/* Employee routes */}
+                <Route path="/employee/auth" element={<EmployeeAuth />} />
                 <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
-                <Route path="/admin" element={<AdminAuth />} />
-                <Route path="/migration" element={<MigrationPanel />} />
+                
+                {/* Admin routes */}
+                <Route path="/admin/auth" element={<AdminAuth />} />
+                <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                
+                {/* Legacy routes for backward compatibility */}
+                <Route path="/migration" element={<Navigate to="/admin/dashboard" replace />} />
+                
+                {/* 404 */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
+              <Toaster />
+            </div>
+          </Router>
         </AppProvider>
       </ThemeProvider>
-    </GoogleMapsSetup>
-  </QueryClientProvider>
-);
+    </QueryClientProvider>
+  );
+}
 
 export default App;

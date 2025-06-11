@@ -43,7 +43,7 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCancelConfirmDialog, setShowCancelConfirmDialog] = useState(false);
   
-  console.log('ServiceRequest - Current request state:', {
+  console.log('ServiceRequest - Current state:', {
     open,
     currentRequest: currentRequest ? {
       id: currentRequest.id,
@@ -57,31 +57,29 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
   // Auto-close when service is completed or cancelled
   useEffect(() => {
     if (currentRequest?.status === 'completed' || currentRequest?.status === 'cancelled') {
-      console.log('ServiceRequest - Service completed/cancelled, auto-closing in 2 seconds');
+      console.log('ServiceRequest - Service completed/cancelled, auto-closing');
       setTimeout(() => {
         onClose();
-      }, 2000);
+      }, 3000);
     }
   }, [currentRequest?.status, onClose]);
 
-  // Determine which dialog should be shown based on current state
+  // Determine active dialog based on current state
   const getActiveDialog = () => {
     if (!open) return null;
     
+    // No current request = show form
     if (!currentRequest) {
-      return 'form'; // Show form for new requests
+      return 'form';
     }
 
-    // Show price quote dialog when quote is received
+    // Quote received = show price quote dialog (HIGHEST PRIORITY)
     if (currentRequest.status === 'quote_received' && currentRequest.currentQuote) {
       return 'price-quote';
     }
 
-    // Show status dialog for all other states (request_accepted, quote_accepted, in_progress)
-    if (currentRequest.status === 'request_accepted' || 
-        currentRequest.status === 'quote_accepted' || 
-        currentRequest.status === 'in_progress' ||
-        currentRequest.status === 'completed') {
+    // All other active states = show status dialog
+    if (['request_accepted', 'quote_declined', 'quote_accepted', 'in_progress', 'completed'].includes(currentRequest.status)) {
       return 'status';
     }
 
@@ -130,11 +128,10 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
   const handleDialogClose = () => {
     console.log('ServiceRequest - Dialog close requested, current state:', {
       activeDialog,
-      status: currentRequest?.status,
-      hasQuote: !!currentRequest?.currentQuote
+      status: currentRequest?.status
     });
     
-    // Block closing during active price quote - user must respond
+    // Block closing during price quote - user must respond
     if (activeDialog === 'price-quote') {
       console.log('ServiceRequest - BLOCKING close - must respond to price quote');
       toast({
@@ -147,14 +144,13 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
     
     // For ongoing requests, show cancel confirmation
     if (currentRequest && 
-        currentRequest.status !== 'completed' && 
-        currentRequest.status !== 'cancelled') {
+        !['completed', 'cancelled'].includes(currentRequest.status)) {
       console.log('ServiceRequest - Showing cancel confirmation');
       setShowCancelConfirmDialog(true);
       return;
     }
     
-    // No ongoing request or completed request - close normally
+    // Normal close
     console.log('ServiceRequest - Closing normally');
     onClose();
   };
@@ -179,7 +175,6 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
     console.log('ServiceRequest - Accepting quote...');
     try {
       await acceptQuote();
-      // Don't show toast here - ServiceRequestManager handles it
     } catch (error) {
       console.error('Error accepting quote:', error);
       toast({
@@ -194,7 +189,6 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
     console.log('ServiceRequest - Declining quote...');
     try {
       await declineQuote();
-      // Don't show toast here - ServiceRequestManager handles it
     } catch (error) {
       console.error('Error declining quote:', error);
       toast({
@@ -217,9 +211,7 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
     
     switch (currentRequest.status) {
       case 'request_accepted':
-        return 'pending';
       case 'quote_received':
-        return 'pending';
       case 'quote_declined':
         return 'pending';
       case 'quote_accepted':
@@ -241,7 +233,6 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
     return '';
   };
 
-  // Don't render anything if dialog should not be open
   if (!open) {
     return null;
   }
@@ -268,7 +259,7 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
         </ServiceRequestDialog>
       )}
 
-      {/* STATUS DIALOG - Request accepted, quote accepted, in progress, completed */}
+      {/* STATUS DIALOG - Request accepted, in progress, completed */}
       {activeDialog === 'status' && currentRequest && (
         <ServiceRequestDialog
           type={type}
@@ -299,8 +290,7 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
         <PriceQuoteDialog
           open={true}
           onClose={() => {
-            console.log('PriceQuoteDialog - Close blocked - user must respond');
-            // Don't actually close - user must respond
+            // Don't close - user must respond
           }}
           serviceType={type}
           priceQuote={currentRequest.currentQuote.amount}
@@ -309,7 +299,7 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
           onCancelRequest={confirmCancelRequest}
           hasDeclinedOnce={currentRequest.declineCount > 0 || currentRequest.hasReceivedRevision}
           employeeName={currentRequest.currentQuote.employeeName}
-          showWaitingForRevision={false}
+          showWaitingForRevision={currentRequest.status === 'quote_declined'}
         />
       )}
 
