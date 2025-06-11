@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import bcrypt from 'bcryptjs';
 
@@ -222,15 +223,22 @@ export class UserAccountService {
   // Update user status (ban/unban functionality)
   static async updateUserStatus(userId: string, status: 'active' | 'banned') {
     try {
-      // Since the existing_user_accounts table doesn't have a status column,
-      // we'll simulate this by updating a custom field or handle it differently
-      // For now, we'll just log the action since the DB schema doesn't support status
-      console.log(`User ${userId} status updated to: ${status}`);
-      
-      // Return a success response for now
-      return { success: true, userId, status };
+      const { data, error } = await supabase
+        .from('existing_user_accounts')
+        .update({ status })
+        .eq('id', userId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating user status:', error);
+        throw error;
+      }
+
+      console.log('User status updated successfully:', data);
+      return data;
     } catch (error) {
-      console.error('Error updating user status:', error);
+      console.error('Error in updateUserStatus:', error);
       throw error;
     }
   }
