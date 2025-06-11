@@ -15,7 +15,8 @@ const mockRequests: ServiceRequest[] = [
     message: 'I have a flat tyre and need assistance',
     timestamp: '01:47:27',
     username: 'user123',
-    status: 'new'
+    status: 'pending',
+    location: { lat: 42.6977, lng: 23.3219 }
   },
   {
     id: '2',
@@ -23,7 +24,8 @@ const mockRequests: ServiceRequest[] = [
     message: 'I am out of fuel and need assistance',
     timestamp: '01:42:27',
     username: 'driver456',
-    status: 'new'
+    status: 'pending',
+    location: { lat: 42.6977, lng: 23.3219 }
   },
   {
     id: '3',
@@ -31,7 +33,8 @@ const mockRequests: ServiceRequest[] = [
     message: 'I have a major problem with my car and need a tow truck',
     timestamp: '01:37:27',
     username: 'traveler789',
-    status: 'new'
+    status: 'pending',
+    location: { lat: 42.6977, lng: 23.3219 }
   }
 ];
 
@@ -42,6 +45,9 @@ const EmployeeDashboard: React.FC = () => {
   const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
   const [showRequestDetails, setShowRequestDetails] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+
+  // Mock employee location
+  const employeeLocation = { lat: 42.6977, lng: 23.3219 };
 
   const handleLogout = () => {
     navigate('/');
@@ -58,6 +64,45 @@ const EmployeeDashboard: React.FC = () => {
   const handleRequestSelect = (request: ServiceRequest) => {
     setSelectedRequest(request);
     setShowRequestDetails(true);
+  };
+
+  const handleAcceptRequest = (requestId: string, priceQuote: number) => {
+    setRequests(prev => 
+      prev.map(req => 
+        req.id === requestId 
+          ? { ...req, status: 'accepted' as const, priceQuote }
+          : req
+      )
+    );
+    setShowRequestDetails(false);
+    setSelectedRequest(null);
+  };
+
+  const handleDeclineRequest = () => {
+    if (selectedRequest) {
+      setRequests(prev => 
+        prev.map(req => 
+          req.id === selectedRequest.id 
+            ? { ...req, status: 'declined' as const }
+            : req
+        )
+      );
+    }
+    setShowRequestDetails(false);
+    setSelectedRequest(null);
+  };
+
+  const getRequestTitle = (type: string) => {
+    switch (type) {
+      case 'flat-tyre':
+        return 'Flat Tyre Assistance';
+      case 'out-of-fuel':
+        return 'Out of Fuel';
+      case 'tow-truck':
+        return 'Tow Truck Request';
+      default:
+        return 'Service Request';
+    }
   };
 
   return (
@@ -82,9 +127,13 @@ const EmployeeDashboard: React.FC = () => {
 
       {showRequestDetails && selectedRequest && (
         <RequestDetailsDialog
-          open={showRequestDetails}
-          onClose={() => setShowRequestDetails(false)}
           request={selectedRequest}
+          employeeLocation={employeeLocation}
+          onClose={() => setShowRequestDetails(false)}
+          onAccept={handleAcceptRequest}
+          onDecline={handleDeclineRequest}
+          getRequestTitle={getRequestTitle}
+          language={language}
         />
       )}
     </div>
