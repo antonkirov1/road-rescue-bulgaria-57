@@ -43,20 +43,19 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCancelConfirmDialog, setShowCancelConfirmDialog] = useState(false);
   
-  // Determine dialog visibility - SIMPLIFIED LOGIC
+  // Determine what should be visible based on current request state
   const shouldShowPriceQuote = open && currentRequest && 
     currentRequest.status === 'quote_received' && 
     !!currentRequest.currentQuote;
     
   const shouldShowStatus = open && currentRequest && 
-    (currentRequest.status === 'request_accepted' || 
-     currentRequest.status === 'in_progress' || 
-     currentRequest.status === 'quote_accepted') &&
+    (currentRequest.status === 'quote_accepted' || 
+     currentRequest.status === 'in_progress') &&
     !shouldShowPriceQuote;
     
   const shouldShowForm = open && !currentRequest;
   
-  console.log('ServiceRequest - Current state:', {
+  console.log('ServiceRequest - Dialog visibility:', {
     open,
     currentRequest: currentRequest ? {
       id: currentRequest.id,
@@ -128,7 +127,7 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
       shouldShowPriceQuote
     });
     
-    // Block closing during active price quote (should never happen with price quote dialog blocking)
+    // Block closing during active price quote
     if (shouldShowPriceQuote) {
       console.log('ServiceRequest - BLOCKING close - must respond to price quote');
       toast({
@@ -298,7 +297,10 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
       {shouldShowPriceQuote && currentRequest?.currentQuote && (
         <PriceQuoteDialog
           open={true}
-          onClose={() => {}} // Blocked - user must respond
+          onClose={() => {
+            console.log('PriceQuoteDialog - Close blocked - user must respond');
+            // Don't actually close - user must respond
+          }}
           serviceType={type}
           priceQuote={currentRequest.currentQuote.amount}
           onAccept={handleAcceptQuote}

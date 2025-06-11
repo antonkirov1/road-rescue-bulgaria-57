@@ -1,18 +1,17 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Clock, MapPin, Phone, User, DollarSign, Navigation } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Clock, MapPin, Phone, Eye, Star } from "lucide-react";
 import { useApp } from '@/contexts/AppContext';
 import { useTranslation } from '@/utils/translations';
-import { getServiceIconAndTitle, ServiceType } from './serviceIcons';
+import { useServiceRequestManager } from '@/hooks/useServiceRequestManager';
 
 interface OngoingRequestCardProps {
   onViewDetails: () => void;
-  onCallEmployee?: () => void;
-  onTrackLocation?: () => void;
-  onReviewQuote?: () => void;
+  onCallEmployee: () => void;
+  onTrackLocation: () => void;
+  onReviewQuote: () => void;
 }
 
 const OngoingRequestCard: React.FC<OngoingRequestCardProps> = ({
@@ -21,117 +20,144 @@ const OngoingRequestCard: React.FC<OngoingRequestCardProps> = ({
   onTrackLocation,
   onReviewQuote
 }) => {
-  const { language, ongoingRequest } = useApp();
+  const { language } = useApp();
   const t = useTranslation(language);
+  const { currentRequest } = useServiceRequestManager();
 
-  if (!ongoingRequest) return null;
+  if (!currentRequest) {
+    return null;
+  }
 
-  const { icon } = getServiceIconAndTitle(ongoingRequest.type as ServiceType, t, null, "h-6 w-6");
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'accepted': return 'bg-green-100 text-green-800 border-green-200';
-      case 'declined': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+  // Get the appropriate status display text
+  const getStatusDisplay = () => {
+    switch (currentRequest.status) {
+      case 'request_accepted':
+        return 'Finding technician...';
+      case 'quote_received':
+        return 'Quote received';
+      case 'quote_declined':
+        return 'Finding alternative...';
+      case 'quote_accepted':
+        return 'Technician on the way';
+      case 'in_progress':
+        return 'Service in progress';
+      case 'completed':
+        return 'Service completed';
+      case 'cancelled':
+        return 'Request cancelled';
+      default:
+        return 'Processing...';
     }
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'pending': return ongoingRequest.priceQuote ? t('quote-received') : t('finding-employee');
-      case 'accepted': return t('employee-on-way');
-      case 'declined': return t('request-declined');
-      default: return status;
+  const getStatusColor = () => {
+    switch (currentRequest.status) {
+      case 'request_accepted':
+      case 'quote_declined':
+        return 'text-yellow-600';
+      case 'quote_received':
+        return 'text-blue-600';
+      case 'quote_accepted':
+      case 'in_progress':
+        return 'text-green-600';
+      case 'completed':
+        return 'text-green-700';
+      case 'cancelled':
+        return 'text-red-600';
+      default:
+        return 'text-gray-600';
     }
   };
+
+  const shouldShowQuoteAction = currentRequest.status === 'quote_received' && currentRequest.currentQuote;
+  const shouldShowTrackAction = currentRequest.status === 'quote_accepted' || currentRequest.status === 'in_progress';
 
   return (
-    <Card className="w-full border-l-4 border-l-green-500 shadow-md">
+    <Card className="w-full">
       <CardContent className="p-4">
-        {/* Header with service type and status */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <div className="bg-green-100 p-2 rounded-full">
-              {icon}
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
+              <Clock className="h-4 w-4 text-blue-600" />
             </div>
             <div>
-              <h3 className="font-semibold text-lg">{t(ongoingRequest.type)}</h3>
-              <p className="text-sm text-gray-600">{ongoingRequest.timestamp}</p>
+              <h3 className="font-medium text-gray-900 capitalize">
+                {t(currentRequest.type)}
+              </h3>
+              <p className={`text-sm ${getStatusColor()}`}>
+                {getStatusDisplay()}
+              </p>
             </div>
           </div>
-          <Badge className={`${getStatusColor(ongoingRequest.status)} font-medium`}>
-            {getStatusText(ongoingRequest.status)}
-          </Badge>
-        </div>
-
-        {/* Location */}
-        <div className="flex items-center gap-2 mb-3 text-sm text-gray-600">
-          <MapPin className="h-4 w-4" />
-          <span>{ongoingRequest.location}</span>
-        </div>
-
-        {/* Employee info (if assigned) */}
-        {ongoingRequest.status === 'accepted' && ongoingRequest.employeeName && (
-          <div className="bg-green-50 rounded-lg p-3 mb-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-green-600" />
-                <span className="font-medium text-green-800">{ongoingRequest.employeeName}</span>
-              </div>
-              {ongoingRequest.employeePhone && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={onCallEmployee}
-                  className="border-green-500 text-green-600 hover:bg-green-50"
-                >
-                  <Phone className="h-4 w-4 mr-1" />
-                  {t('call')}
-                </Button>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Price quote (if available) */}
-        {ongoingRequest.priceQuote !== undefined && ongoingRequest.priceQuote >= 0 && (
-          <div className="flex items-center justify-between bg-blue-50 rounded-lg p-3 mb-3">
-            <div className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-blue-600" />
-              <span className="font-medium">{ongoingRequest.priceQuote.toFixed(2)} BGN</span>
-            </div>
-            {ongoingRequest.status === 'pending' && (
-              <Button
-                size="sm"
-                onClick={onReviewQuote}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                {t('review-quote')}
-              </Button>
+          <div className="text-right">
+            <p className="text-xs text-gray-500">
+              {new Date(currentRequest.createdAt).toLocaleTimeString()}
+            </p>
+            {currentRequest.currentQuote && (
+              <p className="text-sm font-medium text-green-600">
+                {currentRequest.currentQuote.amount} BGN
+              </p>
             )}
           </div>
+        </div>
+
+        <div className="flex items-center gap-2 mb-4">
+          <MapPin className="h-4 w-4 text-gray-400" />
+          <p className="text-sm text-gray-600">Sofia Center, Bulgaria</p>
+        </div>
+
+        {currentRequest.assignedEmployee && (
+          <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+            <p className="text-sm font-medium text-gray-900">
+              Assigned: {currentRequest.assignedEmployee.name}
+            </p>
+          </div>
         )}
 
-        {/* Action buttons */}
-        <div className="flex gap-2 mt-4">
+        <div className="flex gap-2 flex-wrap">
           <Button
+            variant="outline"
+            size="sm"
             onClick={onViewDetails}
-            className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+            className="flex items-center gap-1"
           >
-            <Clock className="h-4 w-4 mr-2" />
-            {t('view-details')}
+            <Eye className="h-3 w-3" />
+            View Details
           </Button>
-          
-          {ongoingRequest.status === 'accepted' && (
+
+          {shouldShowQuoteAction && (
             <Button
-              onClick={onTrackLocation}
-              variant="outline"
-              className="border-green-500 text-green-600 hover:bg-green-50"
+              variant="default"
+              size="sm"
+              onClick={onReviewQuote}
+              className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700"
             >
-              <Navigation className="h-4 w-4 mr-2" />
-              {t('track')}
+              <Star className="h-3 w-3" />
+              Review Quote
             </Button>
+          )}
+
+          {shouldShowTrackAction && currentRequest.assignedEmployee && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onTrackLocation}
+                className="flex items-center gap-1"
+              >
+                <MapPin className="h-3 w-3" />
+                Track
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onCallEmployee}
+                className="flex items-center gap-1"
+              >
+                <Phone className="h-3 w-3" />
+                Call
+              </Button>
+            </>
           )}
         </div>
       </CardContent>

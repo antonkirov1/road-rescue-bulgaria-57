@@ -117,7 +117,7 @@ export class ServiceRequestManager {
       employee: this.currentRequest.assignedEmployee.name
     });
     
-    // Force UI update for quote received
+    // Force UI update for quote received - ensure immediate visibility
     this.notifyListeners();
   }
   
@@ -127,6 +127,8 @@ export class ServiceRequestManager {
     
     this.currentRequest.status = 'quote_accepted';
     RequestLifecycleManager.updateRequestTimestamp(this.currentRequest);
+    
+    console.log('ServiceRequestManager - Quote accepted, updating to quote_accepted status');
     this.notifyListeners();
     
     toast({
@@ -134,8 +136,10 @@ export class ServiceRequestManager {
       description: `${this.currentRequest.assignedEmployee.name} is on the way to your location.`
     });
     
-    // Start service simulation
-    this.simulateServiceProgress();
+    // Start service simulation immediately
+    setTimeout(() => {
+      this.simulateServiceProgress();
+    }, 1000);
   }
   
   // Decline quote
@@ -188,7 +192,7 @@ export class ServiceRequestManager {
       employee: this.currentRequest.assignedEmployee.name
     });
     
-    // Force UI update for revised quote
+    // Force UI update for revised quote - ensure immediate visibility
     this.notifyListeners();
     
     toast({
@@ -238,6 +242,8 @@ export class ServiceRequestManager {
     
     this.currentRequest.status = 'in_progress';
     RequestLifecycleManager.updateRequestTimestamp(this.currentRequest);
+    
+    console.log('ServiceRequestManager - Service in progress, updating status');
     this.notifyListeners();
     
     // Complete service after 15 seconds
@@ -252,6 +258,8 @@ export class ServiceRequestManager {
     
     this.currentRequest.status = 'completed';
     RequestLifecycleManager.updateRequestTimestamp(this.currentRequest);
+    
+    console.log('ServiceRequestManager - Service completed, updating status');
     this.notifyListeners();
     
     await RequestLifecycleManager.recordCompletion(this.currentRequest);
@@ -261,10 +269,10 @@ export class ServiceRequestManager {
       description: `Your ${this.currentRequest.type} service has been completed successfully.`
     });
     
-    // Clear request after a delay
+    // Clear request after a delay to allow UI to show completion
     setTimeout(() => {
       this.clearRequest();
-    }, 2000);
+    }, 3000);
   }
   
   // Cancel request
@@ -295,6 +303,7 @@ export class ServiceRequestManager {
   
   // Clear current request
   private clearRequest(): void {
+    console.log('ServiceRequestManager - Clearing current request');
     this.currentRequest = null;
     this.notifyListeners();
   }
