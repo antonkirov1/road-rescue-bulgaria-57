@@ -412,20 +412,13 @@ export type Database = {
     }
     Functions: {
       create_employee_account: {
-        Args:
-          | {
-              p_username: string
-              p_email: string
-              p_phone_number?: string
-              p_employee_role?: string
-            }
-          | {
-              p_username: string
-              p_email: string
-              p_phone_number?: string
-              p_employee_role?: string
-              p_real_name?: string
-            }
+        Args: {
+          p_username: string
+          p_email: string
+          p_phone_number?: string
+          p_employee_role?: string
+          p_real_name?: string
+        }
         Returns: string
       }
       migrate_new_user_to_existing: {
