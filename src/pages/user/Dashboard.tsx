@@ -24,7 +24,6 @@ const Dashboard: React.FC = () => {
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [showOngoingRequests, setShowOngoingRequests] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
-  const [shouldShowPriceQuote, setShouldShowPriceQuote] = useState(false);
   
   // Redirect to auth if not authenticated
   useEffect(() => {
@@ -50,7 +49,6 @@ const Dashboard: React.FC = () => {
         setShowLocationPicker(false);
         setShowOngoingRequests(false);
         setShowExitConfirm(false);
-        setShouldShowPriceQuote(false);
       } else {
         // Only show exit dialog if we're on the main dashboard with no modals open
         setShowExitConfirm(true);
@@ -91,14 +89,12 @@ const Dashboard: React.FC = () => {
       // For all other services, open the service request dialog
       console.log('Dashboard - Setting selected service:', service);
       setSelectedService(service);
-      setShouldShowPriceQuote(false);
     }
   };
   
   const handleRequestClose = () => {
     console.log('Dashboard - Closing service request');
     setSelectedService(null);
-    setShouldShowPriceQuote(false);
   };
   
   const handleLocationChange = (location: { lat: number; lng: number }) => {
@@ -118,14 +114,12 @@ const Dashboard: React.FC = () => {
   const handleViewRequest = () => {
     if (currentRequest) {
       setSelectedService(currentRequest.type as ServiceType);
-      setShouldShowPriceQuote(false);
     }
   };
 
   const handleReviewPriceQuote = () => {
     if (currentRequest) {
       setSelectedService(currentRequest.type as ServiceType);
-      setShouldShowPriceQuote(true);
     }
   };
 
@@ -170,7 +164,6 @@ const Dashboard: React.FC = () => {
         onLanguageChange={setLanguage}
         onViewRequest={handleViewRequest}
         onReviewPriceQuote={handleReviewPriceQuote}
-        shouldShowPriceQuote={shouldShowPriceQuote}
       />
 
       <ExitConfirmDialog
