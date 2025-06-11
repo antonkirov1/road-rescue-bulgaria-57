@@ -45,33 +45,76 @@ export const useServiceRequestActions = (
   };
   
   const handleDialogClose = () => {
-    // Never allow closing if price quote is active - this is critical
+    console.log('useServiceRequestActions - handleDialogClose called', {
+      currentRequestStatus: currentRequest?.status,
+      hasQuote: !!currentRequest?.currentQuote
+    });
+    
+    // Only block closing if there's an active price quote that user must respond to
     if (currentRequest?.status === 'quote_received' && currentRequest?.currentQuote) {
-      console.log('useServiceRequestActions - BLOCKING close while price quote is showing');
+      console.log('useServiceRequestActions - BLOCKING close while price quote is active');
+      toast({
+        title: "Response Required",
+        description: "Please accept or decline the price quote before closing.",
+        variant: "destructive"
+      });
       return;
     }
     
-    if (currentRequest && currentRequest.status !== 'completed' && currentRequest.status !== 'cancelled') {
+    // If there's an ongoing request (but no active quote), show cancel confirmation
+    if (currentRequest && 
+        currentRequest.status !== 'completed' && 
+        currentRequest.status !== 'cancelled') {
+      console.log('useServiceRequestActions - Showing cancel confirmation');
       setShowCancelConfirmDialog(true);
     } else {
+      console.log('useServiceRequestActions - Closing normally');
       onClose();
     }
   };
   
   const confirmCancelRequest = async () => {
-    await cancelRequest();
-    setShowCancelConfirmDialog(false);
-    onClose();
+    console.log('useServiceRequestActions - Confirming cancel request');
+    try {
+      await cancelRequest();
+      setShowCancelConfirmDialog(false);
+      onClose();
+    } catch (error) {
+      console.error('Error cancelling request:', error);
+      toast({
+        title: "Error",
+        description: "Failed to cancel request. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
   
   const handleAcceptQuote = async () => {
     console.log('useServiceRequestActions - Accepting quote...');
-    await acceptQuote();
+    try {
+      await acceptQuote();
+    } catch (error) {
+      console.error('Error accepting quote:', error);
+      toast({
+        title: "Error",
+        description: "Failed to accept quote. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
   
   const handleDeclineQuote = async () => {
     console.log('useServiceRequestActions - Declining quote...');
-    await declineQuote();
+    try {
+      await declineQuote();
+    } catch (error) {
+      console.error('Error declining quote:', error);
+      toast({
+        title: "Error",
+        description: "Failed to decline quote. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
   
   const handleContactSupport = () => {

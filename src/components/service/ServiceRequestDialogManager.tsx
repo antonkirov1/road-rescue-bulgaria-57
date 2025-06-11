@@ -18,7 +18,6 @@ import { ServiceRequestState } from '@/services/serviceRequest/types';
 import { ServiceType } from '@/components/service/types/serviceRequestState';
 import { useTranslation } from '@/utils/translations';
 import { useApp } from '@/contexts/AppContext';
-import { serviceMessages } from './constants/serviceMessages';
 
 interface ServiceRequestDialogManagerProps {
   type: ServiceType;
@@ -86,13 +85,24 @@ const ServiceRequestDialogManager: React.FC<ServiceRequestDialogManagerProps> = 
     return '';
   };
   
+  // Ensure only one dialog is shown at a time
+  const activeDialog = dialogs.showPriceQuoteDialog ? 'price' :
+                     dialogs.showStatusDialog ? 'status' :
+                     dialogs.showFormDialog ? 'form' : null;
+  
+  console.log('ServiceRequestDialogManager - Active dialog:', activeDialog, {
+    showPriceQuoteDialog: dialogs.showPriceQuoteDialog,
+    showStatusDialog: dialogs.showStatusDialog,
+    showFormDialog: dialogs.showFormDialog
+  });
+  
   return (
     <>
       {/* Form Dialog - for new requests */}
-      {dialogs.showFormDialog && (
+      {activeDialog === 'form' && (
         <ServiceRequestDialog
           type={type}
-          open={dialogs.showFormDialog}
+          open={true}
           onClose={actions.handleDialogClose}
           showRealTimeUpdate={false}
         >
@@ -109,10 +119,10 @@ const ServiceRequestDialogManager: React.FC<ServiceRequestDialogManagerProps> = 
       )}
 
       {/* Status Dialog - for accepted/in-progress requests */}
-      {dialogs.showStatusDialog && (
+      {activeDialog === 'status' && (
         <ServiceRequestDialog
           type={type}
-          open={dialogs.showStatusDialog}
+          open={true}
           onClose={actions.handleDialogClose}
           showRealTimeUpdate={true}
         >
@@ -134,13 +144,13 @@ const ServiceRequestDialogManager: React.FC<ServiceRequestDialogManagerProps> = 
         </ServiceRequestDialog>
       )}
 
-      {/* Price Quote Dialog - AUTOMATIC OPENING */}
-      {dialogs.showPriceQuoteDialog && currentRequest?.currentQuote && (
+      {/* Price Quote Dialog - HIGHEST PRIORITY */}
+      {activeDialog === 'price' && currentRequest?.currentQuote && (
         <PriceQuoteDialog
           key={`price-quote-${dialogs.dialogKey}`}
-          open={dialogs.showPriceQuoteDialog}
+          open={true}
           onClose={() => {
-            console.log('PriceQuoteDialog - Manual close blocked');
+            console.log('PriceQuoteDialog - Close attempt blocked - must respond to quote');
           }}
           serviceType={type}
           priceQuote={currentRequest.currentQuote.amount}

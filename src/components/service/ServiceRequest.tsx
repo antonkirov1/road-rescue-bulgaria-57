@@ -31,9 +31,9 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
   const dialogs = useServiceRequestDialogs(open, currentRequest);
   const actions = useServiceRequestActions(type, userLocation, onClose);
   
-  // Debug logging for all dialog states
+  // Debug logging for dialog states
   useEffect(() => {
-    console.log('ServiceRequest - Complete dialog state:', {
+    console.log('ServiceRequest - Dialog state update:', {
       open,
       currentRequest: currentRequest ? {
         id: currentRequest.id,
@@ -46,18 +46,27 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
         showPriceQuoteDialog: dialogs.showPriceQuoteDialog,
         showStatusDialog: dialogs.showStatusDialog,
         showFormDialog: dialogs.showFormDialog
-      },
-      dialogKey: dialogs.dialogKey
+      }
     });
   }, [open, currentRequest, dialogs]);
   
-  // Close dialog when service is completed
+  // Auto-close when service is completed
   useEffect(() => {
     if (currentRequest?.status === 'completed') {
-      console.log('ServiceRequest - Service completed, closing dialog');
-      onClose();
+      console.log('ServiceRequest - Service completed, auto-closing dialog');
+      // Give a brief moment for the completion message to show
+      setTimeout(() => {
+        onClose();
+      }, 2000);
     }
   }, [currentRequest?.status, onClose]);
+  
+  // Handle forced price quote display from ongoing requests
+  useEffect(() => {
+    if (shouldShowPriceQuote && currentRequest?.status === 'quote_received') {
+      console.log('ServiceRequest - Forced to show price quote from ongoing requests');
+    }
+  }, [shouldShowPriceQuote, currentRequest?.status]);
   
   // Validate message before submitting
   const handleValidatedSubmit = () => {
@@ -66,6 +75,11 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
     }
     actions.handleSubmit(message);
   };
+  
+  // Don't render anything if dialog should not be open
+  if (!open) {
+    return null;
+  }
   
   return (
     <ServiceRequestDialogManager

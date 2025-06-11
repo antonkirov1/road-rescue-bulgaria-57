@@ -1,3 +1,4 @@
+
 import { useMemo, useEffect, useState } from 'react';
 import { ServiceRequestState } from '@/services/serviceRequest/types';
 
@@ -23,32 +24,46 @@ export const useServiceRequestDialogs = (
   
   // Price quote dialog should show automatically when quote is received
   const showPriceQuoteDialog = useMemo(() => {
-    const shouldShow = !!(currentRequest?.status === 'quote_received' && currentRequest?.currentQuote);
+    const shouldShow = !!(
+      open && 
+      currentRequest?.status === 'quote_received' && 
+      currentRequest?.currentQuote
+    );
     console.log('useServiceRequestDialogs - Price quote dialog visibility:', {
+      open,
       status: currentRequest?.status,
       hasQuote: !!currentRequest?.currentQuote,
       shouldShow,
       quoteAmount: currentRequest?.currentQuote?.amount
     });
     return shouldShow;
-  }, [currentRequest?.status, currentRequest?.currentQuote, dialogKey]);
+  }, [open, currentRequest?.status, currentRequest?.currentQuote, dialogKey]);
   
   // Status dialog for accepted/in-progress states (but not when price quote is showing)
   const showStatusDialog = useMemo(() => {
-    if (showPriceQuoteDialog) return false;
+    if (!open || showPriceQuoteDialog) return false;
     
-    const shouldShow = currentRequest?.status === 'request_accepted' || currentRequest?.status === 'in_progress';
+    const shouldShow = !!(
+      currentRequest && 
+      (currentRequest.status === 'request_accepted' || currentRequest.status === 'in_progress')
+    );
     console.log('useServiceRequestDialogs - Status dialog visibility:', {
+      open,
       status: currentRequest?.status,
       showingPriceQuote: showPriceQuoteDialog,
       shouldShow
     });
     return shouldShow;
-  }, [currentRequest?.status, showPriceQuoteDialog]);
+  }, [open, currentRequest?.status, showPriceQuoteDialog]);
   
-  // Form dialog for new requests
+  // Form dialog for new requests (when no current request exists)
   const showFormDialog = useMemo(() => {
-    const shouldShow = open && !currentRequest && !showPriceQuoteDialog && !showStatusDialog;
+    const shouldShow = !!(
+      open && 
+      !currentRequest && 
+      !showPriceQuoteDialog && 
+      !showStatusDialog
+    );
     console.log('useServiceRequestDialogs - Form dialog visibility:', {
       open,
       hasCurrentRequest: !!currentRequest,
