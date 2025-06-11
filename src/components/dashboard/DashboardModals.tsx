@@ -27,7 +27,7 @@ interface DashboardModalsProps {
   onLanguageChange: (language: 'en' | 'bg') => void;
   onViewRequest: () => void;
   onReviewPriceQuote: () => void;
-  shouldShowPriceQuote?: boolean;
+  // Removed shouldShowPriceQuote prop since it's no longer used by ServiceRequest
 }
 
 const DashboardModals: React.FC<DashboardModalsProps> = ({
@@ -48,7 +48,7 @@ const DashboardModals: React.FC<DashboardModalsProps> = ({
   onLanguageChange,
   onViewRequest,
   onReviewPriceQuote,
-  shouldShowPriceQuote = false
+  // Removed shouldShowPriceQuote parameter
 }) => {
   const handleViewRequest = () => {
     // Close ongoing requests dialog and open the service request status
@@ -71,7 +71,7 @@ const DashboardModals: React.FC<DashboardModalsProps> = ({
           open={!!selectedService}
           onClose={onServiceRequestClose}
           userLocation={userLocation}
-          shouldShowPriceQuote={shouldShowPriceQuote}
+          // Removed shouldShowPriceQuote prop as it's no longer used
         />
       )}
       
