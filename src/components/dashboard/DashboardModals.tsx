@@ -64,7 +64,7 @@ const DashboardModals: React.FC<DashboardModalsProps> = ({
 
   return (
     <>
-      {/* Service Request Modal */}
+      {/* Service Request Modal - Simplified to just pass through props */}
       {selectedService && (
         <ServiceRequest
           type={selectedService}

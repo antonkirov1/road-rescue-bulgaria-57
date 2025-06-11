@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
 import { useTranslation } from '@/utils/translations';
 import { toast } from '@/components/ui/use-toast';
+import { useServiceRequestManager } from '@/hooks/useServiceRequestManager';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DashboardServices from '@/components/dashboard/DashboardServices';
 import DashboardModals from '@/components/dashboard/DashboardModals';
@@ -11,7 +13,8 @@ import ExitConfirmDialog from '@/components/dashboard/ExitConfirmDialog';
 type ServiceType = 'flat-tyre' | 'out-of-fuel' | 'other-car-problems' | 'tow-truck' | 'emergency' | 'support' | 'car-battery';
 
 const Dashboard: React.FC = () => {
-  const { isAuthenticated, userLocation, setUserLocation, language, setLanguage, ongoingRequest, logout } = useApp();
+  const { isAuthenticated, userLocation, setUserLocation, language, setLanguage, logout } = useApp();
+  const { currentRequest } = useServiceRequestManager();
   const navigate = useNavigate();
   const t = useTranslation(language);
   
@@ -67,10 +70,10 @@ const Dashboard: React.FC = () => {
   }, [selectedService, showEmergencyServices, showSettings, showLocationPicker, showOngoingRequests, showExitConfirm]);
   
   const handleServiceSelect = (service: ServiceType) => {
-    console.log('Service selected:', service);
+    console.log('Dashboard - Service selected:', service);
     
-    // Check if there's an ongoing request
-    if (ongoingRequest) {
+    // Check if there's an ongoing request that would block new requests
+    if (currentRequest && currentRequest.status !== 'completed' && currentRequest.status !== 'cancelled') {
       toast({
         title: "Request in Progress",
         description: "Please wait for your current request to be completed before making a new one.",
@@ -86,14 +89,14 @@ const Dashboard: React.FC = () => {
       return;
     } else {
       // For all other services, open the service request dialog
-      console.log('Setting selected service:', service);
+      console.log('Dashboard - Setting selected service:', service);
       setSelectedService(service);
       setShouldShowPriceQuote(false);
     }
   };
   
   const handleRequestClose = () => {
-    console.log('Closing service request');
+    console.log('Dashboard - Closing service request');
     setSelectedService(null);
     setShouldShowPriceQuote(false);
   };
@@ -113,27 +116,27 @@ const Dashboard: React.FC = () => {
   };
 
   const handleViewRequest = () => {
-    if (ongoingRequest) {
-      setSelectedService(ongoingRequest.type as ServiceType);
+    if (currentRequest) {
+      setSelectedService(currentRequest.type as ServiceType);
       setShouldShowPriceQuote(false);
     }
   };
 
   const handleReviewPriceQuote = () => {
-    if (ongoingRequest) {
-      setSelectedService(ongoingRequest.type as ServiceType);
+    if (currentRequest) {
+      setSelectedService(currentRequest.type as ServiceType);
       setShouldShowPriceQuote(true);
     }
   };
 
-  // Effect to handle showing price quote when coming from ongoing requests
-  useEffect(() => {
-    if (selectedService && shouldShowPriceQuote) {
-      // This will be handled by the ServiceRequest component
-    }
-  }, [selectedService, shouldShowPriceQuote]);
-
-  console.log('Dashboard render - selectedService:', selectedService);
+  console.log('Dashboard - Current state:', {
+    selectedService,
+    currentRequest: currentRequest ? {
+      id: currentRequest.id,
+      status: currentRequest.status,
+      hasQuote: !!currentRequest.currentQuote
+    } : null
+  });
   
   return (
     <div className="min-h-screen bg-background pb-16 font-clash">
