@@ -1,93 +1,92 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, MapPin, Users, Settings } from 'lucide-react';
+import EmployeeHeader from '@/components/employee/EmployeeHeader';
+import ServiceRequestList from '@/components/employee/ServiceRequestList';
+import RequestDetailsDialog from '@/components/employee/RequestDetailsDialog';
+import { ServiceRequest } from '@/types/serviceRequest';
+import { useApp } from '@/contexts/AppContext';
+
+// Mock data for service requests
+const mockRequests: ServiceRequest[] = [
+  {
+    id: '1',
+    type: 'flat-tyre',
+    message: 'I have a flat tyre and need assistance',
+    timestamp: '01:47:27',
+    username: 'user123',
+    status: 'new'
+  },
+  {
+    id: '2',
+    type: 'out-of-fuel',
+    message: 'I am out of fuel and need assistance',
+    timestamp: '01:42:27',
+    username: 'driver456',
+    status: 'new'
+  },
+  {
+    id: '3',
+    type: 'tow-truck',
+    message: 'I have a major problem with my car and need a tow truck',
+    timestamp: '01:37:27',
+    username: 'traveler789',
+    status: 'new'
+  }
+];
 
 const EmployeeDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { language, setLanguage } = useApp();
+  const [requests, setRequests] = useState<ServiceRequest[]>(mockRequests);
+  const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
+  const [showRequestDetails, setShowRequestDetails] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
-  const handleBackToHome = () => {
+  const handleLogout = () => {
     navigate('/');
+  };
+
+  const handleLanguageChange = (newLanguage: 'en' | 'bg') => {
+    setLanguage(newLanguage);
+  };
+
+  const handleSettingsOpen = () => {
+    setShowSettings(true);
+  };
+
+  const handleRequestSelect = (request: ServiceRequest) => {
+    setSelectedRequest(request);
+    setShowRequestDetails(true);
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="absolute top-4 left-4 z-10">
-        <Button 
-          variant="outline" 
-          onClick={handleBackToHome}
-          className="bg-white/90 backdrop-blur-sm"
-        >
-          ← Back to Home
-        </Button>
-      </div>
+      <EmployeeHeader
+        language={language}
+        onLanguageChange={handleLanguageChange}
+        onLogout={handleLogout}
+        onSettingsOpen={handleSettingsOpen}
+      />
       
-      <div className="container mx-auto px-4 pt-20 pb-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Employee Dashboard
-          </h1>
-          <p className="text-gray-600">
-            Manage service requests and assist customers
-          </p>
+      <div className="container mx-auto px-4 py-6">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Service Requests</h2>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-blue-600" />
-                Active Requests
-              </CardTitle>
-              <CardDescription>Current service requests assigned to you</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">3</div>
-              <p className="text-sm text-gray-600 mt-1">Pending completion</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-green-600" />
-                Completed Today
-              </CardTitle>
-              <CardDescription>Successfully completed services</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">7</div>
-              <p className="text-sm text-gray-600 mt-1">Services completed</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-purple-600" />
-                Service Area
-              </CardTitle>
-              <CardDescription>Your current service coverage</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-lg font-semibold text-purple-600">Sofia Center</div>
-              <p className="text-sm text-gray-600 mt-1">5km radius</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="text-center">
-          <Button variant="outline" className="mr-4">
-            <Settings className="h-4 w-4 mr-2" />
-            Settings
-          </Button>
-          <Button>
-            View Service Requests
-          </Button>
-        </div>
+        <ServiceRequestList
+          requests={requests}
+          onRequestSelect={handleRequestSelect}
+        />
       </div>
+
+      {showRequestDetails && selectedRequest && (
+        <RequestDetailsDialog
+          open={showRequestDetails}
+          onClose={() => setShowRequestDetails(false)}
+          request={selectedRequest}
+        />
+      )}
     </div>
   );
 };
