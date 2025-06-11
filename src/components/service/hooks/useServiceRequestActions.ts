@@ -50,9 +50,9 @@ export const useServiceRequestActions = (
       hasQuote: !!currentRequest?.currentQuote
     });
     
-    // Only block closing if there's an active price quote that user must respond to
+    // Block closing ONLY during active price quote
     if (currentRequest?.status === 'quote_received' && currentRequest?.currentQuote) {
-      console.log('useServiceRequestActions - BLOCKING close while price quote is active');
+      console.log('useServiceRequestActions - BLOCKING close - must respond to price quote');
       toast({
         title: "Response Required",
         description: "Please accept or decline the price quote before closing.",
@@ -61,16 +61,18 @@ export const useServiceRequestActions = (
       return;
     }
     
-    // If there's an ongoing request (but no active quote), show cancel confirmation
+    // For any other ongoing request, show cancel confirmation
     if (currentRequest && 
         currentRequest.status !== 'completed' && 
         currentRequest.status !== 'cancelled') {
       console.log('useServiceRequestActions - Showing cancel confirmation');
       setShowCancelConfirmDialog(true);
-    } else {
-      console.log('useServiceRequestActions - Closing normally');
-      onClose();
+      return;
     }
+    
+    // No ongoing request or completed request - close normally
+    console.log('useServiceRequestActions - Closing normally');
+    onClose();
   };
   
   const confirmCancelRequest = async () => {
@@ -93,6 +95,10 @@ export const useServiceRequestActions = (
     console.log('useServiceRequestActions - Accepting quote...');
     try {
       await acceptQuote();
+      toast({
+        title: "Quote Accepted",
+        description: "The service provider is on their way!"
+      });
     } catch (error) {
       console.error('Error accepting quote:', error);
       toast({
@@ -107,6 +113,10 @@ export const useServiceRequestActions = (
     console.log('useServiceRequestActions - Declining quote...');
     try {
       await declineQuote();
+      toast({
+        title: "Quote Declined",
+        description: "Looking for alternative options..."
+      });
     } catch (error) {
       console.error('Error declining quote:', error);
       toast({

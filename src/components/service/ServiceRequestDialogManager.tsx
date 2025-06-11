@@ -85,7 +85,7 @@ const ServiceRequestDialogManager: React.FC<ServiceRequestDialogManagerProps> = 
     return '';
   };
   
-  // Ensure only one dialog is shown at a time
+  // Determine which dialog should be active (only one at a time)
   const activeDialog = dialogs.showPriceQuoteDialog ? 'price' :
                      dialogs.showStatusDialog ? 'status' :
                      dialogs.showFormDialog ? 'form' : null;
@@ -93,12 +93,17 @@ const ServiceRequestDialogManager: React.FC<ServiceRequestDialogManagerProps> = 
   console.log('ServiceRequestDialogManager - Active dialog:', activeDialog, {
     showPriceQuoteDialog: dialogs.showPriceQuoteDialog,
     showStatusDialog: dialogs.showStatusDialog,
-    showFormDialog: dialogs.showFormDialog
+    showFormDialog: dialogs.showFormDialog,
+    currentRequest: currentRequest ? {
+      id: currentRequest.id,
+      status: currentRequest.status,
+      hasQuote: !!currentRequest.currentQuote
+    } : null
   });
   
   return (
     <>
-      {/* Form Dialog - for new requests */}
+      {/* FORM DIALOG - New requests only */}
       {activeDialog === 'form' && (
         <ServiceRequestDialog
           type={type}
@@ -118,8 +123,8 @@ const ServiceRequestDialogManager: React.FC<ServiceRequestDialogManagerProps> = 
         </ServiceRequestDialog>
       )}
 
-      {/* Status Dialog - for accepted/in-progress requests */}
-      {activeDialog === 'status' && (
+      {/* STATUS DIALOG - Ongoing requests (accepted/in-progress) */}
+      {activeDialog === 'status' && currentRequest && (
         <ServiceRequestDialog
           type={type}
           open={true}
@@ -131,26 +136,27 @@ const ServiceRequestDialogManager: React.FC<ServiceRequestDialogManagerProps> = 
             status={getStatusForDisplay()}
             declineReason={getDeclineReason()}
             userLocation={userLocation}
-            employeeLocation={currentRequest?.assignedEmployee?.location}
-            eta={currentRequest?.status === 'in_progress' ? '05:00' : null}
-            employeeName={currentRequest?.assignedEmployee?.name || ''}
+            employeeLocation={currentRequest.assignedEmployee?.location}
+            eta={currentRequest.status === 'in_progress' ? '05:00' : null}
+            employeeName={currentRequest.assignedEmployee?.name || ''}
             onContactSupport={actions.handleContactSupport}
             onClose={actions.handleDialogClose}
             onReviewPriceQuote={() => {}}
-            hasPriceQuote={!!currentRequest?.currentQuote}
+            hasPriceQuote={!!currentRequest.currentQuote}
             hasStoredSnapshot={false}
             onShowStoredPriceQuote={() => {}}
           />
         </ServiceRequestDialog>
       )}
 
-      {/* Price Quote Dialog - HIGHEST PRIORITY */}
+      {/* PRICE QUOTE DIALOG - HIGHEST PRIORITY - Blocks all other dialogs */}
       {activeDialog === 'price' && currentRequest?.currentQuote && (
         <PriceQuoteDialog
           key={`price-quote-${dialogs.dialogKey}`}
           open={true}
           onClose={() => {
-            console.log('PriceQuoteDialog - Close attempt blocked - must respond to quote');
+            console.log('PriceQuoteDialog - Close blocked - must respond to quote');
+            // Don't actually close - user must respond
           }}
           serviceType={type}
           priceQuote={currentRequest.currentQuote.amount}
@@ -163,7 +169,7 @@ const ServiceRequestDialogManager: React.FC<ServiceRequestDialogManagerProps> = 
         />
       )}
 
-      {/* Cancel Confirmation Dialog */}
+      {/* CANCEL CONFIRMATION DIALOG */}
       {actions.showCancelConfirmDialog && (
         <AlertDialog open={actions.showCancelConfirmDialog} onOpenChange={actions.setShowCancelConfirmDialog}>
           <AlertDialogContent>
@@ -174,8 +180,13 @@ const ServiceRequestDialogManager: React.FC<ServiceRequestDialogManagerProps> = 
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => actions.setShowCancelConfirmDialog(false)}>{t("no")}</AlertDialogCancel>
-              <AlertDialogAction onClick={actions.confirmCancelRequest} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
+              <AlertDialogCancel onClick={() => actions.setShowCancelConfirmDialog(false)}>
+                {t("no")}
+              </AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={actions.confirmCancelRequest} 
+                className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+              >
                 {t("yes-cancel")}
               </AlertDialogAction>
             </AlertDialogFooter>

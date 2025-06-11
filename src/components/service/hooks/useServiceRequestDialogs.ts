@@ -22,13 +22,12 @@ export const useServiceRequestDialogs = (
     }
   }, [currentRequest?.status, currentRequest?.currentQuote?.amount]);
   
-  // Price quote dialog should show automatically when quote is received
+  // Price quote dialog - HIGHEST PRIORITY - shows when quote is received
   const showPriceQuoteDialog = useMemo(() => {
-    const shouldShow = !!(
-      open && 
-      currentRequest?.status === 'quote_received' && 
-      currentRequest?.currentQuote
-    );
+    if (!open || !currentRequest) return false;
+    
+    const shouldShow = currentRequest.status === 'quote_received' && !!currentRequest.currentQuote;
+    
     console.log('useServiceRequestDialogs - Price quote dialog visibility:', {
       open,
       status: currentRequest?.status,
@@ -36,43 +35,42 @@ export const useServiceRequestDialogs = (
       shouldShow,
       quoteAmount: currentRequest?.currentQuote?.amount
     });
-    return shouldShow;
-  }, [open, currentRequest?.status, currentRequest?.currentQuote, dialogKey]);
-  
-  // Status dialog for accepted/in-progress states (but not when price quote is showing)
-  const showStatusDialog = useMemo(() => {
-    if (!open || showPriceQuoteDialog) return false;
     
-    const shouldShow = !!(
-      currentRequest && 
-      (currentRequest.status === 'request_accepted' || currentRequest.status === 'in_progress')
-    );
+    return shouldShow;
+  }, [open, currentRequest?.status, currentRequest?.currentQuote]);
+  
+  // Status dialog - shows for accepted/in-progress states (but NOT when price quote is active)
+  const showStatusDialog = useMemo(() => {
+    if (!open || !currentRequest || showPriceQuoteDialog) return false;
+    
+    const shouldShow = currentRequest.status === 'request_accepted' || 
+                      currentRequest.status === 'in_progress' ||
+                      currentRequest.status === 'quote_accepted';
+    
     console.log('useServiceRequestDialogs - Status dialog visibility:', {
       open,
       status: currentRequest?.status,
       showingPriceQuote: showPriceQuoteDialog,
       shouldShow
     });
+    
     return shouldShow;
   }, [open, currentRequest?.status, showPriceQuoteDialog]);
   
-  // Form dialog for new requests (when no current request exists)
+  // Form dialog - ONLY for new requests when no current request exists
   const showFormDialog = useMemo(() => {
-    const shouldShow = !!(
-      open && 
-      !currentRequest && 
-      !showPriceQuoteDialog && 
-      !showStatusDialog
-    );
+    if (!open) return false;
+    
+    const shouldShow = !currentRequest;
+    
     console.log('useServiceRequestDialogs - Form dialog visibility:', {
       open,
       hasCurrentRequest: !!currentRequest,
-      showingPriceQuote: showPriceQuoteDialog,
-      showingStatus: showStatusDialog,
       shouldShow
     });
+    
     return shouldShow;
-  }, [open, currentRequest, showPriceQuoteDialog, showStatusDialog]);
+  }, [open, currentRequest]);
   
   return {
     showPriceQuoteDialog,
