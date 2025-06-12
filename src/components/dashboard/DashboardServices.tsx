@@ -2,6 +2,7 @@
 import React, { memo } from 'react';
 import ServiceCard from '@/components/service/ServiceCard';
 import { ServiceRequest } from '@/types/newServiceRequest';
+import { ServiceType as ServiceCardType } from '@/components/service/serviceIcons';
 
 type ServiceType = ServiceRequest['type'] | 'emergency' | 'support';
 
@@ -20,7 +21,7 @@ const services: ServiceType[] = [
 
 const DashboardServices: React.FC<DashboardServicesProps> = memo(({ onServiceSelect }) => {
   // Map new service types to old service types for ServiceCard display
-  const getServiceCardType = (service: ServiceType): string => {
+  const getServiceCardType = (service: ServiceType): ServiceCardType => {
     switch (service) {
       case 'Flat Tyre':
         return 'flat-tyre';

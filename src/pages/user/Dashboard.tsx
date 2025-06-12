@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
@@ -6,11 +5,54 @@ import { useTranslation } from '@/utils/translations';
 import { toast } from '@/components/ui/use-toast';
 import { useServiceRequestManager } from '@/hooks/useServiceRequestManager';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import DashboardServices from '@/components/dashboard/DashboardServices';
 import DashboardModals from '@/components/dashboard/DashboardModals';
 import ExitConfirmDialog from '@/components/dashboard/ExitConfirmDialog';
+import { ServiceType as OldServiceType } from '@/components/service/types/serviceRequestState';
 
-type ServiceType = 'flat-tyre' | 'out-of-fuel' | 'other-car-problems' | 'tow-truck' | 'emergency' | 'support' | 'car-battery';
+// Create a separate DashboardServices component for the old system
+const OldDashboardServices: React.FC<{ onServiceSelect: (service: OldServiceType) => void }> = ({ onServiceSelect }) => {
+  const { language } = useApp();
+  const t = useTranslation(language);
+  
+  const services: OldServiceType[] = [
+    'flat-tyre',
+    'out-of-fuel', 
+    'car-battery',
+    'other-car-problems',
+    'tow-truck',
+    'support'
+  ];
+
+  return (
+    <div className="container max-w-md mx-auto px-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
+        {services.map((service) => (
+          <div 
+            key={service}
+            className="group p-3 sm:p-4 hover:bg-secondary/70 transition-colors cursor-pointer flex flex-col min-h-[120px] sm:min-h-[140px] border rounded-lg" 
+            onClick={() => onServiceSelect(service)}
+          >
+            <div className="flex justify-center items-center h-12 sm:h-16 mb-2 sm:mb-3">
+              <div className="bg-roadsaver-primary/10 p-3 sm:p-4 text-roadsaver-primary transition-transform duration-200 group-hover:scale-110 rounded-full flex items-center justify-center">
+                {/* Icon placeholder */}
+                <div className="h-8 w-8 sm:h-10 sm:w-10 bg-gray-300 rounded"></div>
+              </div>
+            </div>
+            
+            <div className="flex-1 flex flex-col justify-center text-center">
+              <h3 className="text-sm sm:text-lg font-semibold mb-1 leading-tight min-h-[1.5rem] sm:min-h-[2rem] flex items-center justify-center">
+                {t(service)}
+              </h3>
+              <p className="text-xs sm:text-sm text-muted-foreground leading-tight min-h-[2rem] sm:min-h-[2.5rem] flex items-center justify-center">
+                {t(`${service}-desc`)}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const Dashboard: React.FC = () => {
   const { isAuthenticated, userLocation, setUserLocation, language, setLanguage, logout } = useApp();
@@ -18,7 +60,7 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const t = useTranslation(language);
   
-  const [selectedService, setSelectedService] = useState<ServiceType | null>(null);
+  const [selectedService, setSelectedService] = useState<OldServiceType | null>(null);
   const [showEmergencyServices, setShowEmergencyServices] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
@@ -67,7 +109,7 @@ const Dashboard: React.FC = () => {
     };
   }, [selectedService, showEmergencyServices, showSettings, showLocationPicker, showOngoingRequests, showExitConfirm]);
   
-  const handleServiceSelect = (service: ServiceType) => {
+  const handleServiceSelect = (service: OldServiceType) => {
     console.log('Dashboard - Service selected:', service);
     
     // Check if there's an ongoing request that would block new requests
@@ -113,13 +155,13 @@ const Dashboard: React.FC = () => {
 
   const handleViewRequest = () => {
     if (currentRequest) {
-      setSelectedService(currentRequest.type as ServiceType);
+      setSelectedService(currentRequest.type as OldServiceType);
     }
   };
 
   const handleReviewPriceQuote = () => {
     if (currentRequest) {
-      setSelectedService(currentRequest.type as ServiceType);
+      setSelectedService(currentRequest.type as OldServiceType);
     }
   };
 
@@ -144,7 +186,7 @@ const Dashboard: React.FC = () => {
         onOngoingRequestsClick={() => setShowOngoingRequests(true)}
       />
       
-      <DashboardServices onServiceSelect={handleServiceSelect} />
+      <OldDashboardServices onServiceSelect={handleServiceSelect} />
       
       <DashboardModals
         selectedService={selectedService}
@@ -155,21 +197,39 @@ const Dashboard: React.FC = () => {
         userLocation={userLocation}
         language={language}
         t={t}
-        onServiceRequestClose={handleRequestClose}
+        onServiceRequestClose={() => setSelectedService(null)}
         onEmergencyServicesClose={() => setShowEmergencyServices(false)}
         onSettingsClose={() => setShowSettings(false)}
         onLocationPickerClose={() => setShowLocationPicker(false)}
         onOngoingRequestsClose={() => setShowOngoingRequests(false)}
-        onLocationChange={handleLocationChange}
+        onLocationChange={(location) => {
+          setUserLocation(location);
+          setShowLocationPicker(false);
+          toast({
+            title: t('location-updated'),
+            description: t('location-updated-msg')
+          });
+        }}
         onLanguageChange={setLanguage}
-        onViewRequest={handleViewRequest}
-        onReviewPriceQuote={handleReviewPriceQuote}
+        onViewRequest={() => {
+          if (currentRequest) {
+            setSelectedService(currentRequest.type as OldServiceType);
+          }
+        }}
+        onReviewPriceQuote={() => {
+          if (currentRequest) {
+            setSelectedService(currentRequest.type as OldServiceType);
+          }
+        }}
       />
 
       <ExitConfirmDialog
         open={showExitConfirm}
         onClose={() => setShowExitConfirm(false)}
-        onLogout={handleLogout}
+        onLogout={() => {
+          logout();
+          navigate('/user');
+        }}
       />
     </div>
   );
