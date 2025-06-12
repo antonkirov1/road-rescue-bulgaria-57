@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { roadsideAssistanceSystem } from '@/services/newRoadsideAssistanceSystem';
@@ -73,11 +72,12 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
         id: `req_${Date.now()}`,
         type: type,
         status: 'pending',
-        location: userLocation,
+        userLocation: userLocation,
         userId: userId,
         message: `I need ${type} assistance`,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        declineCount: 0,
+        createdAt: new Date(),
+        updatedAt: new Date()
       };
       
       setCurrentRequest(mockRequest);
