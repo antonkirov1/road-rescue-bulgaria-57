@@ -10,6 +10,9 @@ import DashboardServices from '@/components/dashboard/DashboardServices';
 import NewServiceRequestManager from '@/components/newService/NewServiceRequestManager';
 import ExitConfirmDialog from '@/components/dashboard/ExitConfirmDialog';
 
+// Define the service types that can be handled by the dashboard
+type DashboardServiceType = ServiceRequest['type'] | 'emergency' | 'support';
+
 const NewDashboard: React.FC = () => {
   const { isAuthenticated, userLocation, language, setLanguage, logout, user } = useApp();
   const navigate = useNavigate();
@@ -59,16 +62,40 @@ const NewDashboard: React.FC = () => {
     };
   }, [isOpen, showEmergencyServices, showSettings, showLocationPicker, showOngoingRequests, showExitConfirm, closeServiceRequest]);
   
-  const handleServiceSelect = (service: ServiceRequest['type']) => {
+  const handleServiceSelect = (service: DashboardServiceType) => {
     console.log('Dashboard - Service selected:', service);
     
     if (service === 'emergency') {
       setShowEmergencyServices(true);
     } else if (service === 'support') {
-      // Handle support differently
+      // Handle support differently - could show a contact dialog
       return;
     } else {
-      openServiceRequest(service);
+      // Map old service types to new ones if needed
+      let mappedService: ServiceRequest['type'];
+      
+      switch (service) {
+        case 'flat-tyre':
+          mappedService = 'Flat Tyre';
+          break;
+        case 'out-of-fuel':
+          mappedService = 'Out of Fuel';
+          break;
+        case 'car-battery':
+          mappedService = 'Car Battery';
+          break;
+        case 'other-car-problems':
+          mappedService = 'Other Car Problems';
+          break;
+        case 'tow-truck':
+          mappedService = 'Tow Truck';
+          break;
+        default:
+          // If it's already a new service type, use it directly
+          mappedService = service as ServiceRequest['type'];
+      }
+      
+      openServiceRequest(mappedService);
     }
   };
 
