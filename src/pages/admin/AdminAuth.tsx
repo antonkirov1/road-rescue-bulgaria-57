@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import LoginForm from '@/components/auth/LoginForm';
@@ -20,7 +21,7 @@ const AdminAuth: React.FC = () => {
     if (credentials.username.trim() === 'account_admin' && credentials.password === 'AdminAcc93') {
       console.log('Admin credentials valid, logging in...');
       login({ username: credentials.username });
-      navigate('/migration');
+      navigate('/admin/dashboard');
       toast({
         title: "Admin Login Successful",
         description: "Welcome to RoadSaver Account Manager"
