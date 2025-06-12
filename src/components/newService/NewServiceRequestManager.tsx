@@ -1,7 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { roadsideAssistanceSystem } from '@/services/newRoadsideAssistanceSystem';
-import { ServiceRequest, UIEvent } from '@/types/newServiceRequest';
+import { ServiceRequest } from '@/types/newServiceRequest';
 import NewUIEventHandler from './NewUIEventHandler';
 import { toast } from '@/components/ui/use-toast';
 
@@ -20,46 +20,22 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
   userLocation,
   userId
 }) => {
-  const [currentScreen, setCurrentScreen] = useState<string | null>('show_searching_technician');
+  const [currentScreen, setCurrentScreen] = useState<string | null>(null);
   const [currentRequest, setCurrentRequest] = useState<ServiceRequest | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
 
+  // Initialize when dialog opens
   useEffect(() => {
-    if (!isInitialized && open) {
-      // Set up event listeners
-      const handleUIEvent = (eventType: UIEvent) => (data?: any) => {
-        console.log(`UI Event: ${eventType}`, data);
-        setCurrentScreen(eventType);
-        if (data && data.id) {
-          setCurrentRequest(data);
-        }
-      };
-
-      // Register all UI event listeners
-      roadsideAssistanceSystem.on('show_searching_technician', handleUIEvent('show_searching_technician'));
-      roadsideAssistanceSystem.on('show_price_quote_received', handleUIEvent('show_price_quote_received'));
-      roadsideAssistanceSystem.on('show_revised_price_quote', handleUIEvent('show_revised_price_quote'));
-      roadsideAssistanceSystem.on('show_request_accepted', handleUIEvent('show_request_accepted'));
-      roadsideAssistanceSystem.on('show_request_started', handleUIEvent('show_request_started'));
-      roadsideAssistanceSystem.on('show_employee_en_route', handleUIEvent('show_employee_en_route'));
-      roadsideAssistanceSystem.on('show_live_tracking', handleUIEvent('show_live_tracking'));
-      roadsideAssistanceSystem.on('show_service_completed', handleUIEvent('show_service_completed'));
-      roadsideAssistanceSystem.on('show_no_technicians_available', handleUIEvent('show_no_technicians_available'));
-      roadsideAssistanceSystem.on('show_price_edit_notification', handleUIEvent('show_revised_price_quote'));
-
-      setIsInitialized(true);
-      
-      // Immediately start the service request process
+    if (open && !currentRequest) {
+      console.log('Initializing new service request for:', type);
       handleSubmitRequest();
     }
-  }, [isInitialized, open]);
+  }, [open, type]);
 
   // Reset state when dialog closes
   useEffect(() => {
     if (!open) {
-      setCurrentScreen('show_searching_technician');
+      setCurrentScreen(null);
       setCurrentRequest(null);
-      setIsInitialized(false);
     }
   }, [open]);
 
@@ -67,8 +43,8 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
     try {
       console.log('Starting service request for:', type);
       
-      // Create a mock request immediately for UI purposes
-      const mockRequest: ServiceRequest = {
+      // Create a service request
+      const newRequest: ServiceRequest = {
         id: `req_${Date.now()}`,
         type: type,
         status: 'pending',
@@ -80,18 +56,22 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
         updatedAt: new Date()
       };
       
-      setCurrentRequest(mockRequest);
+      setCurrentRequest(newRequest);
       setCurrentScreen('show_searching_technician');
       
-      // Start the actual service request process
-      const requestId = await roadsideAssistanceSystem.sendRequest(
-        userId,
-        type,
-        `I need ${type} assistance`,
-        userLocation
-      );
+      // Simulate finding technician and getting quote
+      setTimeout(() => {
+        // Simulate quote received
+        const quote = Math.floor(Math.random() * 50) + 20; // Random quote between 20-70
+        const updatedRequest = {
+          ...newRequest,
+          status: 'quote_sent' as const,
+          priceQuote: quote
+        };
+        setCurrentRequest(updatedRequest);
+        setCurrentScreen('show_price_quote_received');
+      }, 3000); // Show searching for 3 seconds
       
-      console.log('Service request created:', requestId);
     } catch (error) {
       console.error('Error creating service request:', error);
       toast({
@@ -107,7 +87,27 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
     if (!currentRequest) return;
     
     try {
-      await roadsideAssistanceSystem.acceptQuote(currentRequest.id);
+      const updatedRequest = {
+        ...currentRequest,
+        status: 'accepted' as const
+      };
+      setCurrentRequest(updatedRequest);
+      setCurrentScreen('show_request_accepted');
+      
+      // Simulate service progression
+      setTimeout(() => {
+        setCurrentScreen('show_live_tracking');
+      }, 2000);
+      
+      setTimeout(() => {
+        const completedRequest = {
+          ...updatedRequest,
+          status: 'completed' as const
+        };
+        setCurrentRequest(completedRequest);
+        setCurrentScreen('show_service_completed');
+      }, 8000);
+      
     } catch (error) {
       console.error('Error accepting quote:', error);
       toast({
@@ -122,7 +122,36 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
     if (!currentRequest) return;
     
     try {
-      await roadsideAssistanceSystem.declineQuote(currentRequest.id);
+      const declineCount = currentRequest.declineCount + 1;
+      
+      if (declineCount === 1) {
+        // First decline - show revised quote
+        const revisedQuote = Math.max(10, (currentRequest.priceQuote || 50) - Math.floor(Math.random() * 15) - 5);
+        const updatedRequest = {
+          ...currentRequest,
+          declineCount,
+          revisedPriceQuote: revisedQuote,
+          status: 'quote_revised' as const
+        };
+        setCurrentRequest(updatedRequest);
+        setCurrentScreen('show_revised_price_quote');
+      } else {
+        // Second decline - find new technician
+        setCurrentScreen('show_searching_technician');
+        
+        setTimeout(() => {
+          const newQuote = Math.floor(Math.random() * 50) + 20;
+          const updatedRequest = {
+            ...currentRequest,
+            declineCount: 0, // Reset for new employee
+            priceQuote: newQuote,
+            revisedPriceQuote: undefined,
+            status: 'quote_sent' as const
+          };
+          setCurrentRequest(updatedRequest);
+          setCurrentScreen('show_price_quote_received');
+        }, 3000);
+      }
     } catch (error) {
       console.error('Error declining quote:', error);
       toast({
@@ -137,10 +166,14 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
     if (!currentRequest) return;
     
     try {
-      await roadsideAssistanceSystem.cancelRequest(currentRequest.id);
       setCurrentScreen(null);
       setCurrentRequest(null);
       onClose();
+      
+      toast({
+        title: "Request Cancelled",
+        description: "Your service request has been cancelled."
+      });
     } catch (error) {
       console.error('Error cancelling request:', error);
       toast({
@@ -162,8 +195,7 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
       // Only allow closing if service is completed or no active request
       if (!currentRequest || 
           currentRequest.status === 'completed' || 
-          currentRequest.status === 'cancelled' ||
-          currentRequest.status === 'declined') {
+          currentRequest.status === 'cancelled') {
         handleClose();
       } else {
         // Show confirmation for active requests
@@ -176,6 +208,8 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
       }
     }
   };
+
+  if (!open) return null;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
