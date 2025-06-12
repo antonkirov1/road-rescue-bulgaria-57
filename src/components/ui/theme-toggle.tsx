@@ -2,7 +2,7 @@
 import React from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Moon, Sun } from 'lucide-react';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme } from '@/components/theme-provider';
 
 interface ThemeToggleProps {
   showLabels?: boolean;
@@ -10,9 +10,14 @@ interface ThemeToggleProps {
 }
 
 const ThemeToggle: React.FC<ThemeToggleProps> = ({ showLabels = true, size = 'default' }) => {
-  const { isDarkMode, toggleDarkMode } = useTheme();
+  const { theme, setTheme } = useTheme();
 
   const iconSize = size === 'sm' ? 'h-3 w-3' : 'h-4 w-4';
+  const isDarkMode = theme === 'dark';
+
+  const toggleDarkMode = () => {
+    setTheme(isDarkMode ? 'light' : 'dark');
+  };
 
   return (
     <div className="flex items-center space-x-3">
