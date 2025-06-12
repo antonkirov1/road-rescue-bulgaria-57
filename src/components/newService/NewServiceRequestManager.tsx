@@ -74,7 +74,7 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
         status: 'pending',
         userLocation: userLocation,
         userId: userId,
-        message: `I need ${type} assistance`,
+        description: `I need ${type} assistance`,
         declineCount: 0,
         createdAt: new Date(),
         updatedAt: new Date()
