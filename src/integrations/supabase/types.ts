@@ -104,6 +104,33 @@ export type Database = {
         }
         Relationships: []
       }
+      employees: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_available: boolean | null
+          is_simulated: boolean | null
+          location: unknown | null
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_available?: boolean | null
+          is_simulated?: boolean | null
+          location?: unknown | null
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_available?: boolean | null
+          is_simulated?: boolean | null
+          location?: unknown | null
+          name?: string
+        }
+        Relationships: []
+      }
       existing_user_accounts: {
         Row: {
           auth_user_id: string | null
@@ -236,6 +263,75 @@ export type Database = {
           status?: string | null
           total_price?: number
           user_id?: string
+        }
+        Relationships: []
+      }
+      price_ranges: {
+        Row: {
+          created_at: string | null
+          id: string
+          max_price: number
+          min_price: number
+          service_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          max_price: number
+          min_price: number
+          service_type: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          max_price?: number
+          min_price?: number
+          service_type?: string
+        }
+        Relationships: []
+      }
+      service_requests: {
+        Row: {
+          assigned_employee_id: string | null
+          created_at: string | null
+          decline_count: number | null
+          description: string | null
+          id: string
+          price_quote: number | null
+          revised_price_quote: number | null
+          status: string
+          type: string
+          updated_at: string | null
+          user_id: string
+          user_location: unknown | null
+        }
+        Insert: {
+          assigned_employee_id?: string | null
+          created_at?: string | null
+          decline_count?: number | null
+          description?: string | null
+          id?: string
+          price_quote?: number | null
+          revised_price_quote?: number | null
+          status?: string
+          type: string
+          updated_at?: string | null
+          user_id: string
+          user_location?: unknown | null
+        }
+        Update: {
+          assigned_employee_id?: string | null
+          created_at?: string | null
+          decline_count?: number | null
+          description?: string | null
+          id?: string
+          price_quote?: number | null
+          revised_price_quote?: number | null
+          status?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string
+          user_location?: unknown | null
         }
         Relationships: []
       }
@@ -406,6 +502,71 @@ export type Database = {
         }
         Relationships: []
       }
+      user_sessions: {
+        Row: {
+          created_at: string | null
+          id: string
+          logout_timer_active: boolean | null
+          session_start: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          logout_timer_active?: boolean | null
+          session_start?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          logout_timer_active?: boolean | null
+          session_start?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          ban_count: number | null
+          banned_until: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          location: unknown | null
+          name: string | null
+          username: string
+        }
+        Insert: {
+          ban_count?: number | null
+          banned_until?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          location?: unknown | null
+          name?: string | null
+          username: string
+        }
+        Update: {
+          ban_count?: number | null
+          banned_until?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          location?: unknown | null
+          name?: string | null
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -420,6 +581,14 @@ export type Database = {
           p_real_name?: string
         }
         Returns: string
+      }
+      generate_price_quote: {
+        Args: { service_type: string }
+        Returns: number
+      }
+      is_valid_price: {
+        Args: { service_type: string; price: number }
+        Returns: boolean
       }
       migrate_new_user_to_existing: {
         Args: { user_record_id: string }
