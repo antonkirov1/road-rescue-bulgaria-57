@@ -1,29 +1,51 @@
+
 import React, { memo } from 'react';
 import ServiceCard from '@/components/service/ServiceCard';
+import { ServiceRequest } from '@/types/newServiceRequest';
 
-type ServiceType = 'flat-tyre' | 'out-of-fuel' | 'other-car-problems' | 'tow-truck' | 'emergency' | 'support' | 'car-battery';
+type ServiceType = ServiceRequest['type'] | 'emergency' | 'support';
 
 interface DashboardServicesProps {
   onServiceSelect: (service: ServiceType) => void;
 }
 
 const services: ServiceType[] = [
-  'flat-tyre',
-  'out-of-fuel', 
-  'car-battery',
-  'other-car-problems',
-  'tow-truck',
+  'Flat Tyre',
+  'Out of Fuel', 
+  'Car Battery',
+  'Other Car Problems',
+  'Tow Truck',
   'support'
 ];
 
 const DashboardServices: React.FC<DashboardServicesProps> = memo(({ onServiceSelect }) => {
+  // Map new service types to old service types for ServiceCard display
+  const getServiceCardType = (service: ServiceType): string => {
+    switch (service) {
+      case 'Flat Tyre':
+        return 'flat-tyre';
+      case 'Out of Fuel':
+        return 'out-of-fuel';
+      case 'Car Battery':
+        return 'car-battery';
+      case 'Other Car Problems':
+        return 'other-car-problems';
+      case 'Tow Truck':
+        return 'tow-truck';
+      case 'support':
+        return 'support';
+      default:
+        return 'other-car-problems';
+    }
+  };
+
   return (
     <div className="container max-w-md mx-auto px-4">
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
         {services.map((service) => (
           <ServiceCard 
             key={service}
-            type={service} 
+            type={getServiceCardType(service)} 
             onClick={() => onServiceSelect(service)} 
           />
         ))}

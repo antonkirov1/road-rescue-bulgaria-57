@@ -71,31 +71,8 @@ const NewDashboard: React.FC = () => {
       // Handle support differently - could show a contact dialog
       return;
     } else {
-      // Map old service types to new ones if needed
-      let mappedService: ServiceRequest['type'];
-      
-      switch (service) {
-        case 'flat-tyre':
-          mappedService = 'Flat Tyre';
-          break;
-        case 'out-of-fuel':
-          mappedService = 'Out of Fuel';
-          break;
-        case 'car-battery':
-          mappedService = 'Car Battery';
-          break;
-        case 'other-car-problems':
-          mappedService = 'Other Car Problems';
-          break;
-        case 'tow-truck':
-          mappedService = 'Tow Truck';
-          break;
-        default:
-          // If it's already a new service type, use it directly
-          mappedService = service as ServiceRequest['type'];
-      }
-      
-      openServiceRequest(mappedService);
+      // Service is already in the correct format for the new system
+      openServiceRequest(service);
     }
   };
 
