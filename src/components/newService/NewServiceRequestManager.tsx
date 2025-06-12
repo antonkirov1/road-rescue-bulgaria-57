@@ -21,12 +21,12 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
   userLocation,
   userId
 }) => {
-  const [currentScreen, setCurrentScreen] = useState<string | null>(null);
+  const [currentScreen, setCurrentScreen] = useState<string | null>('show_searching_technician');
   const [currentRequest, setCurrentRequest] = useState<ServiceRequest | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    if (!isInitialized) {
+    if (!isInitialized && open) {
       // Set up event listeners
       const handleUIEvent = (eventType: UIEvent) => (data?: any) => {
         console.log(`UI Event: ${eventType}`, data);
@@ -49,18 +49,41 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
       roadsideAssistanceSystem.on('show_price_edit_notification', handleUIEvent('show_revised_price_quote'));
 
       setIsInitialized(true);
-    }
-  }, [isInitialized]);
-
-  useEffect(() => {
-    if (open && !currentScreen) {
-      // Start the service request process
+      
+      // Immediately start the service request process
       handleSubmitRequest();
+    }
+  }, [isInitialized, open]);
+
+  // Reset state when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setCurrentScreen('show_searching_technician');
+      setCurrentRequest(null);
+      setIsInitialized(false);
     }
   }, [open]);
 
   const handleSubmitRequest = async () => {
     try {
+      console.log('Starting service request for:', type);
+      
+      // Create a mock request immediately for UI purposes
+      const mockRequest: ServiceRequest = {
+        id: `req_${Date.now()}`,
+        type: type,
+        status: 'pending',
+        location: userLocation,
+        userId: userId,
+        message: `I need ${type} assistance`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      setCurrentRequest(mockRequest);
+      setCurrentScreen('show_searching_technician');
+      
+      // Start the actual service request process
       const requestId = await roadsideAssistanceSystem.sendRequest(
         userId,
         type,
