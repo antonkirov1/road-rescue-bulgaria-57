@@ -28,11 +28,11 @@ const AdminDashboard: React.FC = () => {
             ← Back to Home
           </Button>
           <h1 className="text-xl font-semibold">Admin Dashboard</h1>
-          <ChatIcon 
-            onClick={() => setShowChat(true)}
-            className="ml-2"
-          />
         </div>
+        <ChatIcon 
+          onClick={() => setShowChat(true)}
+          className="ml-2"
+        />
       </div>
       
       <MigrationPanel />
