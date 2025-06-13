@@ -42,3 +42,22 @@ export interface ChatNotification {
   is_read: boolean;
   created_at: string;
 }
+
+// Type casting functions to ensure proper types from database
+export const castToChatRoom = (data: any): ChatRoom => ({
+  ...data,
+  type: data.type as 'direct' | 'group' | 'support',
+  is_active: Boolean(data.is_active),
+});
+
+export const castToChatMessage = (data: any): ChatMessage => ({
+  ...data,
+  message_type: (data.message_type || 'text') as 'text' | 'image' | 'file' | 'system',
+  is_edited: Boolean(data.is_edited),
+  is_deleted: Boolean(data.is_deleted),
+});
+
+export const castToChatParticipant = (data: any): ChatParticipant => ({
+  ...data,
+  role: (data.role || 'member') as 'admin' | 'moderator' | 'member',
+});

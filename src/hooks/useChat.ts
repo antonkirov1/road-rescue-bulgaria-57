@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { ChatRoom, ChatMessage, ChatNotification } from '@/types/chat';
+import { ChatRoom, ChatMessage, ChatNotification, castToChatRoom, castToChatMessage } from '@/types/chat';
 
 export const useChat = (employeeId?: string) => {
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
@@ -19,7 +19,7 @@ export const useChat = (employeeId?: string) => {
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
-      setRooms(data || []);
+      setRooms((data || []).map(castToChatRoom));
     } catch (error) {
       console.error('Error fetching rooms:', error);
     }
@@ -36,7 +36,10 @@ export const useChat = (employeeId?: string) => {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      setMessages(prev => ({ ...prev, [roomId]: data || [] }));
+      setMessages(prev => ({ 
+        ...prev, 
+        [roomId]: (data || []).map(castToChatMessage)
+      }));
     } catch (error) {
       console.error('Error fetching messages:', error);
     }
@@ -90,7 +93,7 @@ export const useChat = (employeeId?: string) => {
           }]);
       }
 
-      return data;
+      return data ? castToChatRoom(data) : null;
     } catch (error) {
       console.error('Error creating room:', error);
       return null;
@@ -148,7 +151,7 @@ export const useChat = (employeeId?: string) => {
       .channel('chat-messages')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_messages' }, (payload) => {
         if (payload.eventType === 'INSERT') {
-          const newMessage = payload.new as ChatMessage;
+          const newMessage = castToChatMessage(payload.new);
           setMessages(prev => ({
             ...prev,
             [newMessage.room_id]: [...(prev[newMessage.room_id] || []), newMessage]

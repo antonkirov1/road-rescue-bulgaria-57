@@ -1,14 +1,14 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Send, Plus, MessageCircle, X } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { X, Send, Plus } from 'lucide-react';
 import { useChat } from '@/hooks/useChat';
-import { ChatRoom, ChatMessage } from '@/types/chat';
 import { useTranslation } from '@/utils/translations';
+import { ChatRoom, castToChatRoom } from '@/types/chat';
 
 interface ChatInterfaceProps {
   employeeId?: string;
@@ -17,166 +17,153 @@ interface ChatInterfaceProps {
   onClose: () => void;
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ employeeId, language, isOpen, onClose }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ 
+  employeeId, 
+  language, 
+  isOpen, 
+  onClose 
+}) => {
   const t = useTranslation(language);
-  const { rooms, messages, sendMessage, createRoom, fetchMessages, isLoading } = useChat(employeeId);
   const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null);
   const [newMessage, setNewMessage] = useState('');
-  const [newRoomName, setNewRoomName] = useState('');
   const [showNewRoomForm, setShowNewRoomForm] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [newRoomName, setNewRoomName] = useState('');
+  const [newRoomType, setNewRoomType] = useState<'direct' | 'group' | 'support'>('group');
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const {
+    rooms,
+    messages,
+    isLoading,
+    fetchMessages,
+    sendMessage,
+    createRoom
+  } = useChat(employeeId);
+
+  if (!isOpen) return null;
+
+  const handleRoomSelect = async (room: ChatRoom) => {
+    setSelectedRoom(room);
+    await fetchMessages(room.id);
   };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, selectedRoom]);
-
-  useEffect(() => {
-    if (selectedRoom) {
-      fetchMessages(selectedRoom.id);
-    }
-  }, [selectedRoom, fetchMessages]);
 
   const handleSendMessage = async () => {
     if (!selectedRoom || !newMessage.trim()) return;
 
-    await sendMessage(selectedRoom.id, newMessage.trim());
+    await sendMessage(selectedRoom.id, newMessage);
     setNewMessage('');
   };
 
   const handleCreateRoom = async () => {
     if (!newRoomName.trim()) return;
 
-    const room = await createRoom(newRoomName.trim(), 'group');
-    if (room) {
-      setSelectedRoom(room);
-      setNewRoomName('');
+    const newRoom = await createRoom(newRoomName, newRoomType);
+    if (newRoom) {
+      setSelectedRoom(castToChatRoom(newRoom));
       setShowNewRoomForm(false);
+      setNewRoomName('');
     }
   };
 
-  const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString(language === 'bg' ? 'bg-BG' : 'en-US', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-4xl h-[600px] flex flex-col">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <Card className="w-full max-w-4xl h-[80vh] flex flex-col">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <MessageCircle className="h-5 w-5" />
-            {t('chat')}
-          </CardTitle>
+          <CardTitle>{t('chat')}</CardTitle>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
         </CardHeader>
-        <CardContent className="flex-1 flex gap-4 overflow-hidden">
+        <CardContent className="flex-1 flex gap-4 p-4">
           {/* Rooms List */}
           <div className="w-1/3 border-r pr-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold">{t('chat-rooms')}</h3>
-              <Button 
-                size="sm" 
+              <Button
                 variant="outline"
-                onClick={() => setShowNewRoomForm(true)}
+                size="sm"
+                onClick={() => setShowNewRoomForm(!showNewRoomForm)}
               >
-                <Plus className="h-3 w-3" />
+                <Plus className="h-4 w-4" />
               </Button>
             </div>
-            
+
             {showNewRoomForm && (
-              <div className="mb-4 space-y-2">
+              <div className="mb-4 p-3 border rounded">
                 <Input
                   placeholder={t('room-name')}
                   value={newRoomName}
                   onChange={(e) => setNewRoomName(e.target.value)}
+                  className="mb-2"
                 />
+                <select
+                  value={newRoomType}
+                  onChange={(e) => setNewRoomType(e.target.value as 'direct' | 'group' | 'support')}
+                  className="w-full p-2 border rounded mb-2"
+                >
+                  <option value="group">{t('group')}</option>
+                  <option value="support">{t('support')}</option>
+                  <option value="direct">{t('direct')}</option>
+                </select>
                 <div className="flex gap-2">
                   <Button size="sm" onClick={handleCreateRoom}>
                     {t('create')}
                   </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => setShowNewRoomForm(false)}
-                  >
+                  <Button size="sm" variant="outline" onClick={() => setShowNewRoomForm(false)}>
                     {t('cancel')}
                   </Button>
                 </div>
               </div>
             )}
 
-            <ScrollArea className="h-[400px]">
+            <ScrollArea className="h-64">
               {isLoading ? (
-                <p className="text-muted-foreground text-sm">{t('loading')}...</p>
+                <div className="text-center py-4">{t('loading')}</div>
               ) : (
                 <div className="space-y-2">
                   {rooms.map((room) => (
-                    <Button
+                    <div
                       key={room.id}
-                      variant={selectedRoom?.id === room.id ? "default" : "ghost"}
-                      className="w-full justify-start"
-                      onClick={() => setSelectedRoom(room)}
+                      className={`p-3 rounded cursor-pointer ${
+                        selectedRoom?.id === room.id ? 'bg-blue-100' : 'hover:bg-gray-100'
+                      }`}
+                      onClick={() => handleRoomSelect(room)}
                     >
-                      <div className="flex items-center gap-2">
-                        <span className="truncate">{room.name}</span>
-                        <Badge variant="secondary" className="text-xs">
-                          {room.type}
-                        </Badge>
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{room.name}</span>
+                        <Badge variant="outline">{t(room.type)}</Badge>
                       </div>
-                    </Button>
+                    </div>
                   ))}
                 </div>
               )}
             </ScrollArea>
           </div>
 
-          {/* Chat Messages */}
+          {/* Chat Area */}
           <div className="flex-1 flex flex-col">
             {selectedRoom ? (
               <>
                 <div className="border-b pb-2 mb-4">
                   <h3 className="font-semibold">{selectedRoom.name}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedRoom.type === 'support' ? t('support-chat') : t('group-chat')}
-                  </p>
+                  <Badge variant="outline">{t(selectedRoom.type)}</Badge>
                 </div>
 
                 <ScrollArea className="flex-1 mb-4">
-                  <div className="space-y-3 pr-4">
-                    {(messages[selectedRoom.id] || []).map((message) => (
-                      <div
-                        key={message.id}
-                        className={`flex ${
-                          message.sender_employee_id === employeeId || (!employeeId && message.sender_id)
-                            ? 'justify-end'
-                            : 'justify-start'
-                        }`}
-                      >
-                        <div
-                          className={`max-w-[70%] rounded-lg p-3 ${
-                            message.sender_employee_id === employeeId || (!employeeId && message.sender_id)
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted'
-                          }`}
-                        >
-                          <p className="text-sm">{message.message_text}</p>
-                          <p className="text-xs opacity-70 mt-1">
-                            {formatTime(message.created_at)}
-                          </p>
+                  <div className="space-y-3">
+                    {messages[selectedRoom.id]?.length ? (
+                      messages[selectedRoom.id].map((message) => (
+                        <div key={message.id} className="p-3 border rounded">
+                          <div className="text-sm text-gray-500 mb-1">
+                            {message.sender_employee_id ? 'Employee' : 'User'} • {new Date(message.created_at).toLocaleTimeString()}
+                          </div>
+                          <div>{message.message_text}</div>
                         </div>
+                      ))
+                    ) : (
+                      <div className="text-center text-gray-500 py-8">
+                        {t('no-messages')}
                       </div>
-                    ))}
-                    <div ref={messagesEndRef} />
+                    )}
                   </div>
                 </ScrollArea>
 
@@ -186,15 +173,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ employeeId, language, isO
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                    className="flex-1"
                   />
-                  <Button onClick={handleSendMessage} disabled={!newMessage.trim()}>
+                  <Button onClick={handleSendMessage}>
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>
               </>
             ) : (
-              <div className="flex-1 flex items-center justify-center text-muted-foreground">
-                <p>{t('select-room-to-start-chatting')}</p>
+              <div className="flex-1 flex items-center justify-center text-gray-500">
+                {t('select-room-to-start-chatting')}
               </div>
             )}
           </div>
