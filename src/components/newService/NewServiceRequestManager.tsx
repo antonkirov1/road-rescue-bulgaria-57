@@ -41,7 +41,7 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
   return (
     <NewServiceRequestDialog
       open={open}
-      onOpenChange={(isOpen) => !isOpen && handleMinimize()}
+      onOpenChange={() => {}} // Let the dialog handle its own open/close logic
       currentScreen={currentScreen}
       request={currentRequest}
       onAcceptQuote={handleAcceptQuote}
