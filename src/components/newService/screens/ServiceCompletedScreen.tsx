@@ -47,13 +47,13 @@ const ServiceCompletedScreen: React.FC<ServiceCompletedScreenProps> = ({
             <div className="flex items-center justify-between mb-4">
               <span className="text-sm text-gray-600">{t('total-price')}</span>
               <span className="text-lg font-semibold text-green-600">
-                {request.revisedPriceQuote || request.priceQuote} BGN
+                {request.currentQuote?.amount} BGN
               </span>
             </div>
             
-            {request.assignedEmployeeId && (
+            {request.assignedEmployee && (
               <div className="text-sm text-gray-600">
-                {t('assigned-employee')}: {request.assignedEmployeeId}
+                {t('assigned-employee')}: {request.assignedEmployee.name}
               </div>
             )}
           </CardContent>
