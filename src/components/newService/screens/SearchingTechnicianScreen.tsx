@@ -1,9 +1,11 @@
 
 import React from 'react';
+import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Clock, Search } from 'lucide-react';
+import { Loader2, X } from 'lucide-react';
 import { ServiceRequest } from '@/types/newServiceRequest';
+import { useApp } from '@/contexts/AppContext';
+import { useTranslation } from '@/utils/translations';
 
 interface SearchingTechnicianScreenProps {
   request: ServiceRequest;
@@ -14,42 +16,48 @@ const SearchingTechnicianScreen: React.FC<SearchingTechnicianScreenProps> = ({
   request,
   onCancel
 }) => {
+  const { language } = useApp();
+  const t = useTranslation(language);
+
   return (
     <>
       <DialogHeader>
-        <DialogTitle className="sr-only">Searching for Technician</DialogTitle>
+        <DialogTitle className="flex items-center justify-between">
+          {t(request.type)}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onCancel}
+            className="h-6 w-6 rounded-full"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </DialogTitle>
       </DialogHeader>
-      
-      <div className="text-center py-8">
+
+      <div className="flex flex-col items-center py-8">
         <div className="relative mb-6">
-          <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-            <Search className="h-8 w-8 text-blue-600 animate-pulse" />
-          </div>
-          <div className="absolute -top-1 -right-1">
-            <Clock className="h-6 w-6 text-orange-500 animate-spin" />
+          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+            <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
           </div>
         </div>
+
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          {t('finding-employee')}
+        </h3>
         
-        <h2 className="text-xl font-semibold mb-2">Finding Available Technician</h2>
-        <p className="text-gray-600 mb-4">
-          We're searching for the nearest available technician for your {request.type} service.
+        <p className="text-gray-600 text-center mb-6">
+          {t('finding-employee')}
         </p>
-        
-        <div className="bg-blue-50 rounded-lg p-4 mb-6">
-          <div className="flex items-center justify-center gap-2 text-blue-700">
-            <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-            <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-            <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-          </div>
-          <p className="text-sm text-blue-700 mt-2">This usually takes 30-60 seconds</p>
-        </div>
-      </div>
-      
-      <DialogFooter>
-        <Button variant="outline" onClick={onCancel} className="w-full">
-          Cancel Request
+
+        <Button 
+          variant="outline" 
+          onClick={onCancel}
+          className="w-full"
+        >
+          {t('cancel')}
         </Button>
-      </DialogFooter>
+      </div>
     </>
   );
 };

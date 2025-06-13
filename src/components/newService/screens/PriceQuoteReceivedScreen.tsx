@@ -1,10 +1,12 @@
 
 import React from 'react';
+import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { DollarSign, User, Info } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { DollarSign, User } from 'lucide-react';
 import { ServiceRequest } from '@/types/newServiceRequest';
-import { toast } from '@/components/ui/use-toast';
+import { useApp } from '@/contexts/AppContext';
+import { useTranslation } from '@/utils/translations';
 
 interface PriceQuoteReceivedScreenProps {
   request: ServiceRequest;
@@ -19,75 +21,64 @@ const PriceQuoteReceivedScreen: React.FC<PriceQuoteReceivedScreenProps> = ({
   onDecline,
   onCancel
 }) => {
-  const serviceFee = 5;
-  const totalPrice = (request.priceQuote || 0) + serviceFee;
-
-  const handleInfoClick = () => {
-    toast({
-      title: "Service Fee Information",
-      description: "A small fee for maintaining the app and platform services."
-    });
-  };
+  const { language } = useApp();
+  const t = useTranslation(language);
 
   return (
     <>
       <DialogHeader>
-        <DialogTitle>Price Quote Received</DialogTitle>
+        <DialogTitle>{t('quote-received')}</DialogTitle>
       </DialogHeader>
-      
-      <div className="space-y-6">
-        <div className="text-center bg-green-50 rounded-lg p-6">
-          <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-            <DollarSign className="h-8 w-8 text-green-600" />
-          </div>
-          <h3 className="text-lg font-semibold text-green-800 mb-2">
-            Quote Received!
-          </h3>
-          <p className="text-green-700">
-            A technician is ready to help with your {request.type} service.
-          </p>
-        </div>
 
-        <div className="bg-gray-50 rounded-lg p-4">
-          <div className="flex items-center gap-3 mb-3">
-            <User className="h-5 w-5 text-gray-600" />
-            <span className="font-medium">Technician: {request.assignedEmployeeId}</span>
-          </div>
-          
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span>Service Price:</span>
-              <span className="font-semibold">{request.priceQuote} BGN</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-1">
-                <span>Service Fee:</span>
-                <button onClick={handleInfoClick} className="p-1">
-                  <Info className="h-3 w-3 text-gray-400 hover:text-gray-600" />
-                </button>
+      <div className="space-y-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                <DollarSign className="h-5 w-5 text-green-600" />
               </div>
-              <span>+{serviceFee} BGN</span>
+              <div>
+                <h3 className="font-medium">{t('quoted-price')}</h3>
+                <p className="text-2xl font-bold text-green-600">
+                  {request.currentQuote?.amount} BGN
+                </p>
+              </div>
             </div>
-            <hr className="my-2" />
-            <div className="flex justify-between font-semibold text-lg">
-              <span>Total:</span>
-              <span className="text-green-600">{totalPrice} BGN</span>
-            </div>
-          </div>
+
+            {request.assignedEmployee && (
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <User className="h-4 w-4" />
+                <span>{t('assigned-employee')}: {request.assignedEmployee.name}</span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <div className="space-y-2">
+          <Button 
+            onClick={onAccept}
+            className="w-full bg-green-600 hover:bg-green-700"
+          >
+            {t('confirm')} - {request.currentQuote?.amount} BGN
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            onClick={onDecline}
+            className="w-full"
+          >
+            {t('decline')}
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            onClick={onCancel}
+            className="w-full text-red-600 hover:text-red-700"
+          >
+            {t('cancel')}
+          </Button>
         </div>
       </div>
-      
-      <DialogFooter className="flex gap-2">
-        <Button variant="outline" onClick={onCancel} className="flex-1">
-          Cancel
-        </Button>
-        <Button variant="outline" onClick={onDecline} className="flex-1">
-          Decline
-        </Button>
-        <Button onClick={onAccept} className="flex-1 bg-green-600 hover:bg-green-700">
-          Accept
-        </Button>
-      </DialogFooter>
     </>
   );
 };

@@ -1,9 +1,12 @@
 
 import React from 'react';
+import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { CheckCircle, Clock, User } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { CheckCircle, User, Phone, MapPin, Clock } from 'lucide-react';
 import { ServiceRequest } from '@/types/newServiceRequest';
+import { useApp } from '@/contexts/AppContext';
+import { useTranslation } from '@/utils/translations';
 
 interface RequestAcceptedScreenProps {
   request: ServiceRequest;
@@ -14,83 +17,93 @@ const RequestAcceptedScreen: React.FC<RequestAcceptedScreenProps> = ({
   request,
   onClose
 }) => {
+  const { language } = useApp();
+  const t = useTranslation(language);
+
   const getStatusMessage = () => {
     switch (request.status) {
-      case 'accepted':
-        return 'Quote accepted! Technician is preparing to come to your location.';
-      case 'in_progress':
-        return 'Technician has arrived and service is in progress.';
+      case 'request_accepted':
+        return request.assignedEmployee ? t('employee-assigned') : t('finding-employee');
+      case 'quote_accepted':
+        return t('employee-on-way');
       default:
-        return 'Your request has been accepted by a technician.';
+        return t('request-accepted');
     }
-  };
-
-  const getStatusIcon = () => {
-    if (request.status === 'in_progress') {
-      return <Clock className="h-8 w-8 text-blue-600" />;
-    }
-    return <CheckCircle className="h-8 w-8 text-green-600" />;
   };
 
   return (
     <>
       <DialogHeader>
-        <DialogTitle className="sr-only">Request Status</DialogTitle>
+        <DialogTitle className="flex items-center gap-2">
+          <CheckCircle className="h-5 w-5 text-green-600" />
+          {t('request-accepted')}
+        </DialogTitle>
       </DialogHeader>
-      
-      <div className="space-y-6">
-        <div className="text-center bg-green-50 rounded-lg p-6">
-          <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-            {getStatusIcon()}
+
+      <div className="space-y-4">
+        <div className="text-center py-4">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckCircle className="h-8 w-8 text-green-600" />
           </div>
-          <h3 className="text-lg font-semibold text-green-800 mb-2">
-            {request.status === 'in_progress' ? 'Service in Progress' : 'Request Accepted'}
-          </h3>
-          <p className="text-green-700">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
             {getStatusMessage()}
-          </p>
+          </h3>
         </div>
 
-        <div className="bg-gray-50 rounded-lg p-4">
-          <div className="flex items-center gap-3 mb-3">
-            <User className="h-5 w-5 text-gray-600" />
-            <span className="font-medium">Technician: {request.assignedEmployeeId}</span>
-          </div>
-          
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span>Service:</span>
-              <span className="font-medium">{request.type}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Agreed Price:</span>
-              <span className="font-semibold text-green-600">
-                {request.revisedPriceQuote || request.priceQuote} BGN
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span>Status:</span>
-              <span className="capitalize font-medium">{request.status.replace('_', ' ')}</span>
-            </div>
-          </div>
-        </div>
-
-        {request.status === 'in_progress' && (
-          <div className="bg-blue-50 rounded-lg p-4">
-            <div className="flex items-center gap-2 text-blue-700 mb-2">
-              <Clock className="h-4 w-4" />
-              <span className="font-medium">Estimated completion time</span>
-            </div>
-            <p className="text-blue-600">5-15 minutes depending on the service</p>
-          </div>
+        {request.assignedEmployee && (
+          <Card>
+            <CardContent className="p-4">
+              <h4 className="font-medium mb-3">{t('your-technician')}</h4>
+              
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-gray-400" />
+                  <span className="text-sm">{request.assignedEmployee.name}</span>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-gray-400" />
+                  <span className="text-sm">{t('arrive-in')} 15-20 {t('minutes')}</span>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-gray-400" />
+                  <span className="text-sm">{t('live-tracking')}</span>
+                </div>
+              </div>
+              
+              <div className="flex gap-2 mt-4">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => window.location.href = 'tel:+359888123456'}
+                >
+                  <Phone className="h-4 w-4 mr-1" />
+                  {t('call')}
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="flex-1"
+                >
+                  <MapPin className="h-4 w-4 mr-1" />
+                  {t('track')}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         )}
-      </div>
-      
-      <DialogFooter>
-        <Button onClick={onClose} className="w-full">
-          Close
+
+        <Button 
+          variant="outline" 
+          onClick={onClose}
+          className="w-full"
+        >
+          {t('close')}
         </Button>
-      </DialogFooter>
+      </div>
     </>
   );
 };

@@ -1,4 +1,3 @@
-
 export const allTranslations: Record<string, { en: string; bg: string }> = {
   // Navigation and UI
   'services': { en: 'Services', bg: 'Услуги' },
@@ -57,6 +56,7 @@ export const allTranslations: Record<string, { en: string; bg: string }> = {
   'completed': { en: 'Completed', bg: 'Завършен' },
   'cancelled': { en: 'Cancelled', bg: 'Отменен' },
   'in-progress': { en: 'In Progress', bg: 'В процес' },
+  'updated': { en: 'Updated', bg: 'Актуализирано' },
 
   // Request Status
   'finding-employee': { en: 'Finding technician...', bg: 'Търсене на техник...' },
@@ -98,6 +98,7 @@ export const allTranslations: Record<string, { en: string; bg: string }> = {
   'request-details': { en: 'Request Details', bg: 'Детайли на заявката' },
   'started': { en: 'Started', bg: 'Започнато' },
   'contact-support': { en: 'Contact Support', bg: 'Свържи се с поддръжката' },
+  'request-accepted': { en: 'Request Accepted', bg: 'Заявката е приета' },
 
   // Time and ETA
   'eta': { en: 'ETA', bg: 'Очаквано време' },
@@ -256,5 +257,11 @@ export const allTranslations: Record<string, { en: string; bg: string }> = {
   'priority': { en: 'Priority', bg: 'Приоритет' },
   'urgent': { en: 'Urgent', bg: 'Спешно' },
   'normal': { en: 'Normal', bg: 'Нормално' },
-  'low': { en: 'Low', bg: 'Ниско' }
+  'low': { en: 'Low', bg: 'Ниско' },
+
+  // New service request specific translations
+  'revised-quote-message': { en: 'The technician has provided a revised quote based on your feedback.', bg: 'Техникът предостави преработена оферта въз основа на вашата обратна връзка.' },
+  'no-technicians-available-message': { en: 'Unfortunately, no technicians are available at the moment. Please try again later or contact support.', bg: 'За съжаление в момента няма налични техници. Моля, опитайте отново по-късно или се свържете с поддръжката.' },
+  'contact-support-message': { en: 'Our support team is available 24/7 to assist you with your request.', bg: 'Нашият екип за поддръжка е на разположение 24/7, за да ви помогне с вашата заявка.' },
+  'rate-service': { en: 'Rate our service', bg: 'Оценете нашата услуга' }
 };

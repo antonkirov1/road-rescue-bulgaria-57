@@ -1,68 +1,68 @@
 
 import React from 'react';
+import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { AlertTriangle, Clock } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { AlertTriangle, Phone } from 'lucide-react';
+import { useApp } from '@/contexts/AppContext';
+import { useTranslation } from '@/utils/translations';
 
 interface NoTechniciansScreenProps {
   onClose: () => void;
 }
 
-const NoTechniciansScreen: React.FC<NoTechniciansScreenProps> = ({
-  onClose
-}) => {
+const NoTechniciansScreen: React.FC<NoTechniciansScreenProps> = ({ onClose }) => {
+  const { language } = useApp();
+  const t = useTranslation(language);
+
   return (
     <>
       <DialogHeader>
-        <DialogTitle>Service Unavailable</DialogTitle>
+        <DialogTitle className="flex items-center gap-2">
+          <AlertTriangle className="h-5 w-5 text-orange-600" />
+          {t('service-unavailable')}
+        </DialogTitle>
       </DialogHeader>
-      
-      <div className="space-y-6">
-        <div className="text-center bg-orange-50 rounded-lg p-6">
-          <div className="mx-auto w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
+
+      <div className="space-y-4">
+        <div className="text-center py-6">
+          <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <AlertTriangle className="h-8 w-8 text-orange-600" />
           </div>
-          <h3 className="text-lg font-semibold text-orange-800 mb-2">
-            No Technicians Available
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            {t('service-unavailable')}
           </h3>
-          <p className="text-orange-700">
-            All our technicians are currently busy with other requests.
+          <p className="text-gray-600 text-center">
+            {t('no-technicians-available-message')}
           </p>
         </div>
 
-        <div className="bg-blue-50 rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Clock className="h-4 w-4 text-blue-600" />
-            <span className="font-medium text-blue-800">What you can do:</span>
-          </div>
-          <ul className="text-blue-700 text-sm space-y-1">
-            <li>• Try again in a few minutes</li>
-            <li>• Check if your location is in our service area</li>
-            <li>• Contact our support team for assistance</li>
-          </ul>
-        </div>
+        <Card>
+          <CardContent className="p-4">
+            <h4 className="font-medium mb-2">{t('contact-support')}</h4>
+            <p className="text-sm text-gray-600 mb-3">
+              {t('contact-support-message')}
+            </p>
+            
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => window.location.href = 'tel:+359888123456'}
+            >
+              <Phone className="h-4 w-4 mr-2" />
+              {t('call')} +359 888 123 456
+            </Button>
+          </CardContent>
+        </Card>
 
-        <div className="bg-gray-50 rounded-lg p-4">
-          <h4 className="font-medium mb-2">Need immediate help?</h4>
-          <p className="text-sm text-gray-600 mb-3">
-            For emergency situations, please contact emergency services directly.
-          </p>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="flex-1">
-              Emergency: 112
-            </Button>
-            <Button variant="outline" size="sm" className="flex-1">
-              Support
-            </Button>
-          </div>
-        </div>
-      </div>
-      
-      <DialogFooter>
-        <Button onClick={onClose} className="w-full">
-          Close
+        <Button 
+          variant="outline" 
+          onClick={onClose}
+          className="w-full"
+        >
+          {t('close')}
         </Button>
-      </DialogFooter>
+      </div>
     </>
   );
 };
