@@ -6,6 +6,7 @@ import EmployeeSettingsMenu from '@/components/employee/EmployeeSettingsMenu';
 import NewServiceRequestManager from '@/components/newService/NewServiceRequestManager';
 import { useApp } from '@/contexts/AppContext';
 import { useEmployeeDashboardIntegration } from '@/hooks/useEmployeeDashboardIntegration';
+import { usePersistentServiceRequest } from '@/hooks/usePersistentServiceRequest';
 import { useTranslation } from '@/utils/translations';
 import { ServiceRequest } from '@/types/newServiceRequest';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,6 +20,7 @@ const EmployeeDashboard: React.FC = () => {
   const t = useTranslation(language);
   const [showSettings, setShowSettings] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
+  const persistentServiceState = usePersistentServiceRequest();
   
   // Mock employee data - in a real app this would come from auth
   const employeeId = 'emp_' + Date.now();
@@ -233,6 +235,7 @@ const EmployeeDashboard: React.FC = () => {
           onMinimize={handleMinimizeRequest}
           userLocation={{ lat: 42.6977, lng: 23.3219 }}
           userId={selectedRequest.userId}
+          persistentState={persistentServiceState}
         />
       )}
     </div>
