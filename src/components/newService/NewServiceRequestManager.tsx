@@ -8,6 +8,7 @@ interface NewServiceRequestManagerProps {
   type: ServiceRequest['type'];
   open: boolean;
   onClose: () => void;
+  onMinimize: () => void;
   userLocation: { lat: number; lng: number };
   userId: string;
 }
@@ -16,6 +17,7 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
   type,
   open,
   onClose,
+  onMinimize,
   userLocation,
   userId
 }) => {
@@ -44,6 +46,7 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
       onDeclineQuote={handleDeclineQuote}
       onCancelRequest={handleCancelRequest}
       onClose={handleClose}
+      onMinimize={onMinimize}
     />
   );
 };

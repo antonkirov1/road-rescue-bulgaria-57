@@ -25,6 +25,7 @@ const NewDashboard: React.FC = () => {
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [showOngoingRequests, setShowOngoingRequests] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [isServiceRequestMinimized, setIsServiceRequestMinimized] = useState(false);
   
   // Redirect to auth if not authenticated
   useEffect(() => {
@@ -38,16 +39,21 @@ const NewDashboard: React.FC = () => {
     const handlePopState = (event: PopStateEvent) => {
       event.preventDefault();
       
-      const hasOpenModal = isOpen || showEmergencyServices || showSettings || 
+      const hasOpenModal = (isOpen && !isServiceRequestMinimized) || showEmergencyServices || showSettings || 
                           showLocationPicker || showOngoingRequests || showExitConfirm;
       
       if (hasOpenModal) {
-        closeServiceRequest();
-        setShowEmergencyServices(false);
-        setShowSettings(false);
-        setShowLocationPicker(false);
-        setShowOngoingRequests(false);
-        setShowExitConfirm(false);
+        // If service request is open and active, minimize it instead of closing
+        if (isOpen && !isServiceRequestMinimized) {
+          setIsServiceRequestMinimized(true);
+        } else {
+          closeServiceRequest();
+          setShowEmergencyServices(false);
+          setShowSettings(false);
+          setShowLocationPicker(false);
+          setShowOngoingRequests(false);
+          setShowExitConfirm(false);
+        }
       } else {
         setShowExitConfirm(true);
       }
@@ -61,7 +67,7 @@ const NewDashboard: React.FC = () => {
     return () => {
       window.removeEventListener('popstate', handlePopState);
     };
-  }, [isOpen, showEmergencyServices, showSettings, showLocationPicker, showOngoingRequests, showExitConfirm, closeServiceRequest]);
+  }, [isOpen, isServiceRequestMinimized, showEmergencyServices, showSettings, showLocationPicker, showOngoingRequests, showExitConfirm, closeServiceRequest]);
   
   const handleServiceSelect = (service: DashboardServiceType) => {
     console.log('Dashboard - Service selected:', service);
@@ -73,8 +79,29 @@ const NewDashboard: React.FC = () => {
       return;
     } else {
       // Service is already in the correct format for the new system
+      setIsServiceRequestMinimized(false);
       openServiceRequest(service);
     }
+  };
+
+  const handleActiveRequestClick = () => {
+    if (isOpen && isServiceRequestMinimized) {
+      console.log('Restoring minimized service request');
+      setIsServiceRequestMinimized(false);
+    } else {
+      setShowOngoingRequests(true);
+    }
+  };
+
+  const handleServiceRequestMinimize = () => {
+    console.log('Minimizing service request');
+    setIsServiceRequestMinimized(true);
+  };
+
+  const handleServiceRequestClose = () => {
+    console.log('Closing service request completely');
+    setIsServiceRequestMinimized(false);
+    closeServiceRequest();
   };
 
   const handleLogout = () => {
@@ -91,17 +118,18 @@ const NewDashboard: React.FC = () => {
         onLocationClick={() => setShowLocationPicker(true)}
         onSettingsClick={() => setShowSettings(true)}
         onLanguageToggle={() => setLanguage(language === 'en' ? 'bg' : 'en')}
-        onOngoingRequestsClick={() => setShowOngoingRequests(true)}
+        onOngoingRequestsClick={handleActiveRequestClick}
       />
       
       <DashboardServices onServiceSelect={handleServiceSelect} />
       
-      {/* New Service Request Manager */}
-      {isOpen && selectedService && (
+      {/* New Service Request Manager - only show if not minimized */}
+      {isOpen && selectedService && !isServiceRequestMinimized && (
         <NewServiceRequestManager
           type={selectedService}
-          open={isOpen}
-          onClose={closeServiceRequest}
+          open={true}
+          onClose={handleServiceRequestClose}
+          onMinimize={handleServiceRequestMinimize}
           userLocation={userLocation}
           userId={user?.username || 'anonymous'}
         />

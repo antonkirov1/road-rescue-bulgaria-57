@@ -13,6 +13,7 @@ interface NewServiceRequestDialogProps {
   onDeclineQuote: () => void;
   onCancelRequest: () => void;
   onClose: () => void;
+  onMinimize: () => void;
 }
 
 const NewServiceRequestDialog: React.FC<NewServiceRequestDialogProps> = ({
@@ -23,32 +24,37 @@ const NewServiceRequestDialog: React.FC<NewServiceRequestDialogProps> = ({
   onAcceptQuote,
   onDeclineQuote,
   onCancelRequest,
-  onClose
+  onClose,
+  onMinimize
 }) => {
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
-      // Only allow closing if service is completed or no active request
-      if (!request || 
-          request.status === 'completed' || 
-          request.status === 'cancelled') {
-        onClose();
+      // If there's an active request, minimize instead of closing
+      if (request && 
+          !['completed', 'cancelled'].includes(request.status)) {
+        console.log('Minimizing active request instead of closing');
+        onMinimize();
       } else {
-        // Show confirmation for active requests
-        const shouldCancel = window.confirm(
-          'Are you sure you want to cancel your active service request?'
-        );
-        if (shouldCancel) {
-          onCancelRequest();
-        }
+        // No active request or completed/cancelled - close normally
+        onClose();
       }
     }
+  };
+
+  const handleInteractOutside = (e: Event) => {
+    // Prevent default closing behavior - we'll handle it in handleOpenChange
+    e.preventDefault();
+    handleOpenChange(false);
   };
 
   if (!open) return null;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent 
+        className="max-w-md max-h-[90vh] overflow-hidden flex flex-col"
+        onInteractOutside={handleInteractOutside}
+      >
         <NewUIEventHandler
           currentScreen={currentScreen}
           request={request}
