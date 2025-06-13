@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,7 @@ import { User, RefreshCw } from 'lucide-react';
 import { ServiceRequest } from '@/types/newServiceRequest';
 import { useApp } from '@/contexts/AppContext';
 import { useTranslation } from '@/utils/translations';
-import PriceBreakdown from '../../../service/price-quote/PriceBreakdown';
+import PriceBreakdown from '../../service/price-quote/PriceBreakdown';
 
 interface RevisedPriceQuoteScreenProps {
   request: ServiceRequest;
