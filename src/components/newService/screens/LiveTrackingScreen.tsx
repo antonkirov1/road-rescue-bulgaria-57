@@ -7,6 +7,7 @@ import { MapPin, Phone, User, Clock } from 'lucide-react';
 import { ServiceRequest } from '@/types/newServiceRequest';
 import { useApp } from '@/contexts/AppContext';
 import { useTranslation } from '@/utils/translations';
+import GoogleMap from '@/components/GoogleMap';
 
 interface LiveTrackingScreenProps {
   request: ServiceRequest;
@@ -17,8 +18,14 @@ const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({
   request,
   onClose
 }) => {
-  const { language } = useApp();
+  const { language, userLocation } = useApp();
   const t = useTranslation(language);
+
+  // Mock employee location for demonstration
+  const employeeLocation = {
+    lat: userLocation.lat + 0.01,
+    lng: userLocation.lng + 0.01
+  };
 
   return (
     <>
@@ -30,19 +37,17 @@ const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({
       </DialogHeader>
 
       <div className="space-y-4">
+        {/* Live Map */}
+        <div className="rounded-lg overflow-hidden border">
+          <GoogleMap
+            userLocation={userLocation}
+            employeeLocation={employeeLocation}
+            height="200px"
+          />
+        </div>
+
         <Card>
           <CardContent className="p-4">
-            <div className="bg-blue-50 rounded-lg p-4 mb-4">
-              <div className="flex items-center justify-center">
-                <div className="w-32 h-32 bg-blue-200 rounded-lg flex items-center justify-center">
-                  <MapPin className="h-16 w-16 text-blue-600" />
-                </div>
-              </div>
-              <p className="text-center text-sm text-blue-800 mt-2">
-                {t('live-tracking')}
-              </p>
-            </div>
-
             {request.assignedEmployeeId && (
               <>
                 <h4 className="font-medium mb-3">{t('technician-info')}</h4>
@@ -76,6 +81,21 @@ const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({
             )}
           </CardContent>
         </Card>
+
+        {/* Map Legend */}
+        <div className="bg-gray-50 rounded-lg p-3">
+          <h4 className="font-medium mb-2 text-sm">{t('map-legend')}</h4>
+          <div className="space-y-1 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+              <span>{t('your-location')}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+              <span>{t('employee-location')}</span>
+            </div>
+          </div>
+        </div>
 
         <Button 
           variant="outline" 
