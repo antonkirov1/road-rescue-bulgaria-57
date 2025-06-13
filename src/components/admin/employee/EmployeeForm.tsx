@@ -5,19 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { EmployeeAccountService } from '@/services/employeeAccountService';
+import { Checkbox } from '@/components/ui/checkbox';
+import { EmployeeAccountService, EmployeeAccount } from '@/services/employeeAccountService';
 import { toast } from '@/components/ui/use-toast';
-
-interface EmployeeAccount {
-  id?: string;
-  username: string;
-  email: string;
-  phone_number?: string;
-  employee_role?: 'technician' | 'support' | 'admin';
-  status?: string;
-  real_name?: string;
-  created_at?: string;
-}
 
 interface EmployeeFormProps {
   employee?: EmployeeAccount;
@@ -32,12 +22,16 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ employee, onSubmit, onCance
     phone_number: string;
     employee_role: 'technician' | 'support' | 'admin';
     real_name: string;
+    is_available: boolean;
+    is_simulated: boolean;
   }>({
     username: employee?.username || '',
     email: employee?.email || '',
     phone_number: employee?.phone_number || '',
     employee_role: employee?.employee_role || 'technician',
-    real_name: employee?.real_name || ''
+    real_name: employee?.real_name || '',
+    is_available: employee?.is_available ?? true,
+    is_simulated: employee?.is_simulated ?? false
   });
   const [loading, setLoading] = useState(false);
 
@@ -74,7 +68,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ employee, onSubmit, onCance
     }
   };
 
-  const handleChange = (field: keyof typeof formData, value: string) => {
+  const handleChange = (field: keyof typeof formData, value: string | boolean) => {
     setFormData(prev => ({ 
       ...prev, 
       [field]: field === 'employee_role' ? value as 'technician' | 'support' | 'admin' : value 
@@ -143,6 +137,24 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ employee, onSubmit, onCance
                 <SelectItem value="admin">Admin</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="is_available"
+              checked={formData.is_available}
+              onCheckedChange={(checked) => handleChange('is_available', checked === true)}
+            />
+            <Label htmlFor="is_available">Available for assignments</Label>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="is_simulated"
+              checked={formData.is_simulated}
+              onCheckedChange={(checked) => handleChange('is_simulated', checked === true)}
+            />
+            <Label htmlFor="is_simulated">Simulated employee</Label>
           </div>
 
           <div className="flex gap-2 pt-4">

@@ -4,17 +4,7 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Edit, Eye, EyeOff, UserX, UserCheck, Trash2 } from 'lucide-react';
-
-interface EmployeeAccount {
-  id: string;
-  username: string;
-  email: string;
-  phone_number?: string;
-  employee_role?: 'technician' | 'support' | 'admin';
-  status?: string;
-  real_name?: string;
-  created_at: string;
-}
+import { EmployeeAccount } from '@/services/employeeAccountService';
 
 interface EmployeeTableRowProps {
   employee: EmployeeAccount;
@@ -35,7 +25,7 @@ const EmployeeTableRow: React.FC<EmployeeTableRowProps> = ({
   onUnban,
   onRemove
 }) => {
-  const isBanned = employee.status === 'suspended' || employee.status === 'banned';
+  const isBanned = employee.status === 'suspended' || employee.status === 'inactive';
 
   const getRoleDisplayName = (role?: 'technician' | 'support' | 'admin') => {
     switch (role) {
@@ -77,6 +67,11 @@ const EmployeeTableRow: React.FC<EmployeeTableRowProps> = ({
       <TableCell>
         <Badge variant={isBanned ? "destructive" : "default"}>
           {isBanned ? 'Suspended' : 'Active'}
+        </Badge>
+      </TableCell>
+      <TableCell>
+        <Badge variant={employee.is_available ? "default" : "secondary"}>
+          {employee.is_available ? 'Available' : 'Busy'}
         </Badge>
       </TableCell>
       <TableCell className="dark:text-gray-200">

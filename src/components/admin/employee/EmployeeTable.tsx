@@ -2,17 +2,7 @@
 import React from 'react';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import EmployeeTableRow from './EmployeeTableRow';
-
-interface EmployeeAccount {
-  id: string;
-  username: string;
-  email: string;
-  phone_number?: string;
-  employee_role?: 'technician' | 'support' | 'admin';
-  status?: string;
-  real_name?: string;
-  created_at: string;
-}
+import { EmployeeAccount } from '@/services/employeeAccountService';
 
 interface EmployeeTableProps {
   employees: EmployeeAccount[];
@@ -62,6 +52,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
             <TableHead>Phone</TableHead>
             <TableHead>Role</TableHead>
             <TableHead>Status</TableHead>
+            <TableHead>Available</TableHead>
             <TableHead>Created</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>

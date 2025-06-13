@@ -249,6 +249,9 @@ export type Database = {
           email: string
           employee_role: string | null
           id: string
+          is_available: boolean | null
+          is_simulated: boolean | null
+          location: unknown | null
           password_hash: string | null
           phone_number: string | null
           real_name: string | null
@@ -261,6 +264,9 @@ export type Database = {
           email: string
           employee_role?: string | null
           id?: string
+          is_available?: boolean | null
+          is_simulated?: boolean | null
+          location?: unknown | null
           password_hash?: string | null
           phone_number?: string | null
           real_name?: string | null
@@ -273,6 +279,9 @@ export type Database = {
           email?: string
           employee_role?: string | null
           id?: string
+          is_available?: boolean | null
+          is_simulated?: boolean | null
+          location?: unknown | null
           password_hash?: string | null
           phone_number?: string | null
           real_name?: string | null
@@ -334,33 +343,6 @@ export type Database = {
           employee_number?: number
           full_name?: string
           id?: number
-        }
-        Relationships: []
-      }
-      employees: {
-        Row: {
-          created_at: string | null
-          id: string
-          is_available: boolean | null
-          is_simulated: boolean | null
-          location: unknown | null
-          name: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          is_available?: boolean | null
-          is_simulated?: boolean | null
-          location?: unknown | null
-          name: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          is_available?: boolean | null
-          is_simulated?: boolean | null
-          location?: unknown | null
-          name?: string
         }
         Relationships: []
       }

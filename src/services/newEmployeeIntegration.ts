@@ -65,7 +65,7 @@ class NewEmployeeIntegrationService {
     try {
       const { data, error } = await supabase
         .from('employee_accounts')
-        .select('id, username, real_name, status')
+        .select('id, username, real_name, status, is_available, location')
         .eq('status', 'active');
 
       if (error) {
@@ -77,11 +77,14 @@ class NewEmployeeIntegrationService {
         id: `real_emp_${emp.id}`,
         name: emp.real_name || emp.username,
         isSimulated: false,
-        location: {
+        location: emp.location ? {
+          lat: emp.location.x || 42.6977 + (Math.random() - 0.5) * 0.1,
+          lng: emp.location.y || 23.3219 + (Math.random() - 0.5) * 0.1
+        } : {
           lat: 42.6977 + (Math.random() - 0.5) * 0.1,
           lng: 23.3219 + (Math.random() - 0.5) * 0.1
         },
-        isAvailable: Math.random() > 0.4 // 60% availability for real employees
+        isAvailable: emp.is_available ?? (Math.random() > 0.4) // 60% availability for real employees
       }));
     } catch (error) {
       console.error('Error in loadRealEmployees:', error);
