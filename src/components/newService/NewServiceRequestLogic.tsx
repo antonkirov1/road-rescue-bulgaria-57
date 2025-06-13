@@ -24,7 +24,6 @@ export const useServiceRequestLogic = ({
   onClose,
   onMinimize
 }: UseServiceRequestLogicProps) => {
-  const [isMinimized, setIsMinimized] = useState(false);
   const [shouldPreserveState, setShouldPreserveState] = useState(false);
   
   const {
@@ -83,24 +82,21 @@ export const useServiceRequestLogic = ({
     findEmployee
   });
 
-  // Initialize when dialog opens
+  // Initialize when dialog opens and there's no current request
   useEffect(() => {
     if (open && !currentRequest && !shouldPreserveState) {
       console.log('Initializing new service request for:', type);
-      setIsMinimized(false);
       handleSubmitRequest();
     } else if (open && shouldPreserveState) {
       console.log('Restoring minimized service request');
-      setIsMinimized(false);
       setShouldPreserveState(false);
     }
-  }, [open, type, shouldPreserveState]);
+  }, [open, type]);
 
-  // Reset state only when dialog is actually closed (not minimized)
+  // Only reset state when dialog is actually closed (not minimized)
   useEffect(() => {
     if (!open && !shouldPreserveState) {
       console.log('Dialog closed - resetting state');
-      setIsMinimized(false);
       resetState();
     }
   }, [open, shouldPreserveState]);
@@ -146,7 +142,6 @@ export const useServiceRequestLogic = ({
 
   const handleClose = () => {
     console.log('Closing service request completely');
-    setIsMinimized(false);
     setShouldPreserveState(false);
     resetState();
     onClose();
@@ -154,7 +149,6 @@ export const useServiceRequestLogic = ({
 
   const handleMinimizeWrapper = () => {
     console.log('Minimizing service request - preserving state');
-    setIsMinimized(true);
     setShouldPreserveState(true);
     onMinimize();
   };
