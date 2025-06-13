@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Settings, MapPin, Globe, Siren, Clock } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
+import ThemeToggle from '@/components/ui/theme-toggle';
 
 interface DashboardHeaderProps {
   language: 'en' | 'bg';
@@ -47,6 +49,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             <span className="absolute -bottom-1 -right-1 text-xs bg-white text-green-600 px-1 rounded">
               {language.toUpperCase()}
             </span>
+          </div>
+          <div className="h-8 w-8 sm:h-10 sm:w-10 flex items-center justify-center">
+            <ThemeToggle showLabels={false} size="sm" />
           </div>
         </div>
       </header>

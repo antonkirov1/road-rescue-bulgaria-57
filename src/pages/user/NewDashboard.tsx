@@ -9,6 +9,7 @@ import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DashboardServices from '@/components/dashboard/DashboardServices';
 import NewServiceRequestManager from '@/components/newService/NewServiceRequestManager';
 import ExitConfirmDialog from '@/components/dashboard/ExitConfirmDialog';
+import SettingsMenu from '@/components/settings/SettingsMenu';
 
 // Define the service types that can be handled by the dashboard
 type DashboardServiceType = ServiceRequest['type'] | 'emergency' | 'support';
@@ -105,6 +106,14 @@ const NewDashboard: React.FC = () => {
           userId={user?.username || 'anonymous'}
         />
       )}
+
+      {/* Settings Menu */}
+      <SettingsMenu
+        open={showSettings}
+        onClose={() => setShowSettings(false)}
+        onLanguageChange={setLanguage}
+        currentLanguage={language}
+      />
 
       <ExitConfirmDialog
         open={showExitConfirm}
