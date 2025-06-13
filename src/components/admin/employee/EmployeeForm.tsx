@@ -13,7 +13,7 @@ interface EmployeeAccount {
   username: string;
   email: string;
   phone_number?: string;
-  employee_role?: string;
+  employee_role?: 'technician' | 'support' | 'admin';
   status?: string;
   real_name?: string;
   created_at?: string;
@@ -26,7 +26,13 @@ interface EmployeeFormProps {
 }
 
 const EmployeeForm: React.FC<EmployeeFormProps> = ({ employee, onSubmit, onCancel }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    username: string;
+    email: string;
+    phone_number: string;
+    employee_role: 'technician' | 'support' | 'admin';
+    real_name: string;
+  }>({
     username: employee?.username || '',
     email: employee?.email || '',
     phone_number: employee?.phone_number || '',
@@ -68,8 +74,11 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ employee, onSubmit, onCance
     }
   };
 
-  const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleChange = (field: keyof typeof formData, value: string) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      [field]: field === 'employee_role' ? value as 'technician' | 'support' | 'admin' : value 
+    }));
   };
 
   return (

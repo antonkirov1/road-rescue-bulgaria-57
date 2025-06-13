@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { UserCheck } from 'lucide-react';
 import EmployeeTableRow from './EmployeeTableRow';
 
 interface EmployeeAccount {
@@ -38,24 +37,22 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
 }) => {
   if (loading) {
     return (
-      <div className="text-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-        <p className="mt-4 text-gray-600">Loading employees...</p>
+      <div className="flex justify-center items-center py-8">
+        <div className="text-gray-500">Loading employees...</div>
       </div>
     );
   }
 
   if (employees.length === 0) {
     return (
-      <div className="text-center py-12">
-        <UserCheck className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-        <p className="text-gray-600">No employees found</p>
+      <div className="flex justify-center items-center py-8">
+        <div className="text-gray-500">No employees found</div>
       </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="border rounded-lg">
       <Table>
         <TableHeader>
           <TableRow>
