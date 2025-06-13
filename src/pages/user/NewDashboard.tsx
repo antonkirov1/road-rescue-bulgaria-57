@@ -5,6 +5,7 @@ import { useApp } from '@/contexts/AppContext';
 import { useTranslation } from '@/utils/translations';
 import { ServiceRequest } from '@/types/newServiceRequest';
 import { useNewServiceRequest } from '@/hooks/useNewServiceRequest';
+import { usePersistentServiceRequest } from '@/hooks/usePersistentServiceRequest';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DashboardServices from '@/components/dashboard/DashboardServices';
 import NewServiceRequestManager from '@/components/newService/NewServiceRequestManager';
@@ -19,6 +20,9 @@ const NewDashboard: React.FC = () => {
   const navigate = useNavigate();
   const t = useTranslation(language);
   const { isOpen, selectedService, openServiceRequest, closeServiceRequest } = useNewServiceRequest();
+  
+  // Add persistent service request state
+  const persistentServiceState = usePersistentServiceRequest();
   
   const [showEmergencyServices, setShowEmergencyServices] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -101,6 +105,7 @@ const NewDashboard: React.FC = () => {
   const handleServiceRequestClose = () => {
     console.log('Closing service request completely');
     setIsServiceRequestMinimized(false);
+    persistentServiceState.resetState();
     closeServiceRequest();
   };
 
@@ -132,6 +137,7 @@ const NewDashboard: React.FC = () => {
           onMinimize={handleServiceRequestMinimize}
           userLocation={userLocation}
           userId={user?.username || 'anonymous'}
+          persistentState={persistentServiceState}
         />
       )}
 

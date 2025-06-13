@@ -2,10 +2,10 @@
 import { useState, useEffect } from 'react';
 import { ServiceRequest } from '@/types/newServiceRequest';
 import { toast } from '@/components/ui/use-toast';
-import { useServiceRequestState } from '@/hooks/useServiceRequestState';
 import { useEmployeeManagement } from '@/hooks/useEmployeeManagement';
 import { useQuoteHandling } from '@/hooks/useQuoteHandling';
 import { createServiceRequest, handleAcceptQuote, handleCancelRequest } from '@/services/serviceRequestActions';
+import { usePersistentServiceRequest } from '@/hooks/usePersistentServiceRequest';
 
 interface UseServiceRequestLogicProps {
   type: ServiceRequest['type'];
@@ -14,6 +14,7 @@ interface UseServiceRequestLogicProps {
   userId: string;
   onClose: () => void;
   onMinimize: () => void;
+  persistentState: ReturnType<typeof usePersistentServiceRequest>;
 }
 
 export const useServiceRequestLogic = ({
@@ -22,10 +23,12 @@ export const useServiceRequestLogic = ({
   userLocation,
   userId,
   onClose,
-  onMinimize
+  onMinimize,
+  persistentState
 }: UseServiceRequestLogicProps) => {
   const [shouldPreserveState, setShouldPreserveState] = useState(false);
   
+  // Use persistent state instead of local state
   const {
     currentScreen,
     currentRequest,
@@ -41,7 +44,7 @@ export const useServiceRequestLogic = ({
     setHasReceivedRevision,
     resetState,
     resetEmployeeTracking
-  } = useServiceRequestState();
+  } = persistentState;
 
   const { generateQuote, handleDeclineQuote } = useQuoteHandling({
     setCurrentRequest,

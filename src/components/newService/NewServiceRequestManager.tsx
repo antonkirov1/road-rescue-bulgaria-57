@@ -3,6 +3,7 @@ import React from 'react';
 import { ServiceRequest } from '@/types/newServiceRequest';
 import { useServiceRequestLogic } from './NewServiceRequestLogic';
 import NewServiceRequestDialog from './NewServiceRequestDialog';
+import { usePersistentServiceRequest } from '@/hooks/usePersistentServiceRequest';
 
 interface NewServiceRequestManagerProps {
   type: ServiceRequest['type'];
@@ -11,6 +12,7 @@ interface NewServiceRequestManagerProps {
   onMinimize: () => void;
   userLocation: { lat: number; lng: number };
   userId: string;
+  persistentState: ReturnType<typeof usePersistentServiceRequest>;
 }
 
 const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
@@ -19,7 +21,8 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
   onClose,
   onMinimize,
   userLocation,
-  userId
+  userId,
+  persistentState
 }) => {
   const {
     currentScreen,
@@ -35,7 +38,8 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
     userLocation,
     userId,
     onClose,
-    onMinimize
+    onMinimize,
+    persistentState
   });
 
   return (
