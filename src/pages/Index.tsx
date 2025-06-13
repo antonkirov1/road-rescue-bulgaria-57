@@ -36,23 +36,23 @@ const Index: React.FC = () => {
       <div className="max-w-4xl w-full">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            Welcome to RoadSaver
+            {t('welcome-to-roadsaver')}
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300">
-            Choose your access portal
+            {t('choose-access-portal')}
           </p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
-          {/* Customer Portal - Using Users icon (flipped) */}
+          {/* Customer Portal */}
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardHeader className="text-center">
               <div className="mx-auto w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mb-4">
-                <Users className="h-6 w-6 text-green-600 dark:text-green-400" />
+                <UserCheck className="h-6 w-6 text-green-600 dark:text-green-400" />
               </div>
-              <CardTitle>Customer Portal</CardTitle>
+              <CardTitle>{t('customer-portal')}</CardTitle>
               <CardDescription>
-                Request roadside assistance and track your service
+                {t('customer-portal-description')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -60,20 +60,20 @@ const Index: React.FC = () => {
                 onClick={() => navigate('/user/auth')}
                 className="w-full bg-green-600 hover:bg-green-700"
               >
-                Access Customer Portal
+                {t('access-customer-portal')}
               </Button>
             </CardContent>
           </Card>
 
-          {/* Employee Portal - Using UserCheck icon (flipped) */}
+          {/* Employee Portal */}
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardHeader className="text-center">
               <div className="mx-auto w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mb-4">
-                <UserCheck className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                <Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />
               </div>
-              <CardTitle>Employee Portal</CardTitle>
+              <CardTitle>{t('employee-portal')}</CardTitle>
               <CardDescription>
-                Manage service requests and assist customers
+                {t('employee-portal-description')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -81,7 +81,7 @@ const Index: React.FC = () => {
                 onClick={() => navigate('/employee/auth')}
                 className="w-full bg-blue-600 hover:bg-blue-700"
               >
-                Employee Login
+                {t('employee-login')}
               </Button>
             </CardContent>
           </Card>
@@ -92,9 +92,9 @@ const Index: React.FC = () => {
               <div className="mx-auto w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center mb-4">
                 <Shield className="h-6 w-6 text-purple-600 dark:text-purple-400" />
               </div>
-              <CardTitle>Admin Portal</CardTitle>
+              <CardTitle>{t('admin-portal')}</CardTitle>
               <CardDescription>
-                Manage users, employees and system settings
+                {t('admin-portal-description')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -102,7 +102,7 @@ const Index: React.FC = () => {
                 onClick={() => navigate('/admin/auth')}
                 className="w-full bg-purple-600 hover:bg-purple-700"
               >
-                Admin Panel
+                {t('admin-panel')}
               </Button>
             </CardContent>
           </Card>
@@ -110,7 +110,7 @@ const Index: React.FC = () => {
 
         <div className="text-center mt-8">
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            RoadSaver - Your trusted roadside assistance platform
+            {t('roadsaver-footer')}
           </p>
         </div>
       </div>

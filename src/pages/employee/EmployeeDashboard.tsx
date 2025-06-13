@@ -1,10 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import EmployeeHeader from '@/components/employee/EmployeeHeader';
 import EmployeeSettingsMenu from '@/components/employee/EmployeeSettingsMenu';
+import NewServiceRequestManager from '@/components/newService/NewServiceRequestManager';
 import { useApp } from '@/contexts/AppContext';
 import { useEmployeeDashboardIntegration } from '@/hooks/useEmployeeDashboardIntegration';
+import { useTranslation } from '@/utils/translations';
 import { ServiceRequest } from '@/types/newServiceRequest';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,7 +16,9 @@ import { Clock, MapPin, DollarSign, User } from 'lucide-react';
 const EmployeeDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { language, setLanguage } = useApp();
+  const t = useTranslation(language);
   const [showSettings, setShowSettings] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
   
   // Mock employee data - in a real app this would come from auth
   const employeeId = 'emp_' + Date.now();
@@ -55,7 +59,7 @@ const EmployeeDashboard: React.FC = () => {
   };
 
   const handleDeclineRequest = (request: ServiceRequest) => {
-    declineRequest(request, 'Employee declined');
+    declineRequest(request, t('employee-declined'));
   };
 
   const handleCompleteService = () => {
@@ -65,7 +69,7 @@ const EmployeeDashboard: React.FC = () => {
   };
 
   const getServiceTypeDisplay = (type: ServiceRequest['type']) => {
-    return type;
+    return t(`${type.toLowerCase().replace(' ', '-')}`);
   };
 
   return (
@@ -83,9 +87,9 @@ const EmployeeDashboard: React.FC = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                <span>Employee Status</span>
+                <span>{t('employee-status')}</span>
                 <Badge variant={isAvailable ? "default" : "secondary"}>
-                  {isAvailable ? "Available" : "Unavailable"}
+                  {isAvailable ? t('available') : t('unavailable')}
                 </Badge>
               </CardTitle>
             </CardHeader>
@@ -95,7 +99,7 @@ const EmployeeDashboard: React.FC = () => {
                 variant={isAvailable ? "destructive" : "default"}
                 className="w-full"
               >
-                {isAvailable ? "Go Offline" : "Go Online"}
+                {isAvailable ? t('go-offline') : t('go-online')}
               </Button>
             </CardContent>
           </Card>
@@ -107,29 +111,29 @@ const EmployeeDashboard: React.FC = () => {
             <Card className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950">
               <CardHeader>
                 <CardTitle className="text-green-800 dark:text-green-200">
-                  Current Service Request
+                  {t('current-service-request')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4" />
-                  <span className="font-medium">Customer ID:</span>
+                  <span className="font-medium">{t('customer-id')}:</span>
                   <span>{currentRequest.userId}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
-                  <span className="font-medium">Service Type:</span>
+                  <span className="font-medium">{t('service-type')}:</span>
                   <span>{getServiceTypeDisplay(currentRequest.type)}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
-                  <span className="font-medium">Location:</span>
+                  <span className="font-medium">{t('location')}:</span>
                   <span>Sofia, Bulgaria</span>
                 </div>
                 {currentRequest.priceQuote && (
                   <div className="flex items-center gap-2">
                     <DollarSign className="h-4 w-4" />
-                    <span className="font-medium">Quote:</span>
+                    <span className="font-medium">{t('quote')}:</span>
                     <span>{currentRequest.priceQuote} BGN</span>
                   </div>
                 )}
@@ -138,7 +142,7 @@ const EmployeeDashboard: React.FC = () => {
                     onClick={handleCompleteService}
                     className="w-full bg-green-600 hover:bg-green-700"
                   >
-                    Complete Service
+                    {t('complete-service')}
                   </Button>
                 </div>
               </CardContent>
@@ -149,14 +153,14 @@ const EmployeeDashboard: React.FC = () => {
         {/* Incoming Requests */}
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            Incoming Requests ({incomingRequests.length})
+            {t('incoming-requests')} ({incomingRequests.length})
           </h2>
           
           {incomingRequests.length === 0 ? (
             <Card>
               <CardContent className="py-8 text-center">
                 <p className="text-gray-500 dark:text-gray-400">
-                  {isAvailable ? "No pending requests" : "You are currently offline"}
+                  {isAvailable ? t('no-pending-requests') : t('you-are-currently-offline')}
                 </p>
               </CardContent>
             </Card>
@@ -172,7 +176,7 @@ const EmployeeDashboard: React.FC = () => {
                       </Badge>
                     </CardTitle>
                     <CardDescription>
-                      Customer ID: {request.userId}
+                      {t('customer-id')}: {request.userId}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -190,14 +194,14 @@ const EmployeeDashboard: React.FC = () => {
                         onClick={() => handleAcceptRequest(request)}
                         className="flex-1 bg-green-600 hover:bg-green-700"
                       >
-                        Accept
+                        {t('accept')}
                       </Button>
                       <Button 
                         onClick={() => handleDeclineRequest(request)}
                         variant="outline"
                         className="flex-1"
                       >
-                        Decline
+                        {t('decline')}
                       </Button>
                     </div>
                   </CardContent>
@@ -214,6 +218,16 @@ const EmployeeDashboard: React.FC = () => {
         onLanguageChange={handleLanguageChange}
         currentLanguage={language}
       />
+
+      {selectedRequest && (
+        <NewServiceRequestManager
+          type={selectedRequest.type}
+          open={!!selectedRequest}
+          onClose={() => setSelectedRequest(null)}
+          userLocation={{ lat: 42.6977, lng: 23.3219 }}
+          userId={selectedRequest.userId}
+        />
+      )}
     </div>
   );
 };

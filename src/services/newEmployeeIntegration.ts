@@ -1,6 +1,7 @@
 
 import { ServiceRequest } from '@/types/newServiceRequest';
 import { toast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface EmployeeResponse {
   id: string;
@@ -33,25 +34,36 @@ class NewEmployeeIntegrationService {
   }
 
   private async loadSimulatedEmployees(): Promise<void> {
-    // Load simulated employees with random data
-    const simulatedNames = [
-      'Ivan Petrov', 'Maria Georgieva', 'Dimitar Stoyanov', 'Elena Nikolova',
-      'Petar Dimitrov', 'Ana Kostova', 'Stefan Todorov', 'Vera Angelova'
-    ];
+    try {
+      const { data, error } = await supabase
+        .from('employee_simulation')
+        .select('id, employee_number, full_name')
+        .order('employee_number', { ascending: true });
 
-    this.simulatedEmployees = simulatedNames.map((name, index) => ({
-      id: `sim_emp_${index + 1}`,
-      name,
-      isSimulated: true,
-      location: {
-        lat: 42.6977 + (Math.random() - 0.5) * 0.1,
-        lng: 23.3219 + (Math.random() - 0.5) * 0.1
-      },
-      isAvailable: Math.random() > 0.3 // 70% availability
-    }));
+      if (error) {
+        console.error('Error loading simulated employees:', error);
+        return;
+      }
+
+      this.simulatedEmployees = data.map((emp) => ({
+        id: `sim_emp_${emp.id}`,
+        name: emp.full_name,
+        isSimulated: true,
+        location: {
+          lat: 42.6977 + (Math.random() - 0.5) * 0.1,
+          lng: 23.3219 + (Math.random() - 0.5) * 0.1
+        },
+        isAvailable: Math.random() > 0.3 // 70% availability
+      }));
+    } catch (error) {
+      console.error('Error in loadSimulatedEmployees:', error);
+    }
   }
 
   async findAvailableEmployee(request: ServiceRequest, blacklistedEmployees: string[] = []): Promise<EmployeeResponse | null> {
+    // Reload simulated employees to ensure we have fresh data
+    await this.loadSimulatedEmployees();
+
     // First try to find a real employee
     const availableRealEmployees = this.realEmployees.filter(emp => 
       emp.isAvailable && !blacklistedEmployees.includes(emp.name)

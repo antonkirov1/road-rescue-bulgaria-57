@@ -18,6 +18,20 @@ export const allTranslations: Record<string, { en: string; bg: string }> = {
   'warning': { en: 'Warning', bg: 'Предупреждение' },
   'info': { en: 'Information', bg: 'Информация' },
 
+  // Home/Index Page
+  'welcome-to-roadsaver': { en: 'Welcome to RoadSaver', bg: 'Добре дошли в RoadSaver' },
+  'choose-access-portal': { en: 'Choose your access portal', bg: 'Изберете вашия портал за достъп' },
+  'customer-portal': { en: 'Customer Portal', bg: 'Клиентски портал' },
+  'customer-portal-description': { en: 'Request roadside assistance and track your service', bg: 'Заявете пътна помощ и проследете вашата услуга' },
+  'access-customer-portal': { en: 'Access Customer Portal', bg: 'Достъп до клиентския портал' },
+  'employee-portal': { en: 'Employee Portal', bg: 'Служебен портал' },
+  'employee-portal-description': { en: 'Manage service requests and assist customers', bg: 'Управлявайте заявки за услуги и помагайте на клиентите' },
+  'employee-login': { en: 'Employee Login', bg: 'Служебен вход' },
+  'admin-portal': { en: 'Admin Portal', bg: 'Административен портал' },
+  'admin-portal-description': { en: 'Manage users, employees and system settings', bg: 'Управлявайте потребители, служители и системни настройки' },
+  'admin-panel': { en: 'Admin Panel', bg: 'Административен панел' },
+  'roadsaver-footer': { en: 'RoadSaver - Your trusted roadside assistance platform', bg: 'RoadSaver - Вашата доверена платформа за пътна помощ' },
+
   // Service Types
   'flat-tyre': { en: 'Flat Tyre', bg: 'Спукана гума' },
   'out-of-fuel': { en: 'Out of Fuel', bg: 'Без гориво' },
@@ -182,6 +196,22 @@ export const allTranslations: Record<string, { en: string; bg: string }> = {
   'decline': { en: 'Decline', bg: 'Откажи' },
   'employee-login-successful': { en: 'Employee login successful', bg: 'Успешно влизане на служител' },
   'welcome-employee-dashboard': { en: 'Welcome to the employee dashboard', bg: 'Добре дошли в таблото за служители' },
+
+  // Employee Status
+  'employee-status': { en: 'Employee Status', bg: 'Статус на служителя' },
+  'available': { en: 'Available', bg: 'Наличен' },
+  'unavailable': { en: 'Unavailable', bg: 'Недостъпен' },
+  'go-offline': { en: 'Go Offline', bg: 'Стани офлайн' },
+  'go-online': { en: 'Go Online', bg: 'Стани онлайн' },
+  'current-service-request': { en: 'Current Service Request', bg: 'Текуща заявка за услуга' },
+  'customer-id': { en: 'Customer ID', bg: 'ID на клиента' },
+  'service-type': { en: 'Service Type', bg: 'Тип услуга' },
+  'location': { en: 'Location', bg: 'Местоположение' },
+  'quote': { en: 'Quote', bg: 'Оферта' },
+  'complete-service': { en: 'Complete Service', bg: 'Завърши услугата' },
+  'incoming-requests': { en: 'Incoming Requests', bg: 'Входящи заявки' },
+  'no-pending-requests': { en: 'No pending requests', bg: 'Няма чакащи заявки' },
+  'you-are-currently-offline': { en: 'You are currently offline', bg: 'В момента сте офлайн' },
 
   // Additional translations for enhanced features
   'tap-to-view-details': { en: 'Tap to view details', bg: 'Докоснете за детайли' },
