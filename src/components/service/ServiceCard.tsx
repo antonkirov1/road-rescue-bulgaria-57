@@ -1,3 +1,4 @@
+
 import React, { memo } from 'react';
 import { Card } from '@/components/ui/card';
 import { useApp } from '@/contexts/AppContext';
@@ -63,10 +64,6 @@ const ServiceCard: React.FC<ServiceCardProps> = memo(({ type, onClick }) => {
           onOpenChange={setShowContactDialog} 
           onEmailContact={handleEmailContact} 
           onPhoneContact={handlePhoneContact} 
-          contactOptionsText={t('contact-options')} 
-          supportDescText={t('support-desc')} 
-          writeEmailText={t('write-email')} 
-          giveCallText={t('give-call')} 
         />
       )}
     </>

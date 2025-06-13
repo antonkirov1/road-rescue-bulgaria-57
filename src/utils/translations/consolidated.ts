@@ -1,350 +1,320 @@
+
 export const translations = {
-  en: {
-    'create-account': 'Create Account',
-    'join-roadsaver-desc': 'Join RoadSaver and get roadside assistance whenever you need it.',
-    'Back to Login': 'Back to Login',
-    'creating-account': 'Creating Account...',
-    'gender-label': 'Gender',
-    'man-label': 'Man',
-    'woman-label': 'Woman',
-    'not-specified-label': 'Not Specified',
-    'employee-status': 'Employee Status',
-    'available': 'Available',
-    'unavailable': 'Unavailable',
-    'go-offline': 'Go Offline',
-    'go-online': 'Go Online',
-    'version': 'Version',
-    'work-hours-line1': 'Working hours:',
-    'work-hours-line2': 'Monday - Friday: 8:00 AM - 6:00 PM',
-    'contact-information': 'Contact Information',
-    'email': 'Email',
-    'phone': 'Phone',
-    'account': 'Account',
-    'history': 'History',
-    'about': 'About',
-    'decline-service-request': 'Decline Service Request',
-    'decline-reason': 'Please provide a reason for declining this service request:',
-    'enter-decline-reason': 'Enter your reason for declining...',
-    'characters': 'characters',
-    'minimum': 'minimum',
-    'cancel': 'Cancel',
-    'send': 'Send',
-    'current-service-request': 'Current Service Request',
-    'customer-id': 'Customer ID',
-    'service-type': 'Service Type',
-    'location': 'Location',
-    'quote': 'Quote',
-    'complete-service': 'Complete Service',
-    'completed-requests': 'Completed Requests',
-    'completed-requests-desc': 'Your service history',
-    'completed': 'Completed',
-    'no-requests': 'No completed requests yet',
-    'completed-at': 'completed at',
-    'incoming-requests': 'Incoming Requests',
-    'no-pending-requests': 'No pending requests at the moment',
-    'you-are-currently-offline': 'You are currently offline',
-    'accept': 'Accept',
-    'decline': 'Decline',
-    'change-language': 'Change Language',
-    'settings': 'Settings',
-    'logout': 'Logout',
-    'flat-tyre-assistance': 'Flat Tyre Assistance',
-    'out-of-fuel': 'Out of Fuel',
-    'small-issue': 'Small Issue',
-    'tow-truck-request': 'Tow Truck Request',
-    'service-request': 'Service Request',
-    'accepted-status': 'Accepted',
-    'declined-status': 'Declined',
-    'new': 'New',
-    'from': 'From',
-    'customer-location': 'Customer Location',
-    'close': 'Close',
-    'logged-out': 'Logged Out',
-    'logged-out-msg': 'You have been logged out successfully.',
-    'configure-preferences': 'Configure your preferences and account settings',
-    'user-account': 'User Account',
-    'username': 'Username',
-    'change-avatar': 'Change Avatar',
-    'finding-employee': 'Finding nearby technician...',
-    'quote-received': 'Price Quote Received',
-    'assigned-employee': 'Assigned Employee',
-    'confirm': 'Confirm',
-    'service-unavailable': 'Service Unavailable',
-    'no-technicians-available-message': 'Unfortunately, no technicians are available in your area at the moment. Please try again later or contact our support team.',
-    'contact-support': 'Contact Support',
-    'contact-support-message': 'Our support team is available to help you find alternative solutions.',
-    'call': 'Call',
-    'services': 'Services',
-    'active-request': 'Active Request',
-    'emergency-services': 'Emergency Services',
-    'update-location': 'Update Location',
-    'emergency-services-desc': 'If you are in immediate danger or need urgent medical assistance, please call emergency services.',
-    'calling-emergency': 'Calling Emergency Services',
-    'connecting-emergency': 'Connecting to emergency services...',
-    'national-emergency': 'National Emergency',
-    'emergency-number': '112',
-    'account-information': 'Account Information',
-    'change-account-info': 'Change Account Info',
-    'phone-number': 'Phone Number',
-    'outside-hours-contact': 'Outside of working hours, please contact us via phone, Facebook, Messenger, WhatsApp, or Viber for urgent assistance.',
-    'error-title': 'Error',
-    'please-enter-both': 'Please enter both username and password',
-    'Sign In': 'Sign In',
-    'Welcome back to RoadSaver': 'Welcome back to RoadSaver',
-    'enter-username-placeholder': 'Enter your username',
-    'Username': 'Username',
-    'enter-password-placeholder': 'Enter your password',
-    'Password': 'Password',
-    'Create Account': 'Create Account',
-    'signing-in': 'Signing in...',
-    'auth-error': 'Authentication Error',
-    'invalid-username-password': 'Invalid username or password',
-    'hide-password': 'Hide password',
-    'show-password': 'Show password',
-    'secret-question-1': 'Secret Question 1',
-    'secret-question-2': 'Secret Question 2',
-    'select-question': 'Select a question...',
-    'create-your-own-question': 'Create your own question',
-    'back-to-questions': 'Back to questions',
-    'enter-your-custom-question': 'Enter your custom question...',
-    'your-answer': 'Your Answer',
-    'enter-your-answer': 'Enter your answer...',
-    'mothers-maiden-name': "What is your mother's maiden name?",
-    'first-pet-name': 'What was the name of your first pet?',
-    'birth-city': 'In which city were you born?',
-    'elementary-school': 'What was the name of your elementary school?',
-    'favorite-teacher': "What was your favorite teacher's name?",
-    'childhood-friend': "What was your childhood best friend's name?",
-    'first-car': 'What was the make of your first car?',
-    'favorite-book': 'What is your favorite book?',
-    'childhood-nickname': 'What was your childhood nickname?',
-    'favorite-food': 'What is your favorite food?',
-    'street-grew-up': 'What street did you grow up on?',
-    'fathers-middle-name': "What is your father's middle name?",
-    'high-school-mascot': 'What was your high school mascot?',
-    'first-job': 'What was your first job?',
-    'dream-vacation': 'What is your dream vacation destination?',
-
-    // Service types
-    'Flat Tyre': 'Flat Tyre',
-    'Out of Fuel': 'Out of Fuel',
-    'Car Battery': 'Car Battery',
-    'Other Car Problems': 'Other Car Problems',
-    'Tow Truck': 'Tow Truck',
-    'support': 'Support',
-    'flat-tyre': 'Flat Tyre',
-    'out-of-fuel': 'Out of Fuel',
-    'car-battery': 'Car Battery',
-    'other-car-problems': 'Other Car Problems',
-    'tow-truck': 'Tow Truck',
-
-    // New missing keys found in components
-    'Do you want to exit?': 'Do you want to exit?',
-    'If you do, press the Log Out button.': 'If you do, press the Log Out button.',
-    'Log Out': 'Log Out',
-    'No pending service requests': 'No pending service requests',
-    'New requests will appear here': 'New requests will appear here',
-    'Describe your issue (20-300 characters)': 'Describe your issue (20-300 characters)',
-    'Send Request': 'Send Request',
-    'Sending...': 'Sending...',
-    'I have a flat tyre and need assistance': 'I have a flat tyre and need assistance',
-    'I am out of fuel and need assistance': 'I am out of fuel and need assistance',
-    'My car battery is dead. I need assistance.': 'My car battery is dead. I need assistance.',
-    'I have a major problem with my car and need a tow truck': 'I have a major problem with my car and need a tow truck',
-    'I need emergency assistance immediately': 'I need emergency assistance immediately',
-    'I need to speak with customer support': 'I need to speak with customer support',
-    'Contact Options': 'Contact Options',
-    'How would you like to contact our support team?': 'How would you like to contact our support team?',
-    'Write an Email': 'Write an Email',
-    'Give us a Call': 'Give us a Call',
-    'Customer Declined - Send Revised Quote?': 'Customer Declined - Send Revised Quote?',
-    'Revise Price Quote': 'Revise Price Quote',
-    'Adjust Price Quote': 'Adjust Price Quote',
-    'The customer has declined your quote of': 'The customer has declined your quote of',
-    'BGN. You have one opportunity to send a revised quote.': 'BGN. You have one opportunity to send a revised quote.',
-    'Revised Price Quote (BGN)': 'Revised Price Quote (BGN)',
-    'New Price Quote (BGN)': 'New Price Quote (BGN)',
-    "Don't Revise": "Don't Revise",
-    'Send Revised Quote': 'Send Revised Quote',
-    'Send Price Quote': 'Send Price Quote',
-    'Enter new price quote...': 'Enter new price quote...',
-    'Please enter a valid price quote': 'Please enter a valid price quote',
-    'Accept And Send Price Quote': 'Accept And Send Price Quote',
-    'Price Quote (BGN)': 'Price Quote (BGN)',
-    'Enter price quote...': 'Enter price quote...',
+  // Dashboard and Navigation
+  'dashboard': {
+    'en': 'Dashboard',
+    'bg': 'Табло'
   },
-  bg: {
-    'create-account': 'Създаване на акаунт',
-    'join-roadsaver-desc': 'Присъединете се към RoadSaver и получете пътна помощ, когато имате нужда от нея.',
-    'Back to Login': 'Обратно към влизане',
-    'creating-account': 'Създаване на акаунт...',
-    'gender-label': 'Пол',
-    'man-label': 'Мъж',
-    'woman-label': 'Жена',
-    'not-specified-label': 'Неопределен',
-    'employee-status': 'Статус на служител',
-    'available': 'Наличен',
-    'unavailable': 'Недостъпен',
-    'go-offline': 'Излез от линия',
-    'go-online': 'Влез в линия',
-    'version': 'Версия',
-    'work-hours-line1': 'Работно време:',
-    'work-hours-line2': 'Понеделник - Петък: 8:00 - 18:00',
-    'contact-information': 'Информация за контакт',
-    'email': 'Имейл',
-    'phone': 'Телефон',
-    'account': 'Акаунт',
-    'history': 'История',
-    'about': 'За нас',
-    'decline-service-request': 'Отказване на заявка за услуга',
-    'decline-reason': 'Моля, посочете причина за отказване на тази заявка за услуга:',
-    'enter-decline-reason': 'Въведете причината за отказване...',
-    'characters': 'символа',
-    'minimum': 'минимум',
-    'cancel': 'Отказ',
-    'send': 'Изпрати',
-    'current-service-request': 'Текуща заявка за услуга',
-    'customer-id': 'ID на клиент',
-    'service-type': 'Тип услуга',
-    'location': 'Местоположение',
-    'quote': 'Оферта',
-    'complete-service': 'Завърши услугата',
-    'completed-requests': 'Завършени заявки',
-    'completed-requests-desc': 'Вашата история на услуги',
-    'completed': 'Завършена',
-    'no-requests': 'Все още няма завършени заявки',
-    'completed-at': 'завършена в',
-    'incoming-requests': 'Входящи заявки',
-    'no-pending-requests': 'В момента няма чакащи заявки',
-    'you-are-currently-offline': 'В момента сте офлайн',
-    'accept': 'Приеми',
-    'decline': 'Откажи',
-    'change-language': 'Смени език',
-    'settings': 'Настройки',
-    'logout': 'Излез',
-    'flat-tyre-assistance': 'Помощ за спукана гума',
-    'out-of-fuel': 'Без гориво',
-    'small-issue': 'Малък проблем',
-    'tow-truck-request': 'Заявка за автовоз',
-    'service-request': 'Заявка за услуга',
-    'accepted-status': 'Приета',
-    'declined-status': 'Отказана',
-    'new': 'Нова',
-    'from': 'От',
-    'customer-location': 'Местоположение на клиента',
-    'close': 'Затвори',
-    'logged-out': 'Излязохте',
-    'logged-out-msg': 'Успешно излязохте от профила си.',
-    'configure-preferences': 'Конфигурирайте вашите предпочитания и настройки на акаунта',
-    'user-account': 'Потребителски акаунт',
-    'username': 'Потребителско име',
-    'change-avatar': 'Смени аватар',
-    'finding-employee': 'Търсене на близо техник...',
-    'quote-received': 'Получена ценова оферта',
-    'assigned-employee': 'Назначен служител',
-    'confirm': 'Потвърди',
-    'service-unavailable': 'Услугата не е налична',
-    'no-technicians-available-message': 'За съжаление, в момента няма налични техници във вашия район. Моля, опитайте отново по-късно или се свържете с нашия екип за поддръжка.',
-    'contact-support': 'Свържете се с поддръжката',
-    'contact-support-message': 'Нашият екип за поддръжка е на разположение, за да ви помогне да намерите алтернативни решения.',
-    'call': 'Обади се',
-    'services': 'Услуги',
-    'active-request': 'Активна заявка',
-    'emergency-services': 'Спешни услуги',
-    'update-location': 'Обнови местоположението',
-    'emergency-services-desc': 'Ако сте в непосредствена опасност или се нуждаете от спешна медицинска помощ, моля обадете се на спешните служби.',
-    'calling-emergency': 'Обаждане на спешни служби',
-    'connecting-emergency': 'Свързване със спешни служби...',
-    'national-emergency': 'Национален спешен номер',
-    'emergency-number': '112',
-    'account-information': 'Информация за акаунта',
-    'change-account-info': 'Промени информацията за акаунта',
-    'phone-number': 'Телефонен номер',
-    'outside-hours-contact': 'Извън работното време, моля свържете се с нас по телефон, Facebook, Messenger, WhatsApp или Viber за спешна помощ.',
-    'error-title': 'Грешка',
-    'please-enter-both': 'Моля въведете потребителско име и парола',
-    'Sign In': 'Влез',
-    'Welcome back to RoadSaver': 'Добре дошли обратно в RoadSaver',
-    'enter-username-placeholder': 'Въведете потребителско име',
-    'Username': 'Потребителско име',
-    'enter-password-placeholder': 'Въведете парола',
-    'Password': 'Парола',
-    'Create Account': 'Създай акаунт',
-    'signing-in': 'Влизане...',
-    'auth-error': 'Грешка при удостоверяване',
-    'invalid-username-password': 'Невалидно потребителско име или парола',
-    'hide-password': 'Скрий парола',
-    'show-password': 'Покажи парола',
-    'secret-question-1': 'Таен въпрос 1',
-    'secret-question-2': 'Таен въпрос 2',
-    'select-question': 'Изберете въпрос...',
-    'create-your-own-question': 'Създайте собствен въпрос',
-    'back-to-questions': 'Обратно към въпросите',
-    'enter-your-custom-question': 'Въведете вашия собствен въпрос...',
-    'your-answer': 'Вашият отговор',
-    'enter-your-answer': 'Въведете вашия отговор...',
-    'mothers-maiden-name': 'Какво е момичешкото име на майка ви?',
-    'first-pet-name': 'Как се казваше първият ви домашен любимец?',
-    'birth-city': 'В кой град сте родени?',
-    'elementary-school': 'Как се казваше началното ви училище?',
-    'favorite-teacher': 'Как се казваше любимият ви учител?',
-    'childhood-friend': 'Как се казваше най-добрият ви приятел от детството?',
-    'first-car': 'Каква беше марката на първата ви кола?',
-    'favorite-book': 'Коя е любимата ви книга?',
-    'childhood-nickname': 'Какво беше детското ви прякор?',
-    'favorite-food': 'Коя е любимата ви храна?',
-    'street-grew-up': 'На коя улица израснахте?',
-    'fathers-middle-name': 'Какво е второто име на баща ви?',
-    'high-school-mascot': 'Какъв беше талисманът на гимназията ви?',
-    'first-job': 'Каква беше първата ви работа?',
-    'dream-vacation': 'Коя е мечтаната ви дестинация за ваканция?',
+  'logout': {
+    'en': 'Logout',
+    'bg': 'Изход'
+  },
+  'service-requests': {
+    'en': 'Service Requests',
+    'bg': 'Заявки за услуги'
+  },
+  'price-management': {
+    'en': 'Price Management',
+    'bg': 'Управление на цени'
+  },
+  'employee-management': {
+    'en': 'Employee Management',
+    'bg': 'Управление на служители'
+  },
+  'user-management': {
+    'en': 'User Management',
+    'bg': 'Управление на потребители'
+  },
+  'reports': {
+    'en': 'Reports',
+    'bg': 'Отчети'
+  },
+  'settings': {
+    'en': 'Settings',
+    'bg': 'Настройки'
+  },
 
-    // Service types
-    'Flat Tyre': 'Спукана гума',
-    'Out of Fuel': 'Без гориво',
-    'Car Battery': 'Акумулатор',
-    'Other Car Problems': 'Други проблеми с колата',
-    'Tow Truck': 'Автовоз',
-    'support': 'Поддръжка',
-    'flat-tyre': 'Спукана гума',
-    'out-of-fuel': 'Без гориво',
-    'car-battery': 'Акумулатор',
-    'other-car-problems': 'Други проблеми с колата',
-    'tow-truck': 'Автовоз',
+  // Service Types
+  'flat-tire': {
+    'en': 'Flat Tire',
+    'bg': 'Спукана гума'
+  },
+  'battery-jump': {
+    'en': 'Battery Jump',
+    'bg': 'Стартиране на батерия'
+  },
+  'lockout': {
+    'en': 'Lockout',
+    'bg': 'Заключен автомобил'
+  },
+  'towing': {
+    'en': 'Towing',
+    'bg': 'Влачене'
+  },
+  'fuel-delivery': {
+    'en': 'Fuel Delivery',
+    'bg': 'Доставка на гориво'
+  },
+  'support': {
+    'en': 'Support',
+    'bg': 'Поддръжка'
+  },
 
-    // New missing keys found in components
-    'Do you want to exit?': 'Искате ли да излезете?',
-    'If you do, press the Log Out button.': 'Ако да, натиснете бутона за излизане.',
-    'Log Out': 'Излез',
-    'No pending service requests': 'Няма чакащи заявки за услуги',
-    'New requests will appear here': 'Новите заявки ще се появят тук',
-    'Describe your issue (20-300 characters)': 'Опишете проблема си (20-300 символа)',
-    'Send Request': 'Изпрати заявка',
-    'Sending...': 'Изпращане...',
-    'I have a flat tyre and need assistance': 'Имам спукана гума и се нуждая от помощ',
-    'I am out of fuel and need assistance': 'Без гориво съм и се нуждая от помощ',
-    'My car battery is dead. I need assistance.': 'Акумулаторът ми е изтощен. Нуждая се от помощ.',
-    'I have a major problem with my car and need a tow truck': 'Имам сериозен проблем с колата и се нуждая от автовоз',
-    'I need emergency assistance immediately': 'Нуждая се от спешна помощ незабавно',
-    'I need to speak with customer support': 'Трябва да говоря с клиентската поддръжка',
-    'Contact Options': 'Опции за контакт',
-    'How would you like to contact our support team?': 'Как бихте искали да се свържете с нашия екип за поддръжка?',
-    'Write an Email': 'Напишете имейл',
-    'Give us a Call': 'Обадете ни се',
-    'Customer Declined - Send Revised Quote?': 'Клиентът отказа - Изпратете ревизирана оферта?',
-    'Revise Price Quote': 'Ревизирайте ценовата оферта',
-    'Adjust Price Quote': 'Коригирайте ценовата оферта',
-    'The customer has declined your quote of': 'Клиентът отказа вашата оферта от',
-    'BGN. You have one opportunity to send a revised quote.': 'лв. Имате една възможност да изпратите ревизирана оферта.',
-    'Revised Price Quote (BGN)': 'Ревизирана ценова оферта (лв.)',
-    'New Price Quote (BGN)': 'Нова ценова оферта (лв.)',
-    "Don't Revise": 'Не ревизирай',
-    'Send Revised Quote': 'Изпрати ревизирана оферта',
-    'Send Price Quote': 'Изпрати ценова оферта',
-    'Enter new price quote...': 'Въведете нова ценова оферта...',
-    'Please enter a valid price quote': 'Моля въведете валидна ценова оферта',
-    'Accept And Send Price Quote': 'Приеми и изпрати ценова оферта',
-    'Price Quote (BGN)': 'Ценова оферта (лв.)',
-    'Enter price quote...': 'Въведете ценова оферта...',
+  // Common Actions
+  'cancel': {
+    'en': 'Cancel',
+    'bg': 'Отмени'
+  },
+  'confirm': {
+    'en': 'Confirm',
+    'bg': 'Потвърди'
+  },
+  'save': {
+    'en': 'Save',
+    'bg': 'Запази'
+  },
+  'edit': {
+    'en': 'Edit',
+    'bg': 'Редактирай'
+  },
+  'delete': {
+    'en': 'Delete',
+    'bg': 'Изтрий'
+  },
+  'submit': {
+    'en': 'Submit',
+    'bg': 'Изпрати'
+  },
+  'close': {
+    'en': 'Close',
+    'bg': 'Затвори'
+  },
+  'back': {
+    'en': 'Back',
+    'bg': 'Назад'
+  },
+  'next': {
+    'en': 'Next',
+    'bg': 'Напред'
+  },
+  'previous': {
+    'en': 'Previous',
+    'bg': 'Предишен'
+  },
+
+  // Status
+  'pending': {
+    'en': 'Pending',
+    'bg': 'Чакащ'
+  },
+  'in-progress': {
+    'en': 'In Progress',
+    'bg': 'В процес'
+  },
+  'completed': {
+    'en': 'Completed',
+    'bg': 'Завършен'
+  },
+  'declined': {
+    'en': 'Declined',
+    'bg': 'Отказан'
+  },
+  'active': {
+    'en': 'Active',
+    'bg': 'Активен'
+  },
+  'inactive': {
+    'en': 'Inactive',
+    'bg': 'Неактивен'
+  },
+
+  // Exit Confirmation Dialog
+  'exit-app': {
+    'en': 'Exit App',
+    'bg': 'Изход от приложението'
+  },
+  'exit-confirmation': {
+    'en': 'Are you sure you want to exit?',
+    'bg': 'Сигурни ли сте, че искате да излезете?'
+  },
+
+  // Service Request List
+  'no-requests': {
+    'en': 'No service requests found',
+    'bg': 'Няма намерени заявки за услуги'
+  },
+  'search-placeholder': {
+    'en': 'Search requests...',
+    'bg': 'Търсене на заявки...'
+  },
+  'filter-all': {
+    'en': 'All',
+    'bg': 'Всички'
+  },
+  'filter-new': {
+    'en': 'New',
+    'bg': 'Нови'
+  },
+  'filter-assigned': {
+    'en': 'Assigned',
+    'bg': 'Възложени'
+  },
+  'loading': {
+    'en': 'Loading...',
+    'bg': 'Зарежда...'
+  },
+
+  // Service Request Form
+  'request-service': {
+    'en': 'Request Service',
+    'bg': 'Заявка за услуга'
+  },
+  'select-service': {
+    'en': 'Select a service',
+    'bg': 'Изберете услуга'
+  },
+  'describe-problem': {
+    'en': 'Describe your problem',
+    'bg': 'Опишете проблема си'
+  },
+  'enter-description': {
+    'en': 'Enter a detailed description...',
+    'bg': 'Въведете подробно описание...'
+  },
+  'current-location': {
+    'en': 'Current Location',
+    'bg': 'Текущо местоположение'
+  },
+  'getting-location': {
+    'en': 'Getting your location...',
+    'bg': 'Получаване на местоположението...'
+  },
+  'location-error': {
+    'en': 'Unable to get location',
+    'bg': 'Неуспешно получаване на местоположение'
+  },
+  'request-submitted': {
+    'en': 'Service request submitted successfully!',
+    'bg': 'Заявката за услуга е изпратена успешно!'
+  },
+  'submission-error': {
+    'en': 'Failed to submit request. Please try again.',
+    'bg': 'Неуспешно изпращане на заявката. Моля, опитайте отново.'
+  },
+
+  // Contact Dialog
+  'Contact Options': {
+    'en': 'Contact Options',
+    'bg': 'Опции за контакт'
+  },
+  'How would you like to contact our support team?': {
+    'en': 'How would you like to contact our support team?',
+    'bg': 'Как бихте искали да се свържете с нашия екип за поддръжка?'
+  },
+  'Write an Email': {
+    'en': 'Write an Email',
+    'bg': 'Напишете имейл'
+  },
+  'Give us a Call': {
+    'en': 'Give us a Call',
+    'bg': 'Обадете ни се'
+  },
+
+  // Employee Price Adjust Dialog
+  'adjust-price': {
+    'en': 'Adjust Price',
+    'bg': 'Коригиране на цена'
+  },
+  'current-price': {
+    'en': 'Current Price',
+    'bg': 'Текуща цена'
+  },
+  'new-price': {
+    'en': 'New Price',
+    'bg': 'Нова цена'
+  },
+  'adjustment-reason': {
+    'en': 'Adjustment Reason',
+    'bg': 'Причина за корекция'
+  },
+  'enter-reason': {
+    'en': 'Enter reason for price adjustment...',
+    'bg': 'Въведете причина за корекцията на цената...'
+  },
+  'update-price': {
+    'en': 'Update Price',
+    'bg': 'Актуализиране на цена'
+  },
+
+  // Request Details Dialog
+  'request-details': {
+    'en': 'Request Details',
+    'bg': 'Детайли на заявката'
+  },
+  'request-id': {
+    'en': 'Request ID',
+    'bg': 'ID на заявката'
+  },
+  'service-type': {
+    'en': 'Service Type',
+    'bg': 'Тип услуга'
+  },
+  'customer': {
+    'en': 'Customer',
+    'bg': 'Клиент'
+  },
+  'description': {
+    'en': 'Description',
+    'bg': 'Описание'
+  },
+  'status': {
+    'en': 'Status',
+    'bg': 'Статус'
+  },
+  'price': {
+    'en': 'Price',
+    'bg': 'Цена'
+  },
+  'created': {
+    'en': 'Created',
+    'bg': 'Създаден'
+  },
+  'accept-request': {
+    'en': 'Accept Request',
+    'bg': 'Приемане на заявка'
+  },
+  'decline-request': {
+    'en': 'Decline Request',
+    'bg': 'Отказване на заявка'
+  },
+  'complete-request': {
+    'en': 'Complete Request',
+    'bg': 'Завършване на заявка'
+  },
+
+  // Service descriptions for ServiceCard
+  'flat-tire-desc': {
+    'en': 'Quick tire replacement service',
+    'bg': 'Бърза услуга за смяна на гума'
+  },
+  'battery-jump-desc': {
+    'en': 'Emergency battery boost',
+    'bg': 'Спешно зареждане на батерия'
+  },
+  'lockout-desc': {
+    'en': 'Vehicle unlocking assistance',
+    'bg': 'Помощ за отключване на превозно средство'
+  },
+  'towing-desc': {
+    'en': 'Professional towing service',
+    'bg': 'Професионална услуга за влачене'
+  },
+  'fuel-delivery-desc': {
+    'en': 'Emergency fuel delivery',
+    'bg': 'Спешна доставка на гориво'
+  },
+  'support-desc': {
+    'en': 'Contact our support team',
+    'bg': 'Свържете се с нашия екип за поддръжка'
   }
 };
