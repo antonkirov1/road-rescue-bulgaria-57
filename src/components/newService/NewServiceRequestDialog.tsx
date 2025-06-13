@@ -34,6 +34,7 @@ const NewServiceRequestDialog: React.FC<NewServiceRequestDialogProps> = ({
           !['completed', 'cancelled'].includes(request.status)) {
         console.log('Minimizing active request instead of closing');
         onMinimize();
+        return;
       } else {
         // No active request or completed/cancelled - close normally
         onClose();
@@ -42,7 +43,7 @@ const NewServiceRequestDialog: React.FC<NewServiceRequestDialogProps> = ({
   };
 
   const handleInteractOutside = (e: Event) => {
-    // Prevent default closing behavior - we'll handle it in handleOpenChange
+    // Prevent default closing behavior
     e.preventDefault();
     
     // If there's an active request that's not completed/cancelled, minimize it
