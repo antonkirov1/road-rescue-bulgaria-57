@@ -37,7 +37,7 @@ const Home: React.FC = () => {
             <Settings className="h-12 w-12 text-purple-600 mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">Administration</h3>
             <p className="text-gray-600 mb-4">System management and oversight</p>
-            <Link to="/admin">
+            <Link to="/admin-selection">
               <Button variant="outline" className="w-full">Admin Panel</Button>
             </Link>
           </div>
