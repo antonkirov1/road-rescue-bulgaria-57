@@ -1,284 +1,231 @@
-import { supabase } from '@/integrations/supabase/client';
-import { ServiceRequest, User, Employee } from '@/types/newServiceRequest';
 
-export class NewSupabaseService {
-  async createServiceRequest(request: Omit<ServiceRequest, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
+import { supabase } from '@/integrations/supabase/client';
+
+export interface Employee {
+  id: string;
+  name: string;
+  isAvailable: boolean;
+  isSimulated: boolean;
+  location: {
+    lat: number;
+    lng: number;
+  };
+}
+
+export interface User {
+  id: string;
+  username: string;
+  location: {
+    lat: number;
+    lng: number;
+  };
+}
+
+export interface ServiceRequest {
+  id: string;
+  type: string;
+  description?: string;
+  userId: string;
+  status: string;
+  assignedEmployeeId?: string;
+  priceQuote?: number;
+  revisedPriceQuote?: number;
+  userLocation?: {
+    lat: number;
+    lng: number;
+  };
+  createdAt: string;
+  updatedAt?: string;
+  declineCount: number;
+}
+
+class NewSupabaseService {
+  // Service Request Methods
+  async createServiceRequest(request: Omit<ServiceRequest, 'id' | 'createdAt' | 'declineCount'>): Promise<ServiceRequest> {
     const { data, error } = await supabase
       .from('service_requests')
       .insert({
-        user_id: request.userId,
         type: request.type,
+        description: request.description,
+        user_id: request.userId,
         status: request.status,
         assigned_employee_id: request.assignedEmployeeId,
         price_quote: request.priceQuote,
         revised_price_quote: request.revisedPriceQuote,
-        decline_count: request.declineCount,
-        description: request.description,
-        user_location: `POINT(${request.userLocation.lng} ${request.userLocation.lat})`
+        user_location: request.userLocation ? `(${request.userLocation.lat},${request.userLocation.lng})` : null,
       })
-      .select('id')
+      .select()
       .single();
 
     if (error) throw error;
-    return data.id;
+
+    return {
+      id: data.id,
+      type: data.type,
+      description: data.description,
+      userId: data.user_id,
+      status: data.status,
+      assignedEmployeeId: data.assigned_employee_id,
+      priceQuote: data.price_quote,
+      revisedPriceQuote: data.revised_price_quote,
+      userLocation: data.user_location ? {
+        lat: parseFloat(data.user_location.split(',')[0].replace('(', '')),
+        lng: parseFloat(data.user_location.split(',')[1].replace(')', ''))
+      } : undefined,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+      declineCount: data.decline_count || 0,
+    };
   }
 
-  async updateServiceRequest(id: string, updates: Partial<ServiceRequest>): Promise<void> {
-    const updateData: any = {};
-    
-    if (updates.status) updateData.status = updates.status;
-    if (updates.assignedEmployeeId !== undefined) updateData.assigned_employee_id = updates.assignedEmployeeId;
-    if (updates.priceQuote !== undefined) updateData.price_quote = updates.priceQuote;
-    if (updates.revisedPriceQuote !== undefined) updateData.revised_price_quote = updates.revisedPriceQuote;
-    if (updates.declineCount !== undefined) updateData.decline_count = updates.declineCount;
-    if (updates.userLocation) {
-      updateData.user_location = `POINT(${updates.userLocation.lng} ${updates.userLocation.lat})`;
-    }
-
-    const { error } = await supabase
+  async getServiceRequests(): Promise<ServiceRequest[]> {
+    const { data, error } = await supabase
       .from('service_requests')
-      .update(updateData)
-      .eq('id', id);
+      .select('*')
+      .order('created_at', { ascending: false });
 
     if (error) throw error;
+
+    return data.map(item => ({
+      id: item.id,
+      type: item.type,
+      description: item.description,
+      userId: item.user_id,
+      status: item.status,
+      assignedEmployeeId: item.assigned_employee_id,
+      priceQuote: item.price_quote,
+      revisedPriceQuote: item.revised_price_quote,
+      userLocation: item.user_location ? {
+        lat: parseFloat(item.user_location.split(',')[0].replace('(', '')),
+        lng: parseFloat(item.user_location.split(',')[1].replace(')', ''))
+      } : undefined,
+      createdAt: item.created_at,
+      updatedAt: item.updated_at,
+      declineCount: item.decline_count || 0,
+    }));
   }
 
-  async getServiceRequest(id: string): Promise<ServiceRequest | null> {
-    const { data, error } = await supabase
-      .from('service_requests')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error || !data) return null;
-
-    return this.mapServiceRequestFromDB(data);
-  }
-
-  async getUserActiveRequest(userId: string): Promise<ServiceRequest | null> {
-    const { data, error } = await supabase
-      .from('service_requests')
-      .select('*')
-      .eq('user_id', userId)
-      .in('status', ['pending', 'quote_sent', 'quote_revised', 'accepted', 'in_progress'])
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (error || !data) return null;
-    return this.mapServiceRequestFromDB(data);
-  }
-
+  // Employee Methods
   async getAvailableEmployees(): Promise<Employee[]> {
-    try {
-      console.log('Fetching available employees from Supabase...');
-      
-      const { data, error } = await supabase
-        .from('employee_accounts')
-        .select('*')
-        .eq('is_available', true)
-        .eq('status', 'active');
-
-      if (error) {
-        console.error('Error fetching employees:', error);
-        throw error;
-      }
-
-      console.log('Raw employee data from Supabase:', data);
-
-      const employees: Employee[] = data.map(emp => ({
-        id: emp.id,
-        name: emp.real_name || emp.username,
-        isAvailable: emp.is_available || false,
-        location: emp.location ? {
-          lat: (emp.location as any).x || 42.6977,
-          lng: (emp.location as any).y || 23.3219
-        } : {
-          lat: 42.6977 + (Math.random() - 0.5) * 0.1,
-          lng: 23.3219 + (Math.random() - 0.5) * 0.1
-        }
-      }));
-
-      console.log('Processed employees:', employees);
-      return employees;
-    } catch (error) {
-      console.error('Error in getAvailableEmployees:', error);
-      throw error;
-    }
-  }
-
-  async getAvailableSimulatedEmployees(): Promise<Employee[]> {
     const { data, error } = await supabase
-      .from('employees')
+      .from('employee_accounts')
       .select('*')
-      .eq('is_simulated', true)
-      .eq('is_available', true);
+      .eq('is_available', true)
+      .eq('status', 'active');
 
     if (error) throw error;
-    return data.map(this.mapEmployeeFromDB);
+
+    return data.map(employee => ({
+      id: employee.id,
+      name: employee.real_name || employee.username,
+      isAvailable: employee.is_available || false,
+      isSimulated: employee.is_simulated || false,
+      location: employee.location ? {
+        lat: (employee.location as any).x || 0,
+        lng: (employee.location as any).y || 0,
+      } : { lat: 0, lng: 0 },
+    }));
   }
 
-  async getPriceRanges(): Promise<Record<string, { min: number; max: number }>> {
-    const { data, error } = await supabase
-      .from('price_ranges')
-      .select('*');
-
-    if (error) throw error;
-    
-    const ranges: Record<string, { min: number; max: number }> = {};
-    data.forEach(range => {
-      ranges[range.service_type] = {
-        min: Number(range.min_price),
-        max: Number(range.max_price)
-      };
-    });
-    
-    return ranges;
-  }
-
-  async generatePriceQuote(serviceType: string): Promise<number> {
-    const { data, error } = await supabase
-      .rpc('generate_price_quote', { service_type: serviceType });
-
-    if (error) throw error;
-    return Number(data);
-  }
-
-  async validatePrice(serviceType: string, price: number): Promise<boolean> {
-    const { data, error } = await supabase
-      .rpc('is_valid_price', { service_type: serviceType, price });
-
-    if (error) throw error;
-    return data;
-  }
-
-  async addToHistory(request: ServiceRequest): Promise<void> {
+  async updateEmployeeAvailability(employeeId: string, isAvailable: boolean): Promise<void> {
     const { error } = await supabase
-      .from('user_history')
-      .insert({
-        user_id: request.userId,
-        username: request.userId, // Will need to get actual username
-        service_type: request.type,
-        status: request.status,
-        employee_name: request.assignedEmployeeId,
-        price_paid: request.priceQuote || request.revisedPriceQuote,
-        request_date: request.createdAt.toISOString(),
-        completion_date: new Date().toISOString(),
-        latitude: request.userLocation.lat,
-        longitude: request.userLocation.lng
-      });
+      .from('employee_accounts')
+      .update({ is_available: isAvailable })
+      .eq('id', employeeId);
 
     if (error) throw error;
   }
 
-  async blacklistEmployee(requestId: string, employeeId: string, userId: string): Promise<void> {
-    const { error } = await supabase
-      .from('simulated_employees_blacklist')
-      .insert({
-        request_id: requestId,
-        employee_name: employeeId,
-        user_id: userId
-      });
-
-    if (error) throw error;
-  }
-
-  async resetBlacklist(requestId: string): Promise<void> {
-    const { error } = await supabase
-      .from('simulated_employees_blacklist')
-      .delete()
-      .eq('request_id', requestId);
-
-    if (error) throw error;
-  }
-
-  async getBlacklistedEmployees(requestId: string): Promise<string[]> {
+  // User Methods
+  async getUsers(): Promise<User[]> {
     const { data, error } = await supabase
-      .from('simulated_employees_blacklist')
-      .select('employee_name')
-      .eq('request_id', requestId);
+      .from('users')
+      .select('*')
+      .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data.map(item => item.employee_name);
+
+    return data.map(user => ({
+      id: user.id,
+      username: user.username,
+      location: user.location ? {
+        lat: parseFloat(user.location.split(',')[0].replace('(', '')),
+        lng: parseFloat(user.location.split(',')[1].replace(')', ''))
+      } : { lat: 0, lng: 0 },
+    }));
   }
 
-  async createUser(user: Omit<User, 'id'>): Promise<string> {
+  async createUser(user: Omit<User, 'id'>): Promise<User> {
     const { data, error } = await supabase
       .from('users')
       .insert({
         username: user.username,
-        name: user.name,
-        email: user.email,
-        location: `POINT(${user.location.lng} ${user.location.lat})`,
-        ban_count: user.banCount,
-        banned_until: user.bannedUntil?.toISOString()
+        location: `(${user.location.lat},${user.location.lng})`,
       })
-      .select('id')
+      .select()
       .single();
 
     if (error) throw error;
-    return data.id;
+
+    return {
+      id: data.id,
+      username: data.username,
+      location: data.location ? {
+        lat: parseFloat(data.location.split(',')[0].replace('(', '')),
+        lng: parseFloat(data.location.split(',')[1].replace(')', ''))
+      } : { lat: 0, lng: 0 },
+    };
   }
 
-  async updateUser(id: string, updates: Partial<User>): Promise<void> {
+  // Service Request Update Methods
+  async updateServiceRequest(id: string, updates: Partial<ServiceRequest>): Promise<ServiceRequest> {
     const updateData: any = {};
     
-    if (updates.banCount !== undefined) updateData.ban_count = updates.banCount;
-    if (updates.bannedUntil !== undefined) updateData.banned_until = updates.bannedUntil?.toISOString();
-    if (updates.location) {
-      updateData.location = `POINT(${updates.location.lng} ${updates.location.lat})`;
-    }
+    if (updates.status) updateData.status = updates.status;
+    if (updates.assignedEmployeeId) updateData.assigned_employee_id = updates.assignedEmployeeId;
+    if (updates.priceQuote !== undefined) updateData.price_quote = updates.priceQuote;
+    if (updates.revisedPriceQuote !== undefined) updateData.revised_price_quote = updates.revisedPriceQuote;
+    if (updates.declineCount !== undefined) updateData.decline_count = updates.declineCount;
 
-    const { error } = await supabase
-      .from('users')
+    const { data, error } = await supabase
+      .from('service_requests')
       .update(updateData)
-      .eq('id', id);
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return {
+      id: data.id,
+      type: data.type,
+      description: data.description,
+      userId: data.user_id,
+      status: data.status,
+      assignedEmployeeId: data.assigned_employee_id,
+      priceQuote: data.price_quote,
+      revisedPriceQuote: data.revised_price_quote,
+      userLocation: data.user_location ? {
+        lat: parseFloat(data.user_location.split(',')[0].replace('(', '')),
+        lng: parseFloat(data.user_location.split(',')[1].replace(')', ''))
+      } : undefined,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+      declineCount: data.decline_count || 0,
+    };
+  }
+
+  async assignEmployeeToRequest(requestId: string, employeeId: string): Promise<void> {
+    const { error } = await supabase
+      .from('service_requests')
+      .update({
+        assigned_employee_id: employeeId,
+        status: 'assigned'
+      })
+      .eq('id', requestId);
 
     if (error) throw error;
   }
-
-  private mapServiceRequestFromDB(data: any): ServiceRequest {
-    const location = this.parsePoint(data.user_location);
-    return {
-      id: data.id,
-      userId: data.user_id,
-      type: data.type,
-      status: data.status,
-      assignedEmployeeId: data.assigned_employee_id,
-      priceQuote: data.price_quote ? Number(data.price_quote) : undefined,
-      revisedPriceQuote: data.revised_price_quote ? Number(data.revised_price_quote) : undefined,
-      declineCount: data.decline_count || 0,
-      description: data.description,
-      userLocation: location,
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at)
-    };
-  }
-
-  private mapEmployeeFromDB(data: any): Employee {
-    const location = this.parsePoint(data.location);
-    return {
-      id: data.id,
-      name: data.name,
-      isSimulated: data.is_simulated,
-      location: location,
-      isAvailable: data.is_available
-    };
-  }
-
-  private parsePoint(pointStr: string): { lat: number; lng: number } {
-    if (!pointStr) return { lat: 42.6977, lng: 23.3219 }; // Default Sofia location
-    
-    // Parse POINT(lng lat) format
-    const match = pointStr.match(/POINT\(([^)]+)\)/);
-    if (match) {
-      const coords = match[1].split(' ');
-      return {
-        lat: parseFloat(coords[1]),
-        lng: parseFloat(coords[0])
-      };
-    }
-    
-    return { lat: 42.6977, lng: 23.3219 };
-  }
 }
+
+export const newSupabaseService = new NewSupabaseService();
