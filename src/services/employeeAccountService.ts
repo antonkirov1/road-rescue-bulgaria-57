@@ -3,17 +3,21 @@ import { supabase } from '@/integrations/supabase/client';
 import bcrypt from 'bcryptjs';
 
 export interface EmployeeAccount {
+  id?: string;
   username: string;
   email: string;
   phone_number?: string;
   employee_role?: 'technician' | 'support' | 'admin';
   status?: 'active' | 'inactive' | 'suspended';
   real_name?: string;
+  created_at?: string;
+  auth_user_id?: string;
+  password_hash?: string;
 }
 
 export class EmployeeAccountService {
   // Create a new employee account
-  static async createEmployeeAccount(employeeData: EmployeeAccount) {
+  static async createEmployeeAccount(employeeData: Omit<EmployeeAccount, 'id' | 'created_at'>) {
     try {
       const { data, error } = await supabase.rpc('create_employee_account', {
         p_username: employeeData.username,
@@ -37,7 +41,7 @@ export class EmployeeAccountService {
   }
 
   // Get all employee accounts
-  static async getAllEmployees() {
+  static async getAllEmployees(): Promise<EmployeeAccount[]> {
     try {
       const { data, error } = await supabase
         .from('employee_accounts')
@@ -49,7 +53,11 @@ export class EmployeeAccountService {
         throw error;
       }
 
-      return data || [];
+      // Type assertion to ensure proper typing from database
+      return (data || []).map(employee => ({
+        ...employee,
+        employee_role: employee.employee_role as 'technician' | 'support' | 'admin'
+      }));
     } catch (error) {
       console.error('Error in getAllEmployees:', error);
       throw error;
@@ -114,7 +122,10 @@ export class EmployeeAccountService {
       }
 
       console.log('Employee updated successfully:', data);
-      return data;
+      return {
+        ...data,
+        employee_role: data.employee_role as 'technician' | 'support' | 'admin'
+      };
     } catch (error) {
       console.error('Error in updateEmployee:', error);
       throw error;
@@ -137,7 +148,10 @@ export class EmployeeAccountService {
       }
 
       console.log('Employee status updated:', data);
-      return data;
+      return {
+        ...data,
+        employee_role: data.employee_role as 'technician' | 'support' | 'admin'
+      };
     } catch (error) {
       console.error('Error in updateEmployeeStatus:', error);
       throw error;
@@ -145,7 +159,7 @@ export class EmployeeAccountService {
   }
 
   // Get active employees
-  static async getActiveEmployees() {
+  static async getActiveEmployees(): Promise<EmployeeAccount[]> {
     try {
       const { data, error } = await supabase
         .from('employee_accounts')
@@ -158,7 +172,10 @@ export class EmployeeAccountService {
         throw error;
       }
 
-      return data || [];
+      return (data || []).map(employee => ({
+        ...employee,
+        employee_role: employee.employee_role as 'technician' | 'support' | 'admin'
+      }));
     } catch (error) {
       console.error('Error in getActiveEmployees:', error);
       throw error;
@@ -166,7 +183,7 @@ export class EmployeeAccountService {
   }
 
   // Get employees by role
-  static async getEmployeesByRole(role: 'technician' | 'support' | 'admin') {
+  static async getEmployeesByRole(role: 'technician' | 'support' | 'admin'): Promise<EmployeeAccount[]> {
     try {
       const { data, error } = await supabase
         .from('employee_accounts')
@@ -180,9 +197,60 @@ export class EmployeeAccountService {
         throw error;
       }
 
-      return data || [];
+      return (data || []).map(employee => ({
+        ...employee,
+        employee_role: employee.employee_role as 'technician' | 'support' | 'admin'
+      }));
     } catch (error) {
       console.error('Error in getEmployeesByRole:', error);
+      throw error;
+    }
+  }
+
+  // Get employee account by ID
+  static async getEmployeeById(employeeId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('employee_accounts')
+        .select('*')
+        .eq('id', employeeId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching employee:', error);
+        throw error;
+      }
+
+      return {
+        ...data,
+        employee_role: data.employee_role as 'technician' | 'support' | 'admin'
+      };
+    } catch (error) {
+      console.error('Error in getEmployeeById:', error);
+      throw error;
+    }
+  }
+
+  // Get employee account by username
+  static async getEmployeeByUsername(username: string) {
+    try {
+      const { data, error } = await supabase
+        .from('employee_accounts')
+        .select('*')
+        .eq('username', username)
+        .single();
+
+      if (error) {
+        console.error('Error fetching employee by username:', error);
+        throw error;
+      }
+
+      return {
+        ...data,
+        employee_role: data.employee_role as 'technician' | 'support' | 'admin'
+      };
+    } catch (error) {
+      console.error('Error in getEmployeeByUsername:', error);
       throw error;
     }
   }
