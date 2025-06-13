@@ -1,6 +1,6 @@
+
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo } from 'react';
 import { toast } from '@/components/ui/use-toast';
-import { useTranslation } from '@/utils/translations';
 import { useServiceRequestManager } from '@/hooks/useServiceRequestManager';
 
 interface User {
@@ -114,16 +114,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           });
         },
         () => {
-          const t = useTranslation(language);
+          // Simple fallback message without translation dependency
           toast({
-            title: t("location-access-denied"),
-            description: t("location-access-message"),
+            title: "Location access denied",
+            description: "Using default location (Sofia, Bulgaria)",
             variant: "destructive",
           });
         }
       );
     }
-  }, [language]);
+  }, []);
   
   const login = useMemo(() => (userData: User) => {
     setUser(userData);
