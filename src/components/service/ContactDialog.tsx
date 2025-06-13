@@ -3,35 +3,32 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ContactDialogIcons } from './serviceIcons';
+import { useApp } from '@/contexts/AppContext';
+import { useTranslation } from '@/utils/translations';
 
 interface ContactDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onEmailContact: () => void;
   onPhoneContact: () => void;
-  contactOptionsText: string;
-  supportDescText: string;
-  writeEmailText: string;
-  giveCallText: string;
 }
 
 const ContactDialog: React.FC<ContactDialogProps> = ({
   open,
   onOpenChange,
   onEmailContact,
-  onPhoneContact,
-  contactOptionsText,
-  supportDescText,
-  writeEmailText,
-  giveCallText
+  onPhoneContact
 }) => {
+  const { language } = useApp();
+  const t = useTranslation(language);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md mx-4">
         <DialogHeader>
-          <DialogTitle>{contactOptionsText}</DialogTitle>
+          <DialogTitle>{t('Contact Options')}</DialogTitle>
           <DialogDescription>
-            {supportDescText}
+            {t('How would you like to contact our support team?')}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
@@ -40,7 +37,7 @@ const ContactDialog: React.FC<ContactDialogProps> = ({
             className="w-full justify-start bg-green-600 hover:bg-green-700"
           >
             {ContactDialogIcons.email}
-            {writeEmailText}
+            {t('Write an Email')}
           </Button>
           <Button 
             onClick={onPhoneContact}
@@ -48,7 +45,7 @@ const ContactDialog: React.FC<ContactDialogProps> = ({
             className="w-full justify-start"
           >
             {ContactDialogIcons.phone}
-            {giveCallText}
+            {t('Give us a Call')}
           </Button>
         </div>
       </DialogContent>

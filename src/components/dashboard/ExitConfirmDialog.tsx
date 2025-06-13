@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   AlertDialog,
@@ -9,6 +10,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useApp } from '@/contexts/AppContext';
+import { useTranslation } from '@/utils/translations';
 
 interface ExitConfirmDialogProps {
   open: boolean;
@@ -21,24 +24,27 @@ const ExitConfirmDialog: React.FC<ExitConfirmDialogProps> = ({
   onClose,
   onLogout
 }) => {
+  const { language } = useApp();
+  const t = useTranslation(language);
+
   return (
     <AlertDialog open={open} onOpenChange={onClose}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            Do you want to exit?
+            {t('Do you want to exit?')}
           </AlertDialogTitle>
           <AlertDialogDescription>
-            If you do, press the Log Out button.
+            {t('If you do, press the Log Out button.')}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={onClose}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel onClick={onClose}>{t('cancel')}</AlertDialogCancel>
           <AlertDialogAction 
             onClick={onLogout}
             className="bg-red-600 hover:bg-red-700"
           >
-            Log Out
+            {t('Log Out')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

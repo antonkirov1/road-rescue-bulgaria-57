@@ -37,7 +37,7 @@ const EmployeePriceAdjustDialog: React.FC<EmployeePriceAdjustDialogProps> = ({
   const handleSendQuote = () => {
     const price = parseFloat(newPrice);
     if (!newPrice || isNaN(price) || price <= 0) {
-      alert('Please enter a valid price quote');
+      alert(t('Please enter a valid price quote'));
       return;
     }
     onSendQuote(price);
@@ -50,10 +50,10 @@ const EmployeePriceAdjustDialog: React.FC<EmployeePriceAdjustDialogProps> = ({
   };
 
   const title = customerDeclined 
-    ? 'Customer Declined - Send Revised Quote?' 
+    ? t('Customer Declined - Send Revised Quote?')
     : isRevision 
-    ? 'Revise Price Quote' 
-    : 'Adjust Price Quote';
+    ? t('Revise Price Quote')
+    : t('Adjust Price Quote');
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -66,22 +66,21 @@ const EmployeePriceAdjustDialog: React.FC<EmployeePriceAdjustDialogProps> = ({
           {customerDeclined && (
             <div className="rounded-md bg-yellow-50 dark:bg-yellow-900/20 p-3">
               <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                The customer has declined your quote of {currentPrice.toFixed(2)} BGN. 
-                You have one opportunity to send a revised quote.
+                {t('The customer has declined your quote of')} {currentPrice.toFixed(2)} {t('BGN. You have one opportunity to send a revised quote.')}
               </p>
             </div>
           )}
           
           <div className="space-y-2">
             <Label htmlFor="new-price">
-              {customerDeclined ? 'Revised Price Quote (BGN)' : 'New Price Quote (BGN)'}
+              {customerDeclined ? t('Revised Price Quote (BGN)') : t('New Price Quote (BGN)')}
             </Label>
             <Input
               id="new-price"
               type="number"
               min="0"
               step="0.01"
-              placeholder="Enter new price quote..."
+              placeholder={t('Enter new price quote...')}
               value={newPrice}
               onChange={(e) => setNewPrice(e.target.value)}
             />
@@ -93,13 +92,13 @@ const EmployeePriceAdjustDialog: React.FC<EmployeePriceAdjustDialogProps> = ({
             variant="outline" 
             onClick={customerDeclined ? handleDeclineRevision : onClose}
           >
-            {customerDeclined ? "Don't Revise" : 'Cancel'}
+            {customerDeclined ? t("Don't Revise") : t('cancel')}
           </Button>
           <Button 
             onClick={handleSendQuote}
             className="bg-green-600 hover:bg-green-700 text-white"
           >
-            {customerDeclined ? 'Send Revised Quote' : 'Send Price Quote'}
+            {customerDeclined ? t('Send Revised Quote') : t('Send Price Quote')}
           </Button>
         </DialogFooter>
       </DialogContent>

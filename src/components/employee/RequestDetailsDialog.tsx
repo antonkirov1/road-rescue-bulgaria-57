@@ -38,7 +38,7 @@ const RequestDetailsDialog: React.FC<RequestDetailsDialogProps> = ({
   const handleAccept = () => {
     const price = parseFloat(priceQuote);
     if (!priceQuote || isNaN(price) || price <= 0) {
-      alert('Please enter a valid price quote');
+      alert(t('Please enter a valid price quote'));
       return;
     }
     onAccept(request.id, price);
@@ -70,13 +70,13 @@ const RequestDetailsDialog: React.FC<RequestDetailsDialogProps> = ({
 
           {request.status === 'pending' && (
             <div className="space-y-2">
-              <Label htmlFor="price-quote">Price Quote (BGN)</Label>
+              <Label htmlFor="price-quote">{t('Price Quote (BGN)')}</Label>
               <Input
                 id="price-quote"
                 type="number"
                 min="0"
                 step="0.01"
-                placeholder="Enter price quote..."
+                placeholder={t('Enter price quote...')}
                 value={priceQuote}
                 onChange={(e) => setPriceQuote(e.target.value)}
               />
@@ -98,7 +98,7 @@ const RequestDetailsDialog: React.FC<RequestDetailsDialogProps> = ({
                 onClick={handleAccept}
                 className="bg-roadsaver-green text-white hover:bg-roadsaver-green/90"
               >
-                Accept And Send Price Quote
+                {t('Accept And Send Price Quote')}
               </Button>
             </>
           ) : (
