@@ -4,19 +4,24 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, UserCheck, Bot, BarChart3 } from 'lucide-react';
 import UserManagement from './user/UserManagement';
 import EmployeeManagement from './employee/EmployeeManagement';
+import EmployeeSimulation from './simulation/EmployeeSimulation';
 
 interface MaterialDashboardProps {
   currentView: 'dashboard' | 'users' | 'employees' | 'simulation';
   onViewChange: (view: 'dashboard' | 'users' | 'employees' | 'simulation') => void;
+  onStatsUpdate?: () => void;
 }
 
 const MaterialDashboard: React.FC<MaterialDashboardProps> = ({
   currentView,
-  onViewChange
+  onViewChange,
+  onStatsUpdate
 }) => {
   const handleStatsUpdate = async () => {
     // This will be called by child components to trigger stats refresh
-    // The actual stats refresh is handled in the parent MigrationPanel
+    if (onStatsUpdate) {
+      onStatsUpdate();
+    }
   };
 
   const renderDashboardOverview = () => (
@@ -84,28 +89,13 @@ const MaterialDashboard: React.FC<MaterialDashboardProps> = ({
     </div>
   );
 
-  const renderSimulation = () => (
-    <div className="p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Employee Simulation</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            Employee simulation functionality will be implemented here.
-          </p>
-        </CardContent>
-      </Card>
-    </div>
-  );
-
   switch (currentView) {
     case 'users':
       return <UserManagement onStatsUpdate={handleStatsUpdate} />;
     case 'employees':
       return <EmployeeManagement onStatsUpdate={handleStatsUpdate} />;
     case 'simulation':
-      return renderSimulation();
+      return <EmployeeSimulation onStatsUpdate={handleStatsUpdate} />;
     default:
       return renderDashboardOverview();
   }

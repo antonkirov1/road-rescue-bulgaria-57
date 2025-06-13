@@ -29,6 +29,7 @@ interface MaterialSidebarProps {
     activeEmployees: number;
     suspendedEmployees: number;
   };
+  onStatsUpdate?: () => void;
 }
 
 const MaterialSidebar: React.FC<MaterialSidebarProps> = ({

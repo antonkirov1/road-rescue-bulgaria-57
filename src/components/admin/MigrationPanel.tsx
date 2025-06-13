@@ -23,6 +23,7 @@ const MigrationPanel: React.FC = () => {
 
   const refreshStats = async () => {
     try {
+      console.log('Refreshing stats...');
       const [pendingUsers, employees, existingUsersData] = await Promise.all([
         UserAccountService.getPendingNewUsers(), 
         EmployeeAccountService.getAllEmployees(),
@@ -42,7 +43,7 @@ const MigrationPanel: React.FC = () => {
       const activeEmployees = employees.filter(emp => emp.status === 'active').length;
       const suspendedEmployees = employees.filter(emp => emp.status === 'suspended').length;
       
-      setStats({
+      const newStats = {
         pendingUsers: pendingUsers.length,
         existingUsers: existingUsers.length,
         employees: employees.length,
@@ -50,7 +51,10 @@ const MigrationPanel: React.FC = () => {
         bannedUsers,
         activeEmployees,
         suspendedEmployees
-      });
+      };
+      
+      console.log('Updated stats:', newStats);
+      setStats(newStats);
     } catch (error) {
       console.error('Error refreshing stats:', error);
     }
@@ -59,28 +63,49 @@ const MigrationPanel: React.FC = () => {
   useEffect(() => {
     refreshStats();
 
-    // Set up real-time subscriptions
+    // Set up real-time subscriptions with proper channel names
     const usersChannel = supabase
-      .channel('admin-users-stats')
+      .channel('admin-users-changes')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'users' }, 
-        () => refreshStats()
+        (payload) => {
+          console.log('Users table changed:', payload);
+          refreshStats();
+        }
       )
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'new_user_accounts' }, 
-        () => refreshStats()
+        (payload) => {
+          console.log('New user accounts changed:', payload);
+          refreshStats();
+        }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Users channel status:', status);
+      });
 
     const employeesChannel = supabase
-      .channel('admin-employees-stats')
+      .channel('admin-employees-changes')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'employee_accounts' }, 
-        () => refreshStats()
+        (payload) => {
+          console.log('Employee accounts changed:', payload);
+          refreshStats();
+        }
       )
-      .subscribe();
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'employee_simulation' }, 
+        (payload) => {
+          console.log('Employee simulation changed:', payload);
+          refreshStats();
+        }
+      )
+      .subscribe((status) => {
+        console.log('Employees channel status:', status);
+      });
 
     return () => {
+      console.log('Cleaning up channels...');
       supabase.removeChannel(usersChannel);
       supabase.removeChannel(employeesChannel);
     };
@@ -135,6 +160,7 @@ const MigrationPanel: React.FC = () => {
           isCollapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
           stats={stats}
+          onStatsUpdate={refreshStats}
         />
       </div>
 
@@ -153,6 +179,7 @@ const MigrationPanel: React.FC = () => {
           <MaterialDashboard
             currentView={currentView}
             onViewChange={setCurrentView}
+            onStatsUpdate={refreshStats}
           />
         </main>
       </div>
