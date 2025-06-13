@@ -32,11 +32,11 @@ export const allTranslations: Record<string, { en: string; bg: string }> = {
   'roadsaver-footer': { en: 'RoadSaver - Your trusted roadside assistance platform', bg: 'RoadSaver - Вашата доверена платформа за пътна помощ' },
 
   // Service Types
-  'flat-tyre': { en: 'Flat Tyre', bg: 'Спукана гума' },
-  'out-of-fuel': { en: 'Out of Fuel', bg: 'Без гориво' },
-  'car-battery': { en: 'Car Battery', bg: 'Акумулатор' },
-  'other-car-problems': { en: 'Other Car Problems', bg: 'Други проблеми с колата' },
-  'tow-truck': { en: 'Tow Truck', bg: 'Пътна помощ' },
+  'Flat Tyre': { en: 'Flat Tyre', bg: 'Спукана гума' },
+  'Out of Fuel': { en: 'Out of Fuel', bg: 'Без гориво' },
+  'Car Battery': { en: 'Car Battery', bg: 'Акумулатор' },
+  'Other Car Problems': { en: 'Other Car Problems', bg: 'Други проблеми с колата' },
+  'Tow Truck': { en: 'Tow Truck', bg: 'Пътна помощ' },
   'emergency': { en: 'Emergency', bg: 'Спешност' },
   'support': { en: 'Support', bg: 'Поддръжка' },
 
