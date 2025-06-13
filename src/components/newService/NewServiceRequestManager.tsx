@@ -27,26 +27,28 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
     handleAcceptQuote,
     handleDeclineQuote,
     handleCancelRequest,
-    handleClose
+    handleClose,
+    handleMinimize
   } = useServiceRequestLogic({
     type,
     open,
     userLocation,
     userId,
-    onClose
+    onClose,
+    onMinimize
   });
 
   return (
     <NewServiceRequestDialog
       open={open}
-      onOpenChange={(isOpen) => !isOpen && handleClose()}
+      onOpenChange={(isOpen) => !isOpen && handleMinimize()}
       currentScreen={currentScreen}
       request={currentRequest}
       onAcceptQuote={handleAcceptQuote}
       onDeclineQuote={handleDeclineQuote}
       onCancelRequest={handleCancelRequest}
       onClose={handleClose}
-      onMinimize={onMinimize}
+      onMinimize={handleMinimize}
     />
   );
 };

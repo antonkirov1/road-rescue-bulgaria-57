@@ -13,6 +13,7 @@ interface UseServiceRequestLogicProps {
   userLocation: { lat: number; lng: number };
   userId: string;
   onClose: () => void;
+  onMinimize: () => void;
 }
 
 export const useServiceRequestLogic = ({
@@ -20,7 +21,8 @@ export const useServiceRequestLogic = ({
   open,
   userLocation,
   userId,
-  onClose
+  onClose,
+  onMinimize
 }: UseServiceRequestLogicProps) => {
   const {
     currentScreen,
@@ -86,12 +88,12 @@ export const useServiceRequestLogic = ({
     }
   }, [open, type]);
 
-  // Reset state when dialog closes
+  // Reset state only when dialog is completely closed (not minimized)
   useEffect(() => {
-    if (!open) {
+    if (!open && !currentRequest) {
       resetState();
     }
-  }, [open]);
+  }, [open, currentRequest]);
 
   const handleSubmitRequest = async () => {
     try {
@@ -137,6 +139,12 @@ export const useServiceRequestLogic = ({
     onClose();
   };
 
+  const handleMinimizeWrapper = () => {
+    console.log('Minimizing service request - preserving state');
+    // Don't reset state when minimizing, just call the minimize callback
+    onMinimize();
+  };
+
   return {
     currentScreen,
     currentRequest,
@@ -144,6 +152,7 @@ export const useServiceRequestLogic = ({
     handleAcceptQuote: handleAcceptQuoteWrapper,
     handleDeclineQuote: handleDeclineQuoteWrapper,
     handleCancelRequest: handleCancelRequestWrapper,
-    handleClose
+    handleClose,
+    handleMinimize: handleMinimizeWrapper
   };
 };
