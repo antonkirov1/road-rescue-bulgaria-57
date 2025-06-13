@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { UserAccountService } from '@/services/userAccountService';
@@ -8,7 +9,7 @@ import MaterialSidebar from './MaterialSidebar';
 import MaterialHeader from './MaterialHeader';
 
 const MigrationPanel: React.FC = () => {
-  const [currentView, setCurrentView] = useState<'dashboard' | 'users' | 'employees' | 'simulation'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'users' | 'employees' | 'simulation'>('users');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [stats, setStats] = useState({
     pendingUsers: 0,
@@ -54,21 +55,11 @@ const MigrationPanel: React.FC = () => {
   };
 
   const getPageTitle = () => {
-    switch (currentView) {
-      case 'users': return 'User Management';
-      case 'employees': return 'Employee Management';
-      case 'simulation': return 'Simulation Management';
-      default: return 'Dashboard';
-    }
+    return 'User Management';
   };
 
   const getPageSubtitle = () => {
-    switch (currentView) {
-      case 'users': return 'Manage user accounts and permissions';
-      case 'employees': return 'Manage employee accounts and roles';
-      case 'simulation': return 'Manage simulation employee data';
-      default: return 'Overview of your platform metrics';
-    }
+    return 'Manage user accounts and permissions';
   };
 
   return (
