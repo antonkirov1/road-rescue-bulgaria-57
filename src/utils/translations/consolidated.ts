@@ -1,3 +1,4 @@
+
 export const allTranslations: Record<string, { en: string; bg: string }> = {
   // Navigation and UI
   'services': { en: 'Services', bg: 'Услуги' },
@@ -183,7 +184,6 @@ export const allTranslations: Record<string, { en: string; bg: string }> = {
   'service-requests': { en: 'Service Requests', bg: 'Заявки за услуги' },
   'new-request': { en: 'New Request', bg: 'Нова заявка' },
   'new-service-request': { en: 'A new service request has arrived', bg: 'Пристигна нова заявка за услуга' },
-  'request-accepted': { en: 'Request Accepted', bg: 'Заявката е приета' },
   'request-declined-status': { en: 'Request Declined', bg: 'Заявката е отказана' },
   'decline-service-request': { en: 'Decline Service Request', bg: 'Откажи заявката за услуга' },
   'decline-reason': { en: 'Please provide a reason for declining this request:', bg: 'Моля, посочете причина за отказване на тази заявка:' },
