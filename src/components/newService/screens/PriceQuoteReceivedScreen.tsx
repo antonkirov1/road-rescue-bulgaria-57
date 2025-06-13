@@ -24,6 +24,8 @@ const PriceQuoteReceivedScreen: React.FC<PriceQuoteReceivedScreenProps> = ({
   const { language } = useApp();
   const t = useTranslation(language);
 
+  const employeeName = request.assignedEmployeeName || `Employee #${request.assignedEmployeeId}`;
+
   return (
     <>
       <DialogHeader>
@@ -45,12 +47,10 @@ const PriceQuoteReceivedScreen: React.FC<PriceQuoteReceivedScreenProps> = ({
               </div>
             </div>
 
-            {request.assignedEmployeeId && (
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <User className="h-4 w-4" />
-                <span>{t('assigned-employee')}: Employee #{request.assignedEmployeeId}</span>
-              </div>
-            )}
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <User className="h-4 w-4" />
+              <span>{t('assigned-employee')}: {employeeName}</span>
+            </div>
           </CardContent>
         </Card>
 

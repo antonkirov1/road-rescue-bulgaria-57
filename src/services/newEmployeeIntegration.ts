@@ -24,6 +24,7 @@ class NewEmployeeIntegrationService {
 
   private constructor() {
     this.loadSimulatedEmployees();
+    this.loadRealEmployees();
   }
 
   static getInstance(): NewEmployeeIntegrationService {
@@ -60,9 +61,37 @@ class NewEmployeeIntegrationService {
     }
   }
 
+  private async loadRealEmployees(): Promise<void> {
+    try {
+      const { data, error } = await supabase
+        .from('employee_accounts')
+        .select('id, username, real_name, status')
+        .eq('status', 'active');
+
+      if (error) {
+        console.error('Error loading real employees:', error);
+        return;
+      }
+
+      this.realEmployees = data.map((emp) => ({
+        id: `real_emp_${emp.id}`,
+        name: emp.real_name || emp.username,
+        isSimulated: false,
+        location: {
+          lat: 42.6977 + (Math.random() - 0.5) * 0.1,
+          lng: 23.3219 + (Math.random() - 0.5) * 0.1
+        },
+        isAvailable: Math.random() > 0.4 // 60% availability for real employees
+      }));
+    } catch (error) {
+      console.error('Error in loadRealEmployees:', error);
+    }
+  }
+
   async findAvailableEmployee(request: ServiceRequest, blacklistedEmployees: string[] = []): Promise<EmployeeResponse | null> {
-    // Reload simulated employees to ensure we have fresh data
+    // Reload employees to ensure we have fresh data
     await this.loadSimulatedEmployees();
+    await this.loadRealEmployees();
 
     // First try to find a real employee
     const availableRealEmployees = this.realEmployees.filter(emp => 
@@ -70,7 +99,8 @@ class NewEmployeeIntegrationService {
     );
 
     if (availableRealEmployees.length > 0) {
-      return availableRealEmployees[0];
+      const randomIndex = Math.floor(Math.random() * availableRealEmployees.length);
+      return availableRealEmployees[randomIndex];
     }
 
     // Fallback to simulated employees
@@ -95,13 +125,15 @@ class NewEmployeeIntegrationService {
       'Tow Truck': { min: 60, max: 120 }
     };
 
-    const priceRange = basePrices[serviceType];
+    const priceRange = basePrices[serviceType] || { min: 40, max: 60 };
     let amount = Math.floor(Math.random() * (priceRange.max - priceRange.min + 1)) + priceRange.min;
 
     if (isRevised) {
-      // Reduce price by 10-25% for revision
-      const reduction = Math.floor(amount * (0.1 + Math.random() * 0.15));
+      // Reduce price by 15-25% for revision
+      const reductionPercent = 0.15 + Math.random() * 0.10; // 15-25%
+      const reduction = Math.floor(amount * reductionPercent);
       amount = Math.max(priceRange.min, amount - reduction);
+      console.log(`Revised quote: Original ${amount + reduction} BGN, Reduced by ${reduction} BGN (${Math.round(reductionPercent * 100)}%), New: ${amount} BGN`);
     }
 
     return {

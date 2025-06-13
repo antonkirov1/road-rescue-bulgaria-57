@@ -24,6 +24,9 @@ const RevisedPriceQuoteScreen: React.FC<RevisedPriceQuoteScreenProps> = ({
   const { language } = useApp();
   const t = useTranslation(language);
 
+  const employeeName = request.assignedEmployeeName || `Employee #${request.assignedEmployeeId}`;
+  const revisedPrice = request.revisedPriceQuote || request.priceQuote;
+
   return (
     <>
       <DialogHeader>
@@ -49,17 +52,20 @@ const RevisedPriceQuoteScreen: React.FC<RevisedPriceQuoteScreenProps> = ({
               <div>
                 <h3 className="font-medium">{t('quoted-price')}</h3>
                 <p className="text-2xl font-bold text-green-600">
-                  {request.priceQuote} BGN
+                  {revisedPrice} BGN
                 </p>
+                {request.priceQuote && revisedPrice !== request.priceQuote && (
+                  <p className="text-sm text-gray-500 line-through">
+                    Was: {request.priceQuote} BGN
+                  </p>
+                )}
               </div>
             </div>
 
-            {request.assignedEmployeeId && (
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <User className="h-4 w-4" />
-                <span>{t('assigned-employee')}: Employee #{request.assignedEmployeeId}</span>
-              </div>
-            )}
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <User className="h-4 w-4" />
+              <span>{t('assigned-employee')}: {employeeName}</span>
+            </div>
           </CardContent>
         </Card>
 
@@ -68,7 +74,7 @@ const RevisedPriceQuoteScreen: React.FC<RevisedPriceQuoteScreenProps> = ({
             onClick={onAccept}
             className="w-full bg-green-600 hover:bg-green-700"
           >
-            {t('confirm')} - {request.priceQuote} BGN
+            {t('confirm')} - {revisedPrice} BGN
           </Button>
           
           <Button 

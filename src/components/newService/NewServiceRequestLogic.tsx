@@ -91,6 +91,7 @@ export const useServiceRequestLogic = ({
       }
 
       setAssignedEmployee(employee);
+      console.log('Found employee:', employee.name);
       
       // Notify employee and wait for acceptance
       const notified = await employeeIntegrationService.notifyEmployeeOfRequest(employee, request);
@@ -98,7 +99,7 @@ export const useServiceRequestLogic = ({
       if (notified) {
         // Generate quote
         setTimeout(() => {
-          generateQuote(request, employee);
+          generateQuote(request, employee, false);
         }, 1000 + Math.random() * 2000);
       } else {
         // Employee couldn't be notified, find another
@@ -113,22 +114,27 @@ export const useServiceRequestLogic = ({
     }
   };
 
-  const generateQuote = (request: ServiceRequest, employee: EmployeeResponse) => {
-    const quote = employeeIntegrationService.generateQuote(request.type);
+  const generateQuote = (request: ServiceRequest, employee: EmployeeResponse, isRevised: boolean = false) => {
+    const quote = employeeIntegrationService.generateQuote(request.type, isRevised);
     
     const updatedRequest = {
       ...request,
-      status: 'quote_sent' as const,
+      status: isRevised ? 'quote_revised' as const : 'quote_sent' as const,
       priceQuote: quote.amount,
-      assignedEmployeeId: employee.id
+      assignedEmployeeId: employee.id,
+      assignedEmployeeName: employee.name
     };
+
+    if (isRevised) {
+      updatedRequest.revisedPriceQuote = quote.amount;
+    }
     
     setCurrentRequest(updatedRequest);
-    setCurrentScreen('show_price_quote_received');
+    setCurrentScreen(isRevised ? 'show_revised_price_quote' : 'show_price_quote_received');
     
     toast({
-      title: "Price Quote Received",
-      description: `${employee.name} sent you a quote of ${quote.amount} BGN.`
+      title: isRevised ? "Revised Quote Received" : "Price Quote Received",
+      description: `${employee.name} sent you a ${isRevised ? 'revised ' : ''}quote of ${quote.amount} BGN.`
     });
   };
 
@@ -184,23 +190,29 @@ export const useServiceRequestLogic = ({
       const declineCount = currentRequest.declineCount + 1;
       
       if (declineCount === 1) {
-        // First decline - show revised quote
-        const revisedQuote = employeeIntegrationService.generateQuote(currentRequest.type, true);
+        // First decline - show revised quote with lower price
+        console.log('First decline - generating revised quote with lower price');
+        
         const updatedRequest = {
           ...currentRequest,
           declineCount,
-          revisedPriceQuote: revisedQuote.amount,
-          status: 'quote_revised' as const
+          status: 'quote_declined' as const
         };
         setCurrentRequest(updatedRequest);
-        setCurrentScreen('show_revised_price_quote');
         
         toast({
           title: "Quote Declined",
-          description: `${assignedEmployee.name} will send you a revised quote.`
+          description: `${assignedEmployee.name} will send you a revised quote with a lower price.`
         });
+        
+        // Generate revised quote after a short delay
+        setTimeout(() => {
+          generateQuote(updatedRequest, assignedEmployee, true);
+        }, 1500);
+        
       } else {
         // Second decline - find new employee
+        console.log('Second decline - blacklisting employee and finding new one');
         setBlacklistedEmployees(prev => [...prev, assignedEmployee.name]);
         
         // Notify current employee of decline
