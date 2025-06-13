@@ -74,8 +74,6 @@ const EmployeeDashboard: React.FC = () => {
   };
 
   const handleMinimizeRequest = () => {
-    // For employee dashboard, we can simply close the request
-    // since employees don't need the minimize functionality like users do
     setSelectedRequest(null);
   };
 
@@ -86,6 +84,7 @@ const EmployeeDashboard: React.FC = () => {
         onLanguageChange={handleLanguageChange}
         onLogout={handleLogout}
         onSettingsOpen={handleSettingsOpen}
+        employeeId={employeeId}
       />
       
       <div className="container mx-auto px-4 py-6 max-w-4xl">

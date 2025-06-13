@@ -1,4 +1,3 @@
-
 export const translations = {
   // Dashboard and Navigation
   'dashboard': {
@@ -242,5 +241,67 @@ export const translations = {
   'no-requests': {
     'en': 'No service requests found',
     'bg': 'Няма намерени заявки за услуги'
+  },
+
+  // Chat system translations
+  'chat': {
+    en: 'Chat',
+    bg: 'Чат'
+  },
+  'chat-rooms': {
+    en: 'Chat Rooms',
+    bg: 'Чат стаи'
+  },
+  'room-name': {
+    en: 'Room Name',
+    bg: 'Име на стаята'
+  },
+  'create': {
+    en: 'Create',
+    bg: 'Създай'
+  },
+  'cancel': {
+    en: 'Cancel',
+    bg: 'Отказ'
+  },
+  'loading': {
+    en: 'Loading',
+    bg: 'Зареждане'
+  },
+  'support-chat': {
+    en: 'Support Chat',
+    bg: 'Чат за поддръжка'
+  },
+  'group-chat': {
+    en: 'Group Chat',
+    bg: 'Групов чат'
+  },
+  'type-message': {
+    en: 'Type a message...',
+    bg: 'Напишете съобщение...'
+  },
+  'select-room-to-start-chatting': {
+    en: 'Select a room to start chatting',
+    bg: 'Изберете стая за започване на чат'
+  },
+  'no-messages': {
+    en: 'No messages yet',
+    bg: 'Все още няма съобщения'
+  },
+  'new-room': {
+    en: 'New Room',
+    bg: 'Нова стая'
+  },
+  'direct': {
+    en: 'Direct',
+    bg: 'Директен'
+  },
+  'group': {
+    en: 'Group',
+    bg: 'Група'
+  },
+  'support': {
+    en: 'Support',
+    bg: 'Поддръжка'
   }
 };

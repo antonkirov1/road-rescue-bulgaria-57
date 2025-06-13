@@ -1,0 +1,44 @@
+
+export interface ChatRoom {
+  id: string;
+  name: string;
+  type: 'direct' | 'group' | 'support';
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  is_active: boolean;
+}
+
+export interface ChatParticipant {
+  id: string;
+  room_id: string;
+  user_id: string | null;
+  employee_id: string | null;
+  joined_at: string;
+  left_at: string | null;
+  role: 'admin' | 'moderator' | 'member';
+}
+
+export interface ChatMessage {
+  id: string;
+  room_id: string;
+  sender_id: string | null;
+  sender_employee_id: string | null;
+  message_text: string;
+  message_type: 'text' | 'image' | 'file' | 'system';
+  reply_to_message_id: string | null;
+  is_edited: boolean;
+  is_deleted: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ChatNotification {
+  id: string;
+  room_id: string;
+  user_id: string | null;
+  employee_id: string | null;
+  message_id: string;
+  is_read: boolean;
+  created_at: string;
+}
