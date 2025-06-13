@@ -23,6 +23,8 @@ export const useServiceRequestLogic = ({
   const [currentRequest, setCurrentRequest] = useState<ServiceRequest | null>(null);
   const [assignedEmployee, setAssignedEmployee] = useState<EmployeeResponse | null>(null);
   const [blacklistedEmployees, setBlacklistedEmployees] = useState<string[]>([]);
+  const [employeeDeclineCount, setEmployeeDeclineCount] = useState<number>(0);
+  const [hasReceivedRevision, setHasReceivedRevision] = useState<boolean>(false);
 
   // Initialize when dialog opens
   useEffect(() => {
@@ -39,6 +41,8 @@ export const useServiceRequestLogic = ({
       setCurrentRequest(null);
       setAssignedEmployee(null);
       setBlacklistedEmployees([]);
+      setEmployeeDeclineCount(0);
+      setHasReceivedRevision(false);
     }
   }, [open]);
 
@@ -91,6 +95,9 @@ export const useServiceRequestLogic = ({
       }
 
       setAssignedEmployee(employee);
+      // Reset decline tracking for new employee
+      setEmployeeDeclineCount(0);
+      setHasReceivedRevision(false);
       console.log('Found employee:', employee.name);
       
       // Notify employee and wait for acceptance
@@ -187,18 +194,22 @@ export const useServiceRequestLogic = ({
     if (!currentRequest || !assignedEmployee) return;
     
     try {
-      const declineCount = currentRequest.declineCount + 1;
+      const newDeclineCount = employeeDeclineCount + 1;
+      setEmployeeDeclineCount(newDeclineCount);
       
-      if (declineCount === 1) {
-        // First decline - show revised quote with lower price
+      console.log(`Decline #${newDeclineCount} for employee ${assignedEmployee.name}`);
+      
+      if (newDeclineCount === 1 && !hasReceivedRevision) {
+        // First decline - same employee sends revision
         console.log('First decline - generating revised quote with lower price');
         
         const updatedRequest = {
           ...currentRequest,
-          declineCount,
+          declineCount: currentRequest.declineCount + 1,
           status: 'quote_declined' as const
         };
         setCurrentRequest(updatedRequest);
+        setHasReceivedRevision(true);
         
         toast({
           title: "Quote Declined",
@@ -211,18 +222,23 @@ export const useServiceRequestLogic = ({
         }, 1500);
         
       } else {
-        // Second decline - find new employee
-        console.log('Second decline - blacklisting employee and finding new one');
+        // Second decline OR decline after revision - blacklist employee and find new one
+        console.log(`Second decline (total: ${newDeclineCount}) - blacklisting employee ${assignedEmployee.name} and finding new one`);
+        
+        // Add current employee to blacklist
         setBlacklistedEmployees(prev => [...prev, assignedEmployee.name]);
         
         // Notify current employee of decline
         await employeeIntegrationService.employeeDeclinedRequest(
           assignedEmployee.id, 
           currentRequest.id, 
-          'Customer declined revised quote'
+          newDeclineCount === 1 ? 'Customer declined revised quote' : 'Customer declined quote twice'
         );
         
+        // Reset employee assignment for new search
         setAssignedEmployee(null);
+        setEmployeeDeclineCount(0);
+        setHasReceivedRevision(false);
         setCurrentScreen('show_searching_technician');
         
         toast({
@@ -230,11 +246,14 @@ export const useServiceRequestLogic = ({
           description: "Looking for another available employee..."
         });
         
+        // Find new employee after delay
         setTimeout(() => {
           const updatedRequest = {
             ...currentRequest,
-            declineCount: 0,
             revisedPriceQuote: undefined,
+            priceQuote: undefined,
+            assignedEmployeeId: undefined,
+            assignedEmployeeName: undefined,
             status: 'pending' as const
           };
           setCurrentRequest(updatedRequest);
@@ -268,6 +287,8 @@ export const useServiceRequestLogic = ({
       setCurrentRequest(null);
       setAssignedEmployee(null);
       setBlacklistedEmployees([]);
+      setEmployeeDeclineCount(0);
+      setHasReceivedRevision(false);
       onClose();
       
       toast({
@@ -289,6 +310,8 @@ export const useServiceRequestLogic = ({
     setCurrentRequest(null);
     setAssignedEmployee(null);
     setBlacklistedEmployees([]);
+    setEmployeeDeclineCount(0);
+    setHasReceivedRevision(false);
     onClose();
   };
 
