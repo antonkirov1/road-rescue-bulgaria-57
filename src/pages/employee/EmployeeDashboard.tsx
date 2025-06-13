@@ -72,6 +72,12 @@ const EmployeeDashboard: React.FC = () => {
     return t(`${type.toLowerCase().replace(' ', '-')}`);
   };
 
+  const handleMinimizeRequest = () => {
+    // For employee dashboard, we can simply close the request
+    // since employees don't need the minimize functionality like users do
+    setSelectedRequest(null);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <EmployeeHeader
@@ -224,6 +230,7 @@ const EmployeeDashboard: React.FC = () => {
           type={selectedRequest.type}
           open={!!selectedRequest}
           onClose={() => setSelectedRequest(null)}
+          onMinimize={handleMinimizeRequest}
           userLocation={{ lat: 42.6977, lng: 23.3219 }}
           userId={selectedRequest.userId}
         />
