@@ -3,18 +3,16 @@ import React from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Eye, EyeOff, UserX, UserCheck, Trash2 } from 'lucide-react';
+import { Edit, Ban, UserX, Trash2 } from 'lucide-react';
 
 interface UserAccount {
   id: string;
   username: string;
   email: string;
-  phone_number?: string;
-  gender?: string;
-  full_name?: string;
+  name?: string;
   created_at: string;
-  created_by_admin?: boolean;
-  status?: 'active' | 'banned';
+  ban_count?: number;
+  banned_until?: string;
 }
 
 interface UserTableRowProps {
@@ -36,43 +34,36 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
   onUnban,
   onRemove
 }) => {
-  const isBanned = user.status === 'banned';
+  const isBanned = user.banned_until && new Date(user.banned_until) > new Date();
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
 
   return (
     <TableRow>
-      <TableCell className="font-medium">
-        {user.full_name || user.username}
-      </TableCell>
-      <TableCell>{user.username}</TableCell>
-      <TableCell>{user.email}</TableCell>
-      <TableCell>{user.phone_number || 'N/A'}</TableCell>
-      <TableCell>{user.gender || 'N/A'}</TableCell>
+      <TableCell className="font-medium">{user.username}</TableCell>
+      <TableCell>{user.email || 'N/A'}</TableCell>
+      <TableCell>{user.name || 'N/A'}</TableCell>
       <TableCell>
-        <Badge variant={isBanned ? "destructive" : "default"}>
-          {isBanned ? 'Banned' : 'Active'}
-        </Badge>
+        {isBanned ? (
+          <Badge variant="destructive">
+            Banned until {formatDate(user.banned_until!)}
+          </Badge>
+        ) : (
+          <Badge variant="default">Active</Badge>
+        )}
       </TableCell>
+      <TableCell>{user.ban_count || 0}</TableCell>
+      <TableCell>{formatDate(user.created_at)}</TableCell>
       <TableCell>
-        {new Date(user.created_at).toLocaleDateString()}
-      </TableCell>
-      <TableCell>
-        <div className="flex items-center gap-1">
+        <div className="flex gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={() => onEdit(user)}
-            title="Edit User"
           >
             <Edit className="h-4 w-4" />
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onTogglePassword(user.id)}
-            title="Toggle Password Visibility"
-          >
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </Button>
           
           {isBanned ? (
@@ -81,28 +72,25 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
               size="sm"
               onClick={() => onUnban(user)}
               className="text-green-600 hover:text-green-700"
-              title="Unban User"
             >
-              <UserCheck className="h-4 w-4" />
+              <UserX className="h-4 w-4" />
             </Button>
           ) : (
             <Button
               variant="outline"
               size="sm"
               onClick={() => onBan(user)}
-              className="text-red-600 hover:text-red-700"
-              title="Ban User"
+              className="text-orange-600 hover:text-orange-700"
             >
-              <UserX className="h-4 w-4" />
+              <Ban className="h-4 w-4" />
             </Button>
           )}
-
+          
           <Button
             variant="outline"
             size="sm"
             onClick={() => onRemove(user)}
             className="text-red-600 hover:text-red-700"
-            title="Remove User"
           >
             <Trash2 className="h-4 w-4" />
           </Button>

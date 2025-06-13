@@ -13,12 +13,10 @@ interface UserAccount {
   id: string;
   username: string;
   email: string;
-  phone_number?: string;
-  gender?: string;
-  full_name?: string;
+  name?: string;
   created_at: string;
-  created_by_admin?: boolean;
-  status?: 'active' | 'banned';
+  ban_count?: number;
+  banned_until?: string;
 }
 
 const UserManagement: React.FC = () => {
@@ -68,8 +66,8 @@ const UserManagement: React.FC = () => {
 
     const filtered = users.filter(user =>
       user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (user.full_name && user.full_name.toLowerCase().includes(searchTerm.toLowerCase()))
+      (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (user.name && user.name.toLowerCase().includes(searchTerm.toLowerCase()))
     );
     setFilteredUsers(filtered);
   };
@@ -104,16 +102,23 @@ const UserManagement: React.FC = () => {
 
   const handleBanUser = async (user: UserAccount) => {
     try {
+      // Ban user for 30 days
+      const banUntil = new Date();
+      banUntil.setDate(banUntil.getDate() + 30);
+      
       const { error } = await supabase
         .from('users')
-        .update({ status: 'banned' })
+        .update({ 
+          banned_until: banUntil.toISOString(),
+          ban_count: (user.ban_count || 0) + 1
+        })
         .eq('id', user.id);
 
       if (error) throw error;
 
       toast({
         title: "User Banned",
-        description: `${user.username} has been banned.`
+        description: `${user.username} has been banned until ${banUntil.toLocaleDateString()}.`
       });
       loadUsers();
     } catch (error) {
@@ -130,7 +135,7 @@ const UserManagement: React.FC = () => {
     try {
       const { error } = await supabase
         .from('users')
-        .update({ status: 'active' })
+        .update({ banned_until: null })
         .eq('id', user.id);
 
       if (error) throw error;

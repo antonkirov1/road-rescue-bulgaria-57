@@ -9,12 +9,10 @@ interface UserAccount {
   id: string;
   username: string;
   email: string;
-  phone_number?: string;
-  gender?: string;
-  full_name?: string;
+  name?: string;
   created_at: string;
-  created_by_admin?: boolean;
-  status?: 'active' | 'banned';
+  ban_count?: number;
+  banned_until?: string;
 }
 
 interface UserTableProps {
@@ -75,12 +73,11 @@ const UserTable: React.FC<UserTableProps> = ({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="dark:text-gray-200">Name</TableHead>
                 <TableHead className="dark:text-gray-200">Username</TableHead>
                 <TableHead className="dark:text-gray-200">Email</TableHead>
-                <TableHead className="dark:text-gray-200">Phone</TableHead>
-                <TableHead className="dark:text-gray-200">Gender</TableHead>
+                <TableHead className="dark:text-gray-200">Name</TableHead>
                 <TableHead className="dark:text-gray-200">Status</TableHead>
+                <TableHead className="dark:text-gray-200">Ban Count</TableHead>
                 <TableHead className="dark:text-gray-200">Created</TableHead>
                 <TableHead className="dark:text-gray-200">Actions</TableHead>
               </TableRow>

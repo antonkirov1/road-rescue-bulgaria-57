@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,12 +12,10 @@ interface UserAccount {
   id: string;
   username: string;
   email: string;
-  phone_number?: string;
-  gender?: string;
-  full_name?: string;
+  name?: string;
   created_at: string;
-  created_by_admin?: boolean;
-  status?: 'active' | 'banned';
+  ban_count?: number;
+  banned_until?: string;
 }
 
 interface UserFormProps {
@@ -31,10 +28,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
-    password: '',
-    full_name: '',
-    phone_number: '',
-    gender: ''
+    name: ''
   });
   const [loading, setLoading] = useState(false);
 
@@ -43,10 +37,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSubmit, onCancel }) => {
       setFormData({
         username: user.username || '',
         email: user.email || '',
-        password: '',
-        full_name: user.full_name || '',
-        phone_number: user.phone_number || '',
-        gender: user.gender || ''
+        name: user.name || ''
       });
     }
   }, [user]);
@@ -63,9 +54,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSubmit, onCancel }) => {
           .update({
             username: formData.username,
             email: formData.email,
-            full_name: formData.full_name,
-            phone_number: formData.phone_number,
-            gender: formData.gender
+            name: formData.name
           })
           .eq('id', user.id);
 
@@ -82,11 +71,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSubmit, onCancel }) => {
           .insert({
             username: formData.username,
             email: formData.email,
-            full_name: formData.full_name,
-            phone_number: formData.phone_number,
-            gender: formData.gender,
-            created_by_admin: true,
-            status: 'active'
+            name: formData.name
           });
 
         if (error) throw error;
@@ -142,60 +127,23 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSubmit, onCancel }) => {
               </div>
 
               <div>
-                <Label htmlFor="email">Email *</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  required
                 />
               </div>
 
               <div>
-                <Label htmlFor="full_name">Full Name</Label>
+                <Label htmlFor="name">Name</Label>
                 <Input
-                  id="full_name"
-                  value={formData.full_name}
-                  onChange={(e) => handleInputChange('full_name', e.target.value)}
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
                 />
               </div>
-
-              <div>
-                <Label htmlFor="phone_number">Phone Number</Label>
-                <Input
-                  id="phone_number"
-                  value={formData.phone_number}
-                  onChange={(e) => handleInputChange('phone_number', e.target.value)}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="gender">Gender</Label>
-                <Select value={formData.gender} onValueChange={(value) => handleInputChange('gender', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select gender" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {!user && (
-                <div>
-                  <Label htmlFor="password">Password *</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => handleInputChange('password', e.target.value)}
-                    required
-                  />
-                </div>
-              )}
             </div>
 
             <div className="flex gap-2 pt-4">
