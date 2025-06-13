@@ -1,309 +1,113 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import bcrypt from 'bcryptjs';
 
 export interface EmployeeAccount {
   id: string;
   username: string;
   email: string;
-  phone_number?: string | null;
+  phone_number?: string;
   employee_role?: 'technician' | 'support' | 'admin';
   status?: 'active' | 'inactive' | 'suspended';
-  real_name?: string | null;
+  real_name?: string;
   created_at: string;
-  auth_user_id?: string | null;
-  password_hash?: string | null;
-  location?: any; // point type from database
   is_available?: boolean;
   is_simulated?: boolean;
 }
 
 export class EmployeeAccountService {
-  // Create a new employee account
-  static async createEmployeeAccount(employeeData: Omit<EmployeeAccount, 'id' | 'created_at'>) {
-    try {
-      const { data, error } = await supabase.rpc('create_employee_account', {
-        p_username: employeeData.username,
-        p_email: employeeData.email,
-        p_phone_number: employeeData.phone_number || null,
-        p_employee_role: employeeData.employee_role || 'technician',
-        p_real_name: employeeData.real_name || null
-      });
-
-      if (error) {
-        console.error('Error creating employee account:', error);
-        throw error;
-      }
-
-      console.log('Employee account created successfully:', data);
-      return data;
-    } catch (error) {
-      console.error('Error in createEmployeeAccount:', error);
-      throw error;
-    }
-  }
-
-  // Get all employee accounts
   static async getAllEmployees(): Promise<EmployeeAccount[]> {
-    try {
-      const { data, error } = await supabase
-        .from('employee_accounts')
-        .select('*')
-        .order('created_at', { ascending: false });
+    const { data, error } = await supabase
+      .from('employee_accounts')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching employees:', error);
-        throw error;
-      }
+    if (error) {
+      console.error('Error fetching employees:', error);
+      throw error;
+    }
 
-      // Type assertion to ensure proper typing from database
-      return (data || []).map(employee => ({
-        ...employee,
-        employee_role: employee.employee_role as 'technician' | 'support' | 'admin',
-        status: employee.status as 'active' | 'inactive' | 'suspended'
-      }));
-    } catch (error) {
-      console.error('Error in getAllEmployees:', error);
+    return data || [];
+  }
+
+  static async createEmployeeAccount(employeeData: {
+    username: string;
+    email: string;
+    phone_number?: string;
+    employee_role?: 'technician' | 'support' | 'admin';
+    real_name?: string;
+    is_available?: boolean;
+    is_simulated?: boolean;
+  }): Promise<EmployeeAccount> {
+    const { data, error } = await supabase
+      .from('employee_accounts')
+      .insert({
+        ...employeeData,
+        status: 'active'
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating employee:', error);
+      throw error;
+    }
+
+    return data;
+  }
+
+  static async updateEmployee(id: string, updates: Partial<EmployeeAccount>): Promise<EmployeeAccount> {
+    const { data, error } = await supabase
+      .from('employee_accounts')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating employee:', error);
+      throw error;
+    }
+
+    return data;
+  }
+
+  static async updateEmployeeStatus(id: string, status: 'active' | 'inactive' | 'suspended'): Promise<void> {
+    const { error } = await supabase
+      .from('employee_accounts')
+      .update({ status })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error updating employee status:', error);
       throw error;
     }
   }
 
-  // Delete an employee account
-  static async deleteEmployee(employeeId: string) {
-    try {
-      const { data, error } = await supabase
-        .from('employee_accounts')
-        .delete()
-        .eq('id', employeeId)
-        .select()
-        .single();
+  static async deleteEmployee(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('employee_accounts')
+      .delete()
+      .eq('id', id);
 
-      if (error) {
-        console.error('Error deleting employee:', error);
-        throw error;
-      }
-
-      console.log('Employee deleted successfully:', data);
-      return data;
-    } catch (error) {
-      console.error('Error in deleteEmployee:', error);
+    if (error) {
+      console.error('Error deleting employee:', error);
       throw error;
     }
   }
 
-  // Update an employee account
-  static async updateEmployee(employeeId: string, updateData: Partial<EmployeeAccount>) {
-    try {
-      const { data, error } = await supabase
-        .from('employee_accounts')
-        .update({
-          username: updateData.username,
-          email: updateData.email,
-          phone_number: updateData.phone_number,
-          employee_role: updateData.employee_role,
-          real_name: updateData.real_name,
-          location: updateData.location,
-          is_available: updateData.is_available,
-          is_simulated: updateData.is_simulated
-        })
-        .eq('id', employeeId)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error updating employee:', error);
-        throw error;
-      }
-
-      console.log('Employee updated successfully:', data);
-      return {
-        ...data,
-        employee_role: data.employee_role as 'technician' | 'support' | 'admin',
-        status: data.status as 'active' | 'inactive' | 'suspended'
-      };
-    } catch (error) {
-      console.error('Error in updateEmployee:', error);
-      throw error;
-    }
-  }
-
-  // Update employee status
-  static async updateEmployeeStatus(employeeId: string, status: 'active' | 'inactive' | 'suspended') {
-    try {
-      const { data, error } = await supabase
-        .from('employee_accounts')
-        .update({ status })
-        .eq('id', employeeId)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error updating employee status:', error);
-        throw error;
-      }
-
-      console.log('Employee status updated:', data);
-      return {
-        ...data,
-        employee_role: data.employee_role as 'technician' | 'support' | 'admin',
-        status: data.status as 'active' | 'inactive' | 'suspended'
-      };
-    } catch (error) {
-      console.error('Error in updateEmployeeStatus:', error);
-      throw error;
-    }
-  }
-
-  // Get active employees
-  static async getActiveEmployees(): Promise<EmployeeAccount[]> {
-    try {
-      const { data, error } = await supabase
-        .from('employee_accounts')
-        .select('*')
-        .eq('status', 'active')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching active employees:', error);
-        throw error;
-      }
-
-      return (data || []).map(employee => ({
-        ...employee,
-        employee_role: employee.employee_role as 'technician' | 'support' | 'admin',
-        status: employee.status as 'active' | 'inactive' | 'suspended'
-      }));
-    } catch (error) {
-      console.error('Error in getActiveEmployees:', error);
-      throw error;
-    }
-  }
-
-  // Get employees by role
-  static async getEmployeesByRole(role: 'technician' | 'support' | 'admin'): Promise<EmployeeAccount[]> {
-    try {
-      const { data, error } = await supabase
-        .from('employee_accounts')
-        .select('*')
-        .eq('employee_role', role)
-        .eq('status', 'active')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching employees by role:', error);
-        throw error;
-      }
-
-      return (data || []).map(employee => ({
-        ...employee,
-        employee_role: employee.employee_role as 'technician' | 'support' | 'admin',
-        status: employee.status as 'active' | 'inactive' | 'suspended'
-      }));
-    } catch (error) {
-      console.error('Error in getEmployeesByRole:', error);
-      throw error;
-    }
-  }
-
-  // Get employee account by ID
-  static async getEmployeeById(employeeId: string): Promise<EmployeeAccount> {
-    try {
-      const { data, error } = await supabase
-        .from('employee_accounts')
-        .select('*')
-        .eq('id', employeeId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching employee:', error);
-        throw error;
-      }
-
-      return {
-        ...data,
-        employee_role: data.employee_role as 'technician' | 'support' | 'admin',
-        status: data.status as 'active' | 'inactive' | 'suspended'
-      };
-    } catch (error) {
-      console.error('Error in getEmployeeById:', error);
-      throw error;
-    }
-  }
-
-  // Get employee account by username
-  static async getEmployeeByUsername(username: string): Promise<EmployeeAccount> {
-    try {
-      const { data, error } = await supabase
-        .from('employee_accounts')
-        .select('*')
-        .eq('username', username)
-        .single();
-
-      if (error) {
-        console.error('Error fetching employee by username:', error);
-        throw error;
-      }
-
-      return {
-        ...data,
-        employee_role: data.employee_role as 'technician' | 'support' | 'admin',
-        status: data.status as 'active' | 'inactive' | 'suspended'
-      };
-    } catch (error) {
-      console.error('Error in getEmployeeByUsername:', error);
-      throw error;
-    }
-  }
-
-  // Get available employees for assignment
   static async getAvailableEmployees(): Promise<EmployeeAccount[]> {
-    try {
-      const { data, error } = await supabase
-        .from('employee_accounts')
-        .select('*')
-        .eq('status', 'active')
-        .eq('is_available', true)
-        .order('created_at', { ascending: false });
+    const { data, error } = await supabase
+      .from('employee_accounts')
+      .select('*')
+      .eq('status', 'active')
+      .eq('is_available', true)
+      .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching available employees:', error);
-        throw error;
-      }
-
-      return (data || []).map(employee => ({
-        ...employee,
-        employee_role: employee.employee_role as 'technician' | 'support' | 'admin',
-        status: employee.status as 'active' | 'inactive' | 'suspended'
-      }));
-    } catch (error) {
-      console.error('Error in getAvailableEmployees:', error);
+    if (error) {
+      console.error('Error fetching available employees:', error);
       throw error;
     }
-  }
 
-  // Update employee availability
-  static async updateEmployeeAvailability(employeeId: string, isAvailable: boolean): Promise<EmployeeAccount> {
-    try {
-      const { data, error } = await supabase
-        .from('employee_accounts')
-        .update({ is_available: isAvailable })
-        .eq('id', employeeId)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error updating employee availability:', error);
-        throw error;
-      }
-
-      return {
-        ...data,
-        employee_role: data.employee_role as 'technician' | 'support' | 'admin',
-        status: data.status as 'active' | 'inactive' | 'suspended'
-      };
-    } catch (error) {
-      console.error('Error in updateEmployeeAvailability:', error);
-      throw error;
-    }
+    return data || [];
   }
 }

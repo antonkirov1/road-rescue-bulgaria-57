@@ -1,18 +1,15 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { 
-  LayoutDashboard,
   Users, 
   UserCheck, 
-  UserCog, 
-  Database,
-  BarChart3,
-  Settings,
-  HelpCircle,
-  LogOut,
-  ChevronLeft,
-  ChevronRight
+  Bot, 
+  BarChart3, 
+  LogOut, 
+  Menu,
+  X
 } from 'lucide-react';
 
 interface MaterialSidebarProps {
@@ -22,6 +19,7 @@ interface MaterialSidebarProps {
   isCollapsed: boolean;
   onToggleCollapse: () => void;
   stats: {
+    pendingUsers: number;
     existingUsers: number;
     employees: number;
     simulationEmployees: number;
@@ -36,142 +34,120 @@ const MaterialSidebar: React.FC<MaterialSidebarProps> = ({
   onToggleCollapse,
   stats
 }) => {
-  const menuItems = [
+  const navigationItems = [
     {
       id: 'dashboard' as const,
       label: 'Dashboard',
-      icon: LayoutDashboard,
-      badge: null
+      icon: BarChart3,
+      count: null
     },
     {
       id: 'users' as const,
-      label: 'User Management',
+      label: 'Users',
       icon: Users,
-      badge: stats.existingUsers
+      count: stats.existingUsers
     },
     {
       id: 'employees' as const,
-      label: 'Employee Management',
+      label: 'Employees',
       icon: UserCheck,
-      badge: stats.employees
+      count: stats.employees
     },
     {
       id: 'simulation' as const,
-      label: 'Simulation Management',
-      icon: UserCog,
-      badge: stats.simulationEmployees
+      label: 'Simulation',
+      icon: Bot,
+      count: stats.simulationEmployees
     }
   ];
 
-  const MenuItem = ({ item }: { item: typeof menuItems[0] }) => {
-    const isActive = currentView === item.id;
-    const Icon = item.icon;
-
-    return (
-      <Button
-        variant={isActive ? "default" : "ghost"}
-        className={`w-full justify-start mb-1 transition-all duration-200 ${
-          isActive 
-            ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg' 
-            : 'hover:bg-gray-100 text-gray-700'
-        } ${isCollapsed ? 'px-2' : 'px-4'}`}
-        onClick={() => onViewChange(item.id)}
-      >
-        <Icon className={`h-5 w-5 ${isCollapsed ? '' : 'mr-3'} flex-shrink-0`} />
-        {!isCollapsed && (
-          <>
-            <span className="flex-1 text-left">{item.label}</span>
-            {item.badge !== null && (
-              <Badge 
-                variant={isActive ? "secondary" : "default"} 
-                className={`ml-2 ${isActive ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-600'}`}
-              >
-                {item.badge}
-              </Badge>
-            )}
-          </>
-        )}
-      </Button>
-    );
-  };
-
   return (
-    <div className={`bg-white shadow-lg border-r transition-all duration-300 ${
+    <div className={`bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col transition-all duration-300 ${
       isCollapsed ? 'w-16' : 'w-64'
-    } flex flex-col h-full`}>
+    }`}>
       {/* Header */}
-      <div className="p-4 border-b">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
           {!isCollapsed && (
-            <div>
-              <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                RoadSaver
-              </h2>
-              <p className="text-sm text-gray-500">Account Manager</p>
-            </div>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Admin Panel
+            </h2>
           )}
           <Button
             variant="ghost"
             size="sm"
             onClick={onToggleCollapse}
-            className="p-2"
+            className="ml-auto"
           >
-            {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            {isCollapsed ? <Menu className="h-4 w-4" /> : <X className="h-4 w-4" />}
           </Button>
         </div>
       </div>
 
       {/* Navigation */}
-      <div className="flex-1 p-4">
-        <nav className="space-y-1">
-          {menuItems.map((item) => (
-            <MenuItem key={item.id} item={item} />
-          ))}
-        </nav>
-
-        {/* Secondary Menu */}
-        <div className="mt-8 pt-4 border-t">
-          <Button
-            variant="ghost"
-            className={`w-full justify-start mb-1 text-gray-700 hover:bg-gray-100 ${
-              isCollapsed ? 'px-2' : 'px-4'
-            }`}
-          >
-            <BarChart3 className={`h-5 w-5 ${isCollapsed ? '' : 'mr-3'} flex-shrink-0`} />
-            {!isCollapsed && <span>Analytics</span>}
-          </Button>
-          <Button
-            variant="ghost"
-            className={`w-full justify-start mb-1 text-gray-700 hover:bg-gray-100 ${
-              isCollapsed ? 'px-2' : 'px-4'
-            }`}
-          >
-            <Settings className={`h-5 w-5 ${isCollapsed ? '' : 'mr-3'} flex-shrink-0`} />
-            {!isCollapsed && <span>Settings</span>}
-          </Button>
-          <Button
-            variant="ghost"
-            className={`w-full justify-start mb-1 text-gray-700 hover:bg-gray-100 ${
-              isCollapsed ? 'px-2' : 'px-4'
-            }`}
-          >
-            <HelpCircle className={`h-5 w-5 ${isCollapsed ? '' : 'mr-3'} flex-shrink-0`} />
-            {!isCollapsed && <span>Help</span>}
-          </Button>
-        </div>
+      <div className="flex-1 p-4 space-y-2">
+        {navigationItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = currentView === item.id;
+          
+          return (
+            <Button
+              key={item.id}
+              variant={isActive ? "default" : "ghost"}
+              className={`w-full justify-start ${
+                isCollapsed ? 'px-2' : 'px-3'
+              } ${isActive ? 'bg-blue-600 text-white hover:bg-blue-700' : ''}`}
+              onClick={() => onViewChange(item.id)}
+            >
+              <Icon className="h-4 w-4" />
+              {!isCollapsed && (
+                <>
+                  <span className="ml-2">{item.label}</span>
+                  {item.count !== null && (
+                    <span className="ml-auto bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-full text-xs">
+                      {item.count}
+                    </span>
+                  )}
+                </>
+              )}
+            </Button>
+          );
+        })}
       </div>
 
-      {/* Footer */}
-      <div className="p-4 border-t">
+      {/* Stats Card */}
+      {!isCollapsed && (
+        <div className="p-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">Pending Users</span>
+                  <span className="font-semibold text-orange-600">{stats.pendingUsers}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">Total Users</span>
+                  <span className="font-semibold text-blue-600">{stats.existingUsers}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">Employees</span>
+                  <span className="font-semibold text-green-600">{stats.employees}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Logout */}
+      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
         <Button
-          variant="ghost"
+          variant="outline"
+          className="w-full justify-start"
           onClick={onLogout}
-          className={`w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-700 ${
-            isCollapsed ? 'px-2' : 'px-4'
-          }`}
         >
-          <LogOut className={`h-5 w-5 ${isCollapsed ? '' : 'mr-3'} flex-shrink-0`} />
-          {!isCollapsed && <span>Logout</span>}
+          <LogOut className="h-4 w-4" />
+          {!isCollapsed && <span className="ml-2">Logout</span>}
         </Button>
       </div>
     </div>
