@@ -9,33 +9,47 @@ import MaterialSidebar from './MaterialSidebar';
 import MaterialHeader from './MaterialHeader';
 
 const MigrationPanel: React.FC = () => {
-  const [currentView, setCurrentView] = useState<'dashboard' | 'users' | 'employees' | 'simulation'>('users');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'users' | 'employees' | 'simulation'>('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [stats, setStats] = useState({
     pendingUsers: 0,
     existingUsers: 0,
     employees: 0,
-    simulationEmployees: 0
+    simulationEmployees: 0,
+    bannedUsers: 0,
+    activeEmployees: 0,
+    suspendedEmployees: 0
   });
 
   const refreshStats = async () => {
     try {
-      const [pendingUsers, employees, existingUsers] = await Promise.all([
+      const [pendingUsers, employees, existingUsersData] = await Promise.all([
         UserAccountService.getPendingNewUsers(), 
         EmployeeAccountService.getAllEmployees(),
-        UserAccountService.getExistingUsers()
+        supabase.from('users').select('*')
       ]);
       
       // Get simulation employees count
       const { data: simulationEmployees } = await supabase
         .from('employee_simulation')
         .select('*');
+
+      const existingUsers = existingUsersData.data || [];
+      const bannedUsers = existingUsers.filter(user => 
+        user.banned_until && new Date(user.banned_until) > new Date()
+      ).length;
+
+      const activeEmployees = employees.filter(emp => emp.status === 'active').length;
+      const suspendedEmployees = employees.filter(emp => emp.status === 'suspended').length;
       
       setStats({
         pendingUsers: pendingUsers.length,
-        existingUsers: existingUsers?.length || 0,
+        existingUsers: existingUsers.length,
         employees: employees.length,
-        simulationEmployees: simulationEmployees?.length || 0
+        simulationEmployees: simulationEmployees?.length || 0,
+        bannedUsers,
+        activeEmployees,
+        suspendedEmployees
       });
     } catch (error) {
       console.error('Error refreshing stats:', error);
@@ -44,6 +58,32 @@ const MigrationPanel: React.FC = () => {
 
   useEffect(() => {
     refreshStats();
+
+    // Set up real-time subscriptions
+    const usersChannel = supabase
+      .channel('admin-users-stats')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'users' }, 
+        () => refreshStats()
+      )
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'new_user_accounts' }, 
+        () => refreshStats()
+      )
+      .subscribe();
+
+    const employeesChannel = supabase
+      .channel('admin-employees-stats')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'employee_accounts' }, 
+        () => refreshStats()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(usersChannel);
+      supabase.removeChannel(employeesChannel);
+    };
   }, []);
 
   const handleLogout = () => {
@@ -55,27 +95,51 @@ const MigrationPanel: React.FC = () => {
   };
 
   const getPageTitle = () => {
-    return 'User Management';
+    switch (currentView) {
+      case 'dashboard':
+        return 'Admin Dashboard';
+      case 'users':
+        return 'User Management';
+      case 'employees':
+        return 'Employee Management';
+      case 'simulation':
+        return 'Employee Simulation';
+      default:
+        return 'Admin Dashboard';
+    }
   };
 
   const getPageSubtitle = () => {
-    return 'Manage user accounts and permissions';
+    switch (currentView) {
+      case 'dashboard':
+        return 'System overview and statistics';
+      case 'users':
+        return 'Manage user accounts and permissions';
+      case 'employees':
+        return 'Manage employee accounts and roles';
+      case 'simulation':
+        return 'Employee simulation and testing';
+      default:
+        return 'System management';
+    }
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 w-full">
       {/* Sidebar */}
-      <MaterialSidebar
-        currentView={currentView}
-        onViewChange={setCurrentView}
-        onLogout={handleLogout}
-        isCollapsed={sidebarCollapsed}
-        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-        stats={stats}
-      />
+      <div className={`${sidebarCollapsed ? 'hidden lg:flex' : 'flex'} lg:flex`}>
+        <MaterialSidebar
+          currentView={currentView}
+          onViewChange={setCurrentView}
+          onLogout={handleLogout}
+          isCollapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+          stats={stats}
+        />
+      </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Header */}
         <MaterialHeader
           onLogout={handleLogout}

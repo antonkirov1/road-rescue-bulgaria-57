@@ -1,9 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { UserPlus, Search } from 'lucide-react';
+import { UserPlus } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import UserTable from './UserTable';
 import UserForm from './UserForm';
@@ -19,7 +18,11 @@ interface UserAccount {
   banned_until?: string;
 }
 
-const UserManagement: React.FC = () => {
+interface UserManagementProps {
+  onStatsUpdate?: () => void;
+}
+
+const UserManagement: React.FC<UserManagementProps> = ({ onStatsUpdate }) => {
   const [users, setUsers] = useState<UserAccount[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<UserAccount[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,6 +49,11 @@ const UserManagement: React.FC = () => {
 
       if (error) throw error;
       setUsers(data || []);
+      
+      // Trigger stats update in parent component
+      if (onStatsUpdate) {
+        onStatsUpdate();
+      }
     } catch (error) {
       console.error('Error loading users:', error);
       toast({
@@ -194,12 +202,17 @@ const UserManagement: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4 md:p-6">
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>User Management</CardTitle>
-            <Button onClick={handleCreateUser}>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <CardTitle className="text-xl md:text-2xl">User Management</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Manage user accounts and permissions
+              </p>
+            </div>
+            <Button onClick={handleCreateUser} className="w-full sm:w-auto">
               <UserPlus className="h-4 w-4 mr-2" />
               Add User
             </Button>

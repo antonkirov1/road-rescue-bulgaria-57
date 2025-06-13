@@ -9,7 +9,9 @@ import {
   BarChart3, 
   LogOut, 
   Menu,
-  X
+  X,
+  UserX,
+  UserPlus
 } from 'lucide-react';
 
 interface MaterialSidebarProps {
@@ -23,6 +25,9 @@ interface MaterialSidebarProps {
     existingUsers: number;
     employees: number;
     simulationEmployees: number;
+    bannedUsers: number;
+    activeEmployees: number;
+    suspendedEmployees: number;
   };
 }
 
@@ -64,7 +69,7 @@ const MaterialSidebar: React.FC<MaterialSidebarProps> = ({
   return (
     <div className={`bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col transition-all duration-300 ${
       isCollapsed ? 'w-16' : 'w-64'
-    }`}>
+    } min-h-screen`}>
       {/* Header */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
@@ -120,18 +125,59 @@ const MaterialSidebar: React.FC<MaterialSidebarProps> = ({
         <div className="p-4">
           <Card>
             <CardContent className="p-4">
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600 dark:text-gray-300">Pending Users</span>
-                  <span className="font-semibold text-orange-600">{stats.pendingUsers}</span>
+              <div className="space-y-3">
+                <div className="border-b pb-2">
+                  <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Users</h4>
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-600 dark:text-gray-400 flex items-center">
+                        <UserPlus className="h-3 w-3 mr-1" />
+                        Active
+                      </span>
+                      <span className="text-sm font-semibold text-green-600">{stats.existingUsers - stats.bannedUsers}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-600 dark:text-gray-400 flex items-center">
+                        <UserX className="h-3 w-3 mr-1" />
+                        Banned
+                      </span>
+                      <span className="text-sm font-semibold text-red-600">{stats.bannedUsers}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-600 dark:text-gray-400 flex items-center">
+                        <Users className="h-3 w-3 mr-1" />
+                        Total
+                      </span>
+                      <span className="text-sm font-semibold text-blue-600">{stats.existingUsers}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600 dark:text-gray-300">Total Users</span>
-                  <span className="font-semibold text-blue-600">{stats.existingUsers}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600 dark:text-gray-300">Employees</span>
-                  <span className="font-semibold text-green-600">{stats.employees}</span>
+                
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Employees</h4>
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-600 dark:text-gray-400 flex items-center">
+                        <UserCheck className="h-3 w-3 mr-1" />
+                        Active
+                      </span>
+                      <span className="text-sm font-semibold text-green-600">{stats.activeEmployees}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-600 dark:text-gray-400 flex items-center">
+                        <UserX className="h-3 w-3 mr-1" />
+                        Suspended
+                      </span>
+                      <span className="text-sm font-semibold text-orange-600">{stats.suspendedEmployees}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-600 dark:text-gray-400 flex items-center">
+                        <Users className="h-3 w-3 mr-1" />
+                        Total
+                      </span>
+                      <span className="text-sm font-semibold text-purple-600">{stats.employees}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </CardContent>
