@@ -4,21 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { UserPlus, Search } from 'lucide-react';
-import { EmployeeAccountService } from '@/services/employeeAccountService';
+import { EmployeeAccountService, EmployeeAccount } from '@/services/employeeAccountService';
 import { toast } from '@/components/ui/use-toast';
 import EmployeeTable from './EmployeeTable';
 import EmployeeForm from './EmployeeForm';
-
-interface EmployeeAccount {
-  id: string;
-  username: string;
-  email: string;
-  phone_number?: string;
-  employee_role?: 'technician' | 'support' | 'admin';
-  status?: string;
-  real_name?: string;
-  created_at: string;
-}
 
 const EmployeeManagement: React.FC = () => {
   const [employees, setEmployees] = useState<EmployeeAccount[]>([]);

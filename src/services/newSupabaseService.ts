@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ServiceRequest, User, Employee } from '@/types/newServiceRequest';
 
@@ -68,6 +67,44 @@ export class NewSupabaseService {
 
     if (error || !data) return null;
     return this.mapServiceRequestFromDB(data);
+  }
+
+  async getAvailableEmployees(): Promise<Employee[]> {
+    try {
+      console.log('Fetching available employees from Supabase...');
+      
+      const { data, error } = await supabase
+        .from('employee_accounts')
+        .select('*')
+        .eq('is_available', true)
+        .eq('status', 'active');
+
+      if (error) {
+        console.error('Error fetching employees:', error);
+        throw error;
+      }
+
+      console.log('Raw employee data from Supabase:', data);
+
+      const employees: Employee[] = data.map(emp => ({
+        id: emp.id,
+        name: emp.real_name || emp.username,
+        isAvailable: emp.is_available || false,
+        location: emp.location ? {
+          lat: (emp.location as any).x || 42.6977,
+          lng: (emp.location as any).y || 23.3219
+        } : {
+          lat: 42.6977 + (Math.random() - 0.5) * 0.1,
+          lng: 23.3219 + (Math.random() - 0.5) * 0.1
+        }
+      }));
+
+      console.log('Processed employees:', employees);
+      return employees;
+    } catch (error) {
+      console.error('Error in getAvailableEmployees:', error);
+      throw error;
+    }
   }
 
   async getAvailableSimulatedEmployees(): Promise<Employee[]> {

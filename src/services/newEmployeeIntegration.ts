@@ -73,19 +73,27 @@ class NewEmployeeIntegrationService {
         return;
       }
 
-      this.realEmployees = data.map((emp) => ({
-        id: `real_emp_${emp.id}`,
-        name: emp.real_name || emp.username,
-        isSimulated: false,
-        location: emp.location ? {
-          lat: emp.location.x || 42.6977 + (Math.random() - 0.5) * 0.1,
-          lng: emp.location.y || 23.3219 + (Math.random() - 0.5) * 0.1
-        } : {
-          lat: 42.6977 + (Math.random() - 0.5) * 0.1,
-          lng: 23.3219 + (Math.random() - 0.5) * 0.1
-        },
-        isAvailable: emp.is_available ?? (Math.random() > 0.4) // 60% availability for real employees
-      }));
+      this.realEmployees = data.map((emp) => {
+        let lat = 42.6977 + (Math.random() - 0.5) * 0.1;
+        let lng = 23.3219 + (Math.random() - 0.5) * 0.1;
+
+        // Handle location if it exists and has the right structure
+        if (emp.location && typeof emp.location === 'object') {
+          const location = emp.location as any;
+          if (location.x !== undefined && location.y !== undefined) {
+            lat = location.x;
+            lng = location.y;
+          }
+        }
+
+        return {
+          id: `real_emp_${emp.id}`,
+          name: emp.real_name || emp.username,
+          isSimulated: false,
+          location: { lat, lng },
+          isAvailable: emp.is_available ?? (Math.random() > 0.4) // 60% availability for real employees
+        };
+      });
     } catch (error) {
       console.error('Error in loadRealEmployees:', error);
     }
