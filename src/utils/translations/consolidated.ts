@@ -111,7 +111,6 @@ export const allTranslations: Record<string, { en: string; bg: string }> = {
   'email': { en: 'Email', bg: 'Имейл' },
   'phone': { en: 'Phone', bg: 'Телефон' },
   'login-successful': { en: 'Login successful', bg: 'Успешно влизане' },
-  'welcome-to-roadsaver': { en: 'Welcome to RoadSaver', bg: 'Добре дошли в RoadSaver' },
   'registration-successful': { en: 'Registration successful', bg: 'Успешна регистрация' },
   'account-created-welcome': { en: 'Account created successfully. Welcome!', bg: 'Акаунтът е създаден успешно. Добре дошли!' },
 
@@ -239,5 +238,23 @@ export const allTranslations: Record<string, { en: string; bg: string }> = {
 
   // Location access
   'location-access-denied': { en: 'Location Access Denied', bg: 'Достъпът до местоположението е отказан' },
-  'location-access-message': { en: 'Using default location (Sofia, Bulgaria). You can update it manually.', bg: 'Използва се местоположение по подразбиране (София, България). Можете да го актуализирате ръчно.' }
+  'location-access-message': { en: 'Using default location (Sofia, Bulgaria). You can update it manually.', bg: 'Използва се местоположение по подразбиране (София, България). Можете да го актуализирате ръчно.' },
+
+  // Additional employee translations
+  'employee-declined': { en: 'Employee declined', bg: 'Служителят отказа' },
+  'request-for': { en: 'Request for', bg: 'Заявка за' },
+  'distance': { en: 'Distance', bg: 'Разстояние' },
+  'km-away': { en: 'km away', bg: 'км разстояние' },
+  'estimated-time': { en: 'Estimated time', bg: 'Очаквано време' },
+  'minutes': { en: 'minutes', bg: 'минути' },
+  'hours': { en: 'hours', bg: 'часа' },
+  'arrive-in': { en: 'Will arrive in', bg: 'Ще пристигне за' },
+  'technician-info': { en: 'Technician Information', bg: 'Информация за техника' },
+  'contact-technician': { en: 'Contact Technician', bg: 'Свържи се с техника' },
+  'service-description': { en: 'Service Description', bg: 'Описание на услугата' },
+  'additional-notes': { en: 'Additional Notes', bg: 'Допълнителни бележки' },
+  'priority': { en: 'Priority', bg: 'Приоритет' },
+  'urgent': { en: 'Urgent', bg: 'Спешно' },
+  'normal': { en: 'Normal', bg: 'Нормално' },
+  'low': { en: 'Low', bg: 'Ниско' }
 };
