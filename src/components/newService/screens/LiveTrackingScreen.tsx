@@ -43,14 +43,14 @@ const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({
               </p>
             </div>
 
-            {request.assignedEmployee && (
+            {request.assignedEmployeeId && (
               <>
                 <h4 className="font-medium mb-3">{t('technician-info')}</h4>
                 
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm">{request.assignedEmployee.name}</span>
+                    <span className="text-sm">Employee #{request.assignedEmployeeId}</span>
                   </div>
                   
                   <div className="flex items-center gap-2">

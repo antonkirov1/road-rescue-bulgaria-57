@@ -49,15 +49,15 @@ const RevisedPriceQuoteScreen: React.FC<RevisedPriceQuoteScreenProps> = ({
               <div>
                 <h3 className="font-medium">{t('quoted-price')}</h3>
                 <p className="text-2xl font-bold text-green-600">
-                  {request.currentQuote?.amount} BGN
+                  {request.priceQuote} BGN
                 </p>
               </div>
             </div>
 
-            {request.assignedEmployee && (
+            {request.assignedEmployeeId && (
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <User className="h-4 w-4" />
-                <span>{t('assigned-employee')}: {request.assignedEmployee.name}</span>
+                <span>{t('assigned-employee')}: Employee #{request.assignedEmployeeId}</span>
               </div>
             )}
           </CardContent>
@@ -68,7 +68,7 @@ const RevisedPriceQuoteScreen: React.FC<RevisedPriceQuoteScreenProps> = ({
             onClick={onAccept}
             className="w-full bg-green-600 hover:bg-green-700"
           >
-            {t('confirm')} - {request.currentQuote?.amount} BGN
+            {t('confirm')} - {request.priceQuote} BGN
           </Button>
           
           <Button 

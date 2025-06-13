@@ -22,9 +22,9 @@ const RequestAcceptedScreen: React.FC<RequestAcceptedScreenProps> = ({
 
   const getStatusMessage = () => {
     switch (request.status) {
-      case 'request_accepted':
-        return request.assignedEmployee ? t('employee-assigned') : t('finding-employee');
-      case 'quote_accepted':
+      case 'accepted':
+        return request.assignedEmployeeId ? t('employee-assigned') : t('finding-employee');
+      case 'in_progress':
         return t('employee-on-way');
       default:
         return t('request-accepted');
@@ -50,7 +50,7 @@ const RequestAcceptedScreen: React.FC<RequestAcceptedScreenProps> = ({
           </h3>
         </div>
 
-        {request.assignedEmployee && (
+        {request.assignedEmployeeId && (
           <Card>
             <CardContent className="p-4">
               <h4 className="font-medium mb-3">{t('your-technician')}</h4>
@@ -58,7 +58,7 @@ const RequestAcceptedScreen: React.FC<RequestAcceptedScreenProps> = ({
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-gray-400" />
-                  <span className="text-sm">{request.assignedEmployee.name}</span>
+                  <span className="text-sm">Employee #{request.assignedEmployeeId}</span>
                 </div>
                 
                 <div className="flex items-center gap-2">
