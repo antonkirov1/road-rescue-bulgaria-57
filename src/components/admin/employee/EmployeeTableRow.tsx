@@ -10,7 +10,7 @@ interface EmployeeAccount {
   username: string;
   email: string;
   phone_number?: string;
-  employee_role?: string;
+  employee_role?: 'technician' | 'support' | 'admin';
   status?: string;
   real_name?: string;
   created_at: string;
@@ -37,7 +37,7 @@ const EmployeeTableRow: React.FC<EmployeeTableRowProps> = ({
 }) => {
   const isBanned = employee.status === 'suspended' || employee.status === 'banned';
 
-  const getRoleDisplayName = (role?: string) => {
+  const getRoleDisplayName = (role?: 'technician' | 'support' | 'admin') => {
     switch (role) {
       case 'technician':
         return 'Technician';
@@ -50,7 +50,7 @@ const EmployeeTableRow: React.FC<EmployeeTableRowProps> = ({
     }
   };
 
-  const getRoleVariant = (role?: string) => {
+  const getRoleVariant = (role?: 'technician' | 'support' | 'admin') => {
     switch (role) {
       case 'support':
         return 'secondary' as const;

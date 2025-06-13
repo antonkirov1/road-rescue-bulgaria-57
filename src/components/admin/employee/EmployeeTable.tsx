@@ -8,7 +8,7 @@ interface EmployeeAccount {
   username: string;
   email: string;
   phone_number?: string;
-  employee_role?: string;
+  employee_role?: 'technician' | 'support' | 'admin';
   status?: string;
   real_name?: string;
   created_at: string;
