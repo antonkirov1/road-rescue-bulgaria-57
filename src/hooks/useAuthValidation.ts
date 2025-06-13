@@ -24,29 +24,24 @@ export const useUsernameValidation = (t: (key: string) => string) => {
         // Convert to lowercase for validation
         const lowerUsername = username.toLowerCase();
         
-        // Length validation
-        if (username.length < 6 || username.length > 20) {
-          return { isValid: false, errorMessage: 'Username must be between 6-20 characters' };
+        // Length validation - more relaxed (3-30 characters)
+        if (username.length < 3 || username.length > 30) {
+          return { isValid: false, errorMessage: 'Username must be between 3-30 characters' };
         }
         
-        // Must begin with alphanumeric character
-        if (!/^[a-z0-9]/.test(lowerUsername)) {
-          return { isValid: false, errorMessage: 'Username must begin with a letter or number' };
+        // Allow more flexible characters - letters, numbers, underscore, dash, dot
+        if (!/^[a-zA-Z0-9._-]+$/.test(username)) {
+          return { isValid: false, errorMessage: 'Username can only contain letters, numbers, periods, dashes, and underscores' };
         }
         
-        // Allowed characters only
-        if (!/^[a-z0-9._'-]+$/.test(lowerUsername)) {
-          return { isValid: false, errorMessage: 'Username can only contain letters, numbers, periods, dashes, underscores, and apostrophes' };
+        // Must not start or end with special characters
+        if (/^[._-]|[._-]$/.test(username)) {
+          return { isValid: false, errorMessage: 'Username cannot start or end with special characters' };
         }
         
-        // No consecutive periods
-        if (lowerUsername.includes('..')) {
-          return { isValid: false, errorMessage: 'Username cannot contain consecutive periods' };
-        }
-        
-        // No spaces
-        if (username.includes(' ')) {
-          return { isValid: false, errorMessage: 'Username cannot contain spaces' };
+        // No consecutive special characters
+        if (/[._-]{2,}/.test(username)) {
+          return { isValid: false, errorMessage: 'Username cannot contain consecutive special characters' };
         }
         
         // Check against existing usernames
@@ -123,33 +118,33 @@ export const usePasswordValidation = (t: (key: string) => string) => {
           return { isValid: false, errorMessage: '' };
         }
         
-        // Length validation
-        if (password.length < 8) {
-          return { isValid: false, errorMessage: 'Password must be at least 8 characters long' };
+        // More relaxed length validation (6 characters minimum)
+        if (password.length < 6) {
+          return { isValid: false, errorMessage: 'Password must be at least 6 characters long' };
         }
         
-        // Uppercase letter validation
-        if (!/[A-Z]/.test(password)) {
-          return { isValid: false, errorMessage: 'Password must contain at least one uppercase letter' };
+        // Only require one of the following character types (not all)
+        const hasLetter = /[a-zA-Z]/.test(password);
+        const hasNumber = /[0-9]/.test(password);
+        const hasSpecial = /[^a-zA-Z0-9]/.test(password);
+        
+        // Must have at least letters and one other type
+        if (!hasLetter) {
+          return { isValid: false, errorMessage: 'Password must contain at least one letter' };
         }
         
-        // Lowercase letter validation
-        if (!/[a-z]/.test(password)) {
-          return { isValid: false, errorMessage: 'Password must contain at least one lowercase letter' };
+        if (!hasNumber && !hasSpecial) {
+          return { isValid: false, errorMessage: 'Password must contain at least one number or special character' };
         }
         
-        // Number validation
-        if (!/[0-9]/.test(password)) {
-          return { isValid: false, errorMessage: 'Password must contain at least one number' };
+        // Check against blacklist (only common weak passwords)
+        const commonWeakPasswords = ['password', '123456', 'qwerty', 'admin', 'letmein'];
+        if (commonWeakPasswords.some(weak => password.toLowerCase().includes(weak))) {
+          return { isValid: false, errorMessage: 'Password is too common. Please choose a more unique password' };
         }
         
-        // Special character validation
-        if (!/[~`!@#$%^&*()\-_+={}[\]|\\;:"<>,./?]/.test(password)) {
-          return { isValid: false, errorMessage: 'Password must contain at least one special character' };
-        }
-        
-        // Check against blacklist
-        if (passwordBlacklist.some(word => password.toLowerCase().includes(word.toLowerCase()))) {
+        // Check against custom blacklist if available
+        if (passwordBlacklist.length > 0 && passwordBlacklist.some(word => password.toLowerCase().includes(word.toLowerCase()))) {
           return { isValid: false, errorMessage: 'Password contains forbidden content' };
         }
         

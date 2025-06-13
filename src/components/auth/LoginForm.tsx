@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,11 +46,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onCreateAccount, isEmplo
     }
     
     // For demo purposes, we'll simulate authentication for other user types
+    // Updated test accounts with simpler credentials
     setTimeout(() => {
-      // Check for test accounts
-      if (isEmployee && username === 'admin' && password === 'Admin1') {
+      if (isEmployee && username === 'admin' && password === 'admin123') {
         onLogin({ username, password });
-      } else if (!isEmployee && username === 'user' && password === 'Useruser1') {
+      } else if (!isEmployee && username === 'user' && password === 'user123') {
         onLogin({ username, password });
       } else {
         toast({
@@ -85,6 +86,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onCreateAccount, isEmplo
         <CardTitle className="text-2xl font-bold">{t('Sign In')}</CardTitle>
         <CardDescription>
           {isEmployee ? t('Welcome back to RoadSaver') : isAdmin ? t('Welcome back to RoadSaver') : t('Welcome back to RoadSaver')}
+          {/* Demo credentials hint */}
+          <div className="mt-2 text-xs text-muted-foreground">
+            Demo: {isEmployee ? 'admin / admin123' : 'user / user123'}
+          </div>
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
