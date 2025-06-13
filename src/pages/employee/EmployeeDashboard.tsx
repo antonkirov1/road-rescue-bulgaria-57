@@ -2,53 +2,33 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import EmployeeHeader from '@/components/employee/EmployeeHeader';
-import ServiceRequestList from '@/components/employee/ServiceRequestList';
-import RequestDetailsDialog from '@/components/employee/RequestDetailsDialog';
 import EmployeeSettingsMenu from '@/components/employee/EmployeeSettingsMenu';
-import { ServiceRequest } from '@/types/serviceRequest';
 import { useApp } from '@/contexts/AppContext';
-
-// Mock data for service requests
-const mockRequests: ServiceRequest[] = [
-  {
-    id: '1',
-    type: 'flat-tyre',
-    message: 'I have a flat tyre and need assistance',
-    timestamp: '01:47:27',
-    username: 'user123',
-    status: 'pending',
-    location: { lat: 42.6977, lng: 23.3219 }
-  },
-  {
-    id: '2',
-    type: 'out-of-fuel',
-    message: 'I am out of fuel and need assistance',
-    timestamp: '01:42:27',
-    username: 'driver456',
-    status: 'pending',
-    location: { lat: 42.6977, lng: 23.3219 }
-  },
-  {
-    id: '3',
-    type: 'tow-truck',
-    message: 'I have a major problem with my car and need a tow truck',
-    timestamp: '01:37:27',
-    username: 'traveler789',
-    status: 'pending',
-    location: { lat: 42.6977, lng: 23.3219 }
-  }
-];
+import { useEmployeeDashboardIntegration } from '@/hooks/useEmployeeDashboardIntegration';
+import { ServiceRequest } from '@/types/newServiceRequest';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Clock, MapPin, DollarSign, User } from 'lucide-react';
 
 const EmployeeDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { language, setLanguage } = useApp();
-  const [requests, setRequests] = useState<ServiceRequest[]>(mockRequests);
-  const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
-  const [showRequestDetails, setShowRequestDetails] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-
-  // Mock employee location
-  const employeeLocation = { lat: 42.6977, lng: 23.3219 };
+  
+  // Mock employee data - in a real app this would come from auth
+  const employeeId = 'emp_' + Date.now();
+  const employeeName = 'John Smith';
+  
+  const {
+    isAvailable,
+    incomingRequests,
+    currentRequest,
+    updateAvailability,
+    acceptRequest,
+    declineRequest,
+    completeService
+  } = useEmployeeDashboardIntegration(employeeId, employeeName);
 
   const handleLogout = () => {
     navigate('/');
@@ -66,52 +46,30 @@ const EmployeeDashboard: React.FC = () => {
     setShowSettings(false);
   };
 
-  const handleRequestSelect = (request: ServiceRequest) => {
-    setSelectedRequest(request);
-    setShowRequestDetails(true);
+  const handleToggleAvailability = () => {
+    updateAvailability(!isAvailable);
   };
 
-  const handleAcceptRequest = (requestId: string, priceQuote: number) => {
-    setRequests(prev => 
-      prev.map(req => 
-        req.id === requestId 
-          ? { ...req, status: 'accepted' as const, priceQuote }
-          : req
-      )
-    );
-    setShowRequestDetails(false);
-    setSelectedRequest(null);
+  const handleAcceptRequest = (request: ServiceRequest) => {
+    acceptRequest(request);
   };
 
-  const handleDeclineRequest = () => {
-    if (selectedRequest) {
-      setRequests(prev => 
-        prev.map(req => 
-          req.id === selectedRequest.id 
-            ? { ...req, status: 'declined' as const }
-            : req
-        )
-      );
+  const handleDeclineRequest = (request: ServiceRequest) => {
+    declineRequest(request, 'Employee declined');
+  };
+
+  const handleCompleteService = () => {
+    if (currentRequest) {
+      completeService(currentRequest.id);
     }
-    setShowRequestDetails(false);
-    setSelectedRequest(null);
   };
 
-  const getRequestTitle = (type: string) => {
-    switch (type) {
-      case 'flat-tyre':
-        return 'Flat Tyre Assistance';
-      case 'out-of-fuel':
-        return 'Out of Fuel';
-      case 'tow-truck':
-        return 'Tow Truck Request';
-      default:
-        return 'Service Request';
-    }
+  const getServiceTypeDisplay = (type: ServiceRequest['type']) => {
+    return type;
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <EmployeeHeader
         language={language}
         onLanguageChange={handleLanguageChange}
@@ -119,28 +77,136 @@ const EmployeeDashboard: React.FC = () => {
         onSettingsOpen={handleSettingsOpen}
       />
       
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        {/* Availability Toggle */}
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Service Requests</h2>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>Employee Status</span>
+                <Badge variant={isAvailable ? "default" : "secondary"}>
+                  {isAvailable ? "Available" : "Unavailable"}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                onClick={handleToggleAvailability}
+                variant={isAvailable ? "destructive" : "default"}
+                className="w-full"
+              >
+                {isAvailable ? "Go Offline" : "Go Online"}
+              </Button>
+            </CardContent>
+          </Card>
         </div>
 
-        <ServiceRequestList
-          requests={requests}
-          onRequestSelect={handleRequestSelect}
-        />
-      </div>
+        {/* Current Request */}
+        {currentRequest && (
+          <div className="mb-6">
+            <Card className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950">
+              <CardHeader>
+                <CardTitle className="text-green-800 dark:text-green-200">
+                  Current Service Request
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  <span className="font-medium">Customer ID:</span>
+                  <span>{currentRequest.userId}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  <span className="font-medium">Service Type:</span>
+                  <span>{getServiceTypeDisplay(currentRequest.type)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  <span className="font-medium">Location:</span>
+                  <span>Sofia, Bulgaria</span>
+                </div>
+                {currentRequest.priceQuote && (
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-4 w-4" />
+                    <span className="font-medium">Quote:</span>
+                    <span>{currentRequest.priceQuote} BGN</span>
+                  </div>
+                )}
+                <div className="pt-4">
+                  <Button 
+                    onClick={handleCompleteService}
+                    className="w-full bg-green-600 hover:bg-green-700"
+                  >
+                    Complete Service
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
-      {showRequestDetails && selectedRequest && (
-        <RequestDetailsDialog
-          request={selectedRequest}
-          employeeLocation={employeeLocation}
-          onClose={() => setShowRequestDetails(false)}
-          onAccept={handleAcceptRequest}
-          onDecline={handleDeclineRequest}
-          getRequestTitle={getRequestTitle}
-          language={language}
-        />
-      )}
+        {/* Incoming Requests */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Incoming Requests ({incomingRequests.length})
+          </h2>
+          
+          {incomingRequests.length === 0 ? (
+            <Card>
+              <CardContent className="py-8 text-center">
+                <p className="text-gray-500 dark:text-gray-400">
+                  {isAvailable ? "No pending requests" : "You are currently offline"}
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {incomingRequests.map((request) => (
+                <Card key={request.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span>{getServiceTypeDisplay(request.type)}</span>
+                      <Badge variant="outline">
+                        {new Date(request.createdAt).toLocaleTimeString()}
+                      </Badge>
+                    </CardTitle>
+                    <CardDescription>
+                      Customer ID: {request.userId}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4" />
+                      <span>Sofia, Bulgaria</span>
+                    </div>
+                    {request.description && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {request.description}
+                      </p>
+                    )}
+                    <div className="flex gap-2 pt-4">
+                      <Button 
+                        onClick={() => handleAcceptRequest(request)}
+                        className="flex-1 bg-green-600 hover:bg-green-700"
+                      >
+                        Accept
+                      </Button>
+                      <Button 
+                        onClick={() => handleDeclineRequest(request)}
+                        variant="outline"
+                        className="flex-1"
+                      >
+                        Decline
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
 
       <EmployeeSettingsMenu
         open={showSettings}

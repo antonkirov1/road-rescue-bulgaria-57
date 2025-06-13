@@ -44,11 +44,11 @@ const Index: React.FC = () => {
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
-          {/* Customer Portal */}
+          {/* Customer Portal - Using Users icon (flipped) */}
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardHeader className="text-center">
               <div className="mx-auto w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mb-4">
-                <UserCheck className="h-6 w-6 text-green-600 dark:text-green-400" />
+                <Users className="h-6 w-6 text-green-600 dark:text-green-400" />
               </div>
               <CardTitle>Customer Portal</CardTitle>
               <CardDescription>
@@ -65,11 +65,11 @@ const Index: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Employee Portal */}
+          {/* Employee Portal - Using UserCheck icon (flipped) */}
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardHeader className="text-center">
               <div className="mx-auto w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mb-4">
-                <Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                <UserCheck className="h-6 w-6 text-blue-600 dark:text-blue-400" />
               </div>
               <CardTitle>Employee Portal</CardTitle>
               <CardDescription>
@@ -81,7 +81,7 @@ const Index: React.FC = () => {
                 onClick={() => navigate('/employee/auth')}
                 className="w-full bg-blue-600 hover:bg-blue-700"
               >
-                Access Employee Portal
+                Employee Login
               </Button>
             </CardContent>
           </Card>
@@ -102,7 +102,7 @@ const Index: React.FC = () => {
                 onClick={() => navigate('/admin/auth')}
                 className="w-full bg-purple-600 hover:bg-purple-700"
               >
-                Access Admin Portal
+                Admin Panel
               </Button>
             </CardContent>
           </Card>
