@@ -216,7 +216,7 @@ export class RoadsideAssistanceSystem {
 
       if (availableEmployees.length === 0) {
         this.triggerUI('show_no_technicians_available');
-        await this.supabaseService.updateServiceRequest(requestId, { status: 'declined' });
+        await this.supabaseService.updateServiceRequest(requestId, { status: 'cancelled' });
         return;
       }
 
