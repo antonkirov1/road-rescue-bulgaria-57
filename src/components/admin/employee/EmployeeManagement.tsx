@@ -1,22 +1,24 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { UserPlus, Search } from 'lucide-react';
-import { EmployeeAccountService, EmployeeAccount } from '@/services/employeeAccountService';
+import { UserPlus } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import EmployeeTable from './EmployeeTable';
 import EmployeeForm from './EmployeeForm';
+import { EmployeeAccountService, EmployeeAccount } from '@/services/employeeAccountService';
 
-const EmployeeManagement: React.FC = () => {
+interface EmployeeManagementProps {
+  onStatsUpdate?: () => void;
+}
+
+const EmployeeManagement: React.FC<EmployeeManagementProps> = ({ onStatsUpdate }) => {
   const [employees, setEmployees] = useState<EmployeeAccount[]>([]);
   const [filteredEmployees, setFilteredEmployees] = useState<EmployeeAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<EmployeeAccount | undefined>();
-  const [showPasswords, setShowPasswords] = useState<{[key: string]: boolean}>({});
 
   useEffect(() => {
     loadEmployees();
@@ -31,6 +33,10 @@ const EmployeeManagement: React.FC = () => {
       setLoading(true);
       const data = await EmployeeAccountService.getAllEmployees();
       setEmployees(data);
+      
+      if (onStatsUpdate) {
+        onStatsUpdate();
+      }
     } catch (error) {
       console.error('Error loading employees:', error);
       toast({
@@ -51,9 +57,8 @@ const EmployeeManagement: React.FC = () => {
 
     const filtered = employees.filter(employee =>
       employee.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (employee.real_name && employee.real_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (employee.employee_role && employee.employee_role.toLowerCase().includes(searchTerm.toLowerCase()))
+      (employee.email && employee.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (employee.real_name && employee.real_name.toLowerCase().includes(searchTerm.toLowerCase()))
     );
     setFilteredEmployees(filtered);
   };
@@ -79,44 +84,19 @@ const EmployeeManagement: React.FC = () => {
     setEditingEmployee(undefined);
   };
 
-  const handleTogglePassword = (employeeId: string) => {
-    setShowPasswords(prev => ({
-      ...prev,
-      [employeeId]: !prev[employeeId]
-    }));
-  };
-
-  const handleBanEmployee = async (employee: EmployeeAccount) => {
+  const handleStatusChange = async (employee: EmployeeAccount, status: 'active' | 'inactive' | 'suspended') => {
     try {
-      await EmployeeAccountService.updateEmployeeStatus(employee.id, 'suspended');
+      await EmployeeAccountService.updateEmployeeStatus(employee.id, status);
       toast({
-        title: "Employee Suspended",
-        description: `${employee.username} has been suspended.`
+        title: "Employee Updated",
+        description: `${employee.username} status changed to ${status}.`
       });
       loadEmployees();
     } catch (error) {
-      console.error('Error suspending employee:', error);
+      console.error('Error updating employee status:', error);
       toast({
         title: "Error",
-        description: "Failed to suspend employee. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleUnbanEmployee = async (employee: EmployeeAccount) => {
-    try {
-      await EmployeeAccountService.updateEmployeeStatus(employee.id, 'active');
-      toast({
-        title: "Employee Reactivated",
-        description: `${employee.username} has been reactivated.`
-      });
-      loadEmployees();
-    } catch (error) {
-      console.error('Error reactivating employee:', error);
-      toast({
-        title: "Error",
-        description: "Failed to reactivate employee. Please try again.",
+        description: "Failed to update employee status. Please try again.",
         variant: "destructive"
       });
     }
@@ -155,37 +135,31 @@ const EmployeeManagement: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4 md:p-6">
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Employee Management</CardTitle>
-            <Button onClick={handleCreateEmployee}>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <CardTitle className="text-xl md:text-2xl">Employee Management</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Manage employee accounts and roles
+              </p>
+            </div>
+            <Button onClick={handleCreateEmployee} className="w-full sm:w-auto">
               <UserPlus className="h-4 w-4 mr-2" />
               Add Employee
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center space-x-2 mb-4">
-            <Search className="h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search employees..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-sm"
-            />
-          </div>
-
           <EmployeeTable
             employees={filteredEmployees}
             loading={loading}
-            showPasswords={showPasswords}
-            onEditEmployee={handleEditEmployee}
-            onTogglePassword={handleTogglePassword}
-            onBanEmployee={handleBanEmployee}
-            onUnbanEmployee={handleUnbanEmployee}
-            onRemoveEmployee={handleRemoveEmployee}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            onEdit={handleEditEmployee}
+            onStatusChange={handleStatusChange}
+            onRemove={handleRemoveEmployee}
           />
         </CardContent>
       </Card>

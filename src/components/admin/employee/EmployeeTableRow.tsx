@@ -3,128 +3,100 @@ import React from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Eye, EyeOff, UserX, UserCheck, Trash2 } from 'lucide-react';
+import { Edit, UserX, Trash2 } from 'lucide-react';
 import { EmployeeAccount } from '@/services/employeeAccountService';
 
 interface EmployeeTableRowProps {
   employee: EmployeeAccount;
-  showPassword: boolean;
   onEdit: (employee: EmployeeAccount) => void;
-  onTogglePassword: (employeeId: string) => void;
-  onBan: (employee: EmployeeAccount) => void;
-  onUnban: (employee: EmployeeAccount) => void;
+  onStatusChange: (employee: EmployeeAccount, status: 'active' | 'inactive' | 'suspended') => void;
   onRemove: (employee: EmployeeAccount) => void;
 }
 
 const EmployeeTableRow: React.FC<EmployeeTableRowProps> = ({
   employee,
-  showPassword,
   onEdit,
-  onTogglePassword,
-  onBan,
-  onUnban,
+  onStatusChange,
   onRemove
 }) => {
-  const isBanned = employee.status === 'suspended' || employee.status === 'inactive';
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
 
-  const getRoleDisplayName = (role?: 'technician' | 'support' | 'admin') => {
-    switch (role) {
-      case 'technician':
-        return 'Technician';
-      case 'support':
-        return 'Support';
-      case 'admin':
-        return 'Admin';
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'active':
+        return <Badge variant="default" className="bg-green-100 text-green-800">Active</Badge>;
+      case 'inactive':
+        return <Badge variant="secondary">Inactive</Badge>;
+      case 'suspended':
+        return <Badge variant="destructive">Suspended</Badge>;
       default:
-        return 'Technician';
+        return <Badge variant="secondary">{status}</Badge>;
     }
   };
 
-  const getRoleVariant = (role?: 'technician' | 'support' | 'admin') => {
+  const getRoleBadge = (role: string) => {
     switch (role) {
-      case 'support':
-        return 'secondary' as const;
       case 'admin':
-        return 'destructive' as const;
+        return <Badge variant="destructive">Admin</Badge>;
+      case 'support':
+        return <Badge variant="default" className="bg-blue-100 text-blue-800">Support</Badge>;
+      case 'technician':
+        return <Badge variant="secondary">Technician</Badge>;
       default:
-        return 'outline' as const;
+        return <Badge variant="secondary">{role}</Badge>;
     }
   };
 
   return (
     <TableRow>
-      <TableCell className="font-medium dark:text-gray-200">
-        {employee.real_name || employee.username}
-      </TableCell>
-      <TableCell className="dark:text-gray-200">{employee.username}</TableCell>
-      <TableCell className="dark:text-gray-200">{employee.email}</TableCell>
-      <TableCell className="dark:text-gray-200">{employee.phone_number || 'N/A'}</TableCell>
-      <TableCell>
-        <Badge variant={getRoleVariant(employee.employee_role)}>
-          {getRoleDisplayName(employee.employee_role)}
-        </Badge>
-      </TableCell>
-      <TableCell>
-        <Badge variant={isBanned ? "destructive" : "default"}>
-          {isBanned ? 'Suspended' : 'Active'}
-        </Badge>
-      </TableCell>
+      <TableCell className="font-medium">{employee.username}</TableCell>
+      <TableCell>{employee.email || 'N/A'}</TableCell>
+      <TableCell>{employee.real_name || 'N/A'}</TableCell>
+      <TableCell>{getRoleBadge(employee.employee_role || 'technician')}</TableCell>
+      <TableCell>{getStatusBadge(employee.status || 'active')}</TableCell>
       <TableCell>
         <Badge variant={employee.is_available ? "default" : "secondary"}>
-          {employee.is_available ? 'Available' : 'Busy'}
+          {employee.is_available ? 'Available' : 'Unavailable'}
         </Badge>
       </TableCell>
-      <TableCell className="dark:text-gray-200">
-        {new Date(employee.created_at).toLocaleDateString()}
-      </TableCell>
+      <TableCell>{formatDate(employee.created_at)}</TableCell>
       <TableCell>
-        <div className="flex items-center gap-1">
+        <div className="flex gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={() => onEdit(employee)}
-            title="Edit Employee"
           >
             <Edit className="h-4 w-4" />
           </Button>
           
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onTogglePassword(employee.id)}
-            title="Toggle Password Visibility"
-          >
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </Button>
-          
-          {isBanned ? (
+          {employee.status === 'active' ? (
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onUnban(employee)}
-              className="text-green-600 hover:text-green-700"
-              title="Unban Employee"
+              onClick={() => onStatusChange(employee, 'suspended')}
+              className="text-orange-600 hover:text-orange-700"
             >
-              <UserCheck className="h-4 w-4" />
+              <UserX className="h-4 w-4" />
             </Button>
           ) : (
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onBan(employee)}
-              className="text-red-600 hover:text-red-700"
-              title="Ban Employee"
+              onClick={() => onStatusChange(employee, 'active')}
+              className="text-green-600 hover:text-green-700"
             >
               <UserX className="h-4 w-4" />
             </Button>
           )}
-
+          
           <Button
             variant="outline"
             size="sm"
             onClick={() => onRemove(employee)}
             className="text-red-600 hover:text-red-700"
-            title="Remove Employee"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
