@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { ChatRoom, ChatMessage, ChatNotification, castToChatRoom, castToChatMessage } from '@/types/chat';
 
@@ -8,6 +8,14 @@ export const useChat = (employeeId?: string) => {
   const [messages, setMessages] = useState<{ [roomId: string]: ChatMessage[] }>({});
   const [notifications, setNotifications] = useState<ChatNotification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Use refs to track channel instances and prevent multiple subscriptions
+  const channelsRef = useRef<{
+    rooms?: any;
+    messages?: any;
+    notifications?: any;
+  }>({});
+  const isSubscribedRef = useRef(false);
 
   // Fetch chat rooms
   const fetchRooms = async () => {
@@ -132,6 +140,11 @@ export const useChat = (employeeId?: string) => {
   };
 
   useEffect(() => {
+    // Prevent multiple subscriptions
+    if (isSubscribedRef.current) {
+      return;
+    }
+
     const loadInitialData = async () => {
       setIsLoading(true);
       await fetchRooms();
@@ -141,14 +154,19 @@ export const useChat = (employeeId?: string) => {
 
     loadInitialData();
 
-    // Set up real-time subscriptions
+    // Create unique channel names to avoid conflicts
+    const roomChannelName = `chat-rooms-${employeeId || 'anonymous'}-${Date.now()}`;
+    const messageChannelName = `chat-messages-${employeeId || 'anonymous'}-${Date.now()}`;
+    const notificationChannelName = `chat-notifications-${employeeId || 'anonymous'}-${Date.now()}`;
+
+    // Set up real-time subscriptions with unique channel names
     const roomsChannel = supabase
-      .channel('chat-rooms')
+      .channel(roomChannelName)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_rooms' }, fetchRooms)
       .subscribe();
 
     const messagesChannel = supabase
-      .channel('chat-messages')
+      .channel(messageChannelName)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_messages' }, (payload) => {
         if (payload.eventType === 'INSERT') {
           const newMessage = castToChatMessage(payload.new);
@@ -161,14 +179,34 @@ export const useChat = (employeeId?: string) => {
       .subscribe();
 
     const notificationsChannel = supabase
-      .channel('chat-notifications')
+      .channel(notificationChannelName)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_notifications' }, fetchNotifications)
       .subscribe();
 
+    // Store channel references
+    channelsRef.current = {
+      rooms: roomsChannel,
+      messages: messagesChannel,
+      notifications: notificationsChannel
+    };
+
+    isSubscribedRef.current = true;
+
     return () => {
-      supabase.removeChannel(roomsChannel);
-      supabase.removeChannel(messagesChannel);
-      supabase.removeChannel(notificationsChannel);
+      // Clean up channels
+      if (channelsRef.current.rooms) {
+        supabase.removeChannel(channelsRef.current.rooms);
+      }
+      if (channelsRef.current.messages) {
+        supabase.removeChannel(channelsRef.current.messages);
+      }
+      if (channelsRef.current.notifications) {
+        supabase.removeChannel(channelsRef.current.notifications);
+      }
+      
+      // Reset refs
+      channelsRef.current = {};
+      isSubscribedRef.current = false;
     };
   }, [employeeId]);
 
