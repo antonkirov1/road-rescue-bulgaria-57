@@ -26,7 +26,12 @@ export class EmployeeAccountService {
       throw error;
     }
 
-    return data || [];
+    // Cast the data to ensure proper typing
+    return (data || []).map(employee => ({
+      ...employee,
+      employee_role: employee.employee_role as 'technician' | 'support' | 'admin',
+      status: employee.status as 'active' | 'inactive' | 'suspended'
+    }));
   }
 
   static async createEmployeeAccount(employeeData: {
@@ -52,7 +57,12 @@ export class EmployeeAccountService {
       throw error;
     }
 
-    return data;
+    // Cast the data to ensure proper typing
+    return {
+      ...data,
+      employee_role: data.employee_role as 'technician' | 'support' | 'admin',
+      status: data.status as 'active' | 'inactive' | 'suspended'
+    };
   }
 
   static async updateEmployee(id: string, updates: Partial<EmployeeAccount>): Promise<EmployeeAccount> {
@@ -68,7 +78,12 @@ export class EmployeeAccountService {
       throw error;
     }
 
-    return data;
+    // Cast the data to ensure proper typing
+    return {
+      ...data,
+      employee_role: data.employee_role as 'technician' | 'support' | 'admin',
+      status: data.status as 'active' | 'inactive' | 'suspended'
+    };
   }
 
   static async updateEmployeeStatus(id: string, status: 'active' | 'inactive' | 'suspended'): Promise<void> {
@@ -108,6 +123,11 @@ export class EmployeeAccountService {
       throw error;
     }
 
-    return data || [];
+    // Cast the data to ensure proper typing
+    return (data || []).map(employee => ({
+      ...employee,
+      employee_role: employee.employee_role as 'technician' | 'support' | 'admin',
+      status: employee.status as 'active' | 'inactive' | 'suspended'
+    }));
   }
 }
