@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import bcrypt from 'bcryptjs';
 
@@ -5,7 +6,7 @@ export interface EmployeeAccount {
   username: string;
   email: string;
   phone_number?: string;
-  employee_role?: string;
+  employee_role?: 'technician' | 'support' | 'admin';
   status?: 'active' | 'inactive' | 'suspended';
   real_name?: string;
 }
@@ -160,6 +161,28 @@ export class EmployeeAccountService {
       return data || [];
     } catch (error) {
       console.error('Error in getActiveEmployees:', error);
+      throw error;
+    }
+  }
+
+  // Get employees by role
+  static async getEmployeesByRole(role: 'technician' | 'support' | 'admin') {
+    try {
+      const { data, error } = await supabase
+        .from('employee_accounts')
+        .select('*')
+        .eq('employee_role', role)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching employees by role:', error);
+        throw error;
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error in getEmployeesByRole:', error);
       throw error;
     }
   }

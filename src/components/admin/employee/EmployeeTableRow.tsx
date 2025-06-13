@@ -37,6 +37,30 @@ const EmployeeTableRow: React.FC<EmployeeTableRowProps> = ({
 }) => {
   const isBanned = employee.status === 'suspended' || employee.status === 'banned';
 
+  const getRoleDisplayName = (role?: string) => {
+    switch (role) {
+      case 'technician':
+        return 'Technician';
+      case 'support':
+        return 'Support';
+      case 'admin':
+        return 'Admin';
+      default:
+        return 'Technician';
+    }
+  };
+
+  const getRoleVariant = (role?: string) => {
+    switch (role) {
+      case 'support':
+        return 'secondary' as const;
+      case 'admin':
+        return 'destructive' as const;
+      default:
+        return 'outline' as const;
+    }
+  };
+
   return (
     <TableRow>
       <TableCell className="font-medium dark:text-gray-200">
@@ -46,8 +70,8 @@ const EmployeeTableRow: React.FC<EmployeeTableRowProps> = ({
       <TableCell className="dark:text-gray-200">{employee.email}</TableCell>
       <TableCell className="dark:text-gray-200">{employee.phone_number || 'N/A'}</TableCell>
       <TableCell>
-        <Badge variant="outline">
-          {employee.employee_role || 'Technician'}
+        <Badge variant={getRoleVariant(employee.employee_role)}>
+          {getRoleDisplayName(employee.employee_role)}
         </Badge>
       </TableCell>
       <TableCell>
