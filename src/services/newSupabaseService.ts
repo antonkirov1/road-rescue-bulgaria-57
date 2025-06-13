@@ -68,7 +68,7 @@ class NewSupabaseService {
       assignedEmployeeId: data.assigned_employee_id,
       priceQuote: data.price_quote,
       revisedPriceQuote: data.revised_price_quote,
-      userLocation: data.user_location ? {
+      userLocation: data.user_location && typeof data.user_location === 'string' ? {
         lat: parseFloat(data.user_location.split(',')[0].replace('(', '')),
         lng: parseFloat(data.user_location.split(',')[1].replace(')', ''))
       } : undefined,
@@ -95,7 +95,7 @@ class NewSupabaseService {
       assignedEmployeeId: item.assigned_employee_id,
       priceQuote: item.price_quote,
       revisedPriceQuote: item.revised_price_quote,
-      userLocation: item.user_location ? {
+      userLocation: item.user_location && typeof item.user_location === 'string' ? {
         lat: parseFloat(item.user_location.split(',')[0].replace('(', '')),
         lng: parseFloat(item.user_location.split(',')[1].replace(')', ''))
       } : undefined,
@@ -148,7 +148,7 @@ class NewSupabaseService {
     return data.map(user => ({
       id: user.id,
       username: user.username,
-      location: user.location ? {
+      location: user.location && typeof user.location === 'string' ? {
         lat: parseFloat(user.location.split(',')[0].replace('(', '')),
         lng: parseFloat(user.location.split(',')[1].replace(')', ''))
       } : { lat: 0, lng: 0 },
@@ -170,7 +170,7 @@ class NewSupabaseService {
     return {
       id: data.id,
       username: data.username,
-      location: data.location ? {
+      location: data.location && typeof data.location === 'string' ? {
         lat: parseFloat(data.location.split(',')[0].replace('(', '')),
         lng: parseFloat(data.location.split(',')[1].replace(')', ''))
       } : { lat: 0, lng: 0 },
@@ -205,7 +205,7 @@ class NewSupabaseService {
       assignedEmployeeId: data.assigned_employee_id,
       priceQuote: data.price_quote,
       revisedPriceQuote: data.revised_price_quote,
-      userLocation: data.user_location ? {
+      userLocation: data.user_location && typeof data.user_location === 'string' ? {
         lat: parseFloat(data.user_location.split(',')[0].replace('(', '')),
         lng: parseFloat(data.user_location.split(',')[1].replace(')', ''))
       } : undefined,
@@ -228,4 +228,5 @@ class NewSupabaseService {
   }
 }
 
+export { NewSupabaseService };
 export const newSupabaseService = new NewSupabaseService();
