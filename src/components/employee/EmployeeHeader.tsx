@@ -43,7 +43,7 @@ const EmployeeHeader: React.FC<EmployeeHeaderProps> = ({
               className="text-white hover:bg-white/20 h-8 w-8 sm:h-10 sm:w-10"
               title={t('change-language')}
             >
-              <Globe className="h-3 w-3 sm:h-4 sm:w-4 animate-globe-pulse" />
+              <Globe className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
             <span className="absolute -bottom-1 -right-1 text-xs bg-white text-blue-600 px-1 rounded">
               {language.toUpperCase()}
@@ -56,7 +56,7 @@ const EmployeeHeader: React.FC<EmployeeHeaderProps> = ({
             className="text-white hover:bg-white/20 h-8 w-8 sm:h-10 sm:w-10"
             title={t('settings')}
           >
-            <Settings className="h-4 w-4 sm:h-5 sm:w-5 animate-settings-gear-turn" />
+            <Settings className="h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
           <Button 
             variant="ghost" 
