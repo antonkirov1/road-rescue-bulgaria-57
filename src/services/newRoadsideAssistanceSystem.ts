@@ -1,419 +1,306 @@
 
-import { ServiceRequest, User, Employee, UIEvent } from '@/types/newServiceRequest';
-import { NewSupabaseService } from './newSupabaseService';
 import { toast } from '@/components/ui/use-toast';
+import { NewSupabaseService } from './newSupabaseService';
 
-export class RoadsideAssistanceSystem {
-  private activeRequests: Map<string, ServiceRequest> = new Map();
-  private userSessions: Map<string, NodeJS.Timeout> = new Map();
-  private supabaseService: NewSupabaseService;
-  private uiEventListeners: Map<UIEvent, Array<(data?: any) => void>> = new Map();
-  private isSimulation: boolean = true; // Toggle for simulation mode
+const supabaseService = new NewSupabaseService();
 
-  constructor() {
-    this.supabaseService = new NewSupabaseService();
-  }
-
-  // Event System
-  on(event: UIEvent, callback: (data?: any) => void) {
-    if (!this.uiEventListeners.has(event)) {
-      this.uiEventListeners.set(event, []);
-    }
-    this.uiEventListeners.get(event)!.push(callback);
-  }
-
-  off(event: UIEvent, callback: (data?: any) => void) {
-    const listeners = this.uiEventListeners.get(event);
-    if (listeners) {
-      const index = listeners.indexOf(callback);
-      if (index > -1) {
-        listeners.splice(index, 1);
-      }
-    }
-  }
-
-  private triggerUI(event: UIEvent, data?: any) {
-    console.log(`RoadsideAssistanceSystem: Triggering UI event ${event}`, data);
-    const listeners = this.uiEventListeners.get(event) || [];
-    listeners.forEach(callback => callback(data));
-  }
-
-  // User Actions
-  async sendRequest(userId: string, serviceType: ServiceRequest['type'], description: string, userLocation: { lat: number; lng: number }): Promise<string> {
+export class NewRoadsideAssistanceSystem {
+  
+  static async requestRoadsideAssistance(
+    userId: string,
+    serviceType: string,
+    location: { lat: number; lng: number },
+    description?: string
+  ) {
     try {
-      // Check for existing active request
-      const existingRequest = await this.supabaseService.getUserActiveRequest(userId);
+      // Check if user already has an active request
+      const existingRequest = await supabaseService.getUserActiveRequest(userId);
+      
       if (existingRequest) {
-        throw new Error('User already has an active request');
+        toast({
+          title: "Active Request Found",
+          description: "You already have an active roadside assistance request.",
+          variant: "destructive"
+        });
+        return { success: false, error: "User already has an active request" };
       }
 
-      const request: Omit<ServiceRequest, 'id' | 'createdAt' | 'updatedAt'> = {
+      // Generate initial price quote
+      const priceQuote = await supabaseService.generatePriceQuote(serviceType);
+
+      // Create new service request
+      const serviceRequest = await supabaseService.createServiceRequest({
         userId,
         type: serviceType,
-        status: 'pending',
-        declineCount: 0,
         description,
-        userLocation
-      };
+        status: 'pending',
+        priceQuote,
+        userLocation: location
+      });
 
-      const requestId = await this.supabaseService.createServiceRequest(request);
+      // Find available employees
+      const availableEmployees = await supabaseService.getAvailableSimulatedEmployees();
+      const blacklistedEmployees = await supabaseService.getBlacklistedEmployees(userId, serviceRequest.id);
       
-      const fullRequest: ServiceRequest = {
-        ...request,
-        id: requestId,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
+      const eligibleEmployees = availableEmployees.filter(emp => 
+        !blacklistedEmployees.includes(emp.name)
+      );
 
-      this.activeRequests.set(requestId, fullRequest);
-      this.triggerUI('show_searching_technician', fullRequest);
-
-      if (this.isSimulation) {
-        await this.assignSimulatedEmployee(requestId);
-      } else {
-        this.addToEmployeeDashboard(fullRequest);
+      if (eligibleEmployees.length === 0) {
+        // Reset blacklist and try again
+        await supabaseService.resetBlacklist(userId, serviceRequest.id);
+        
+        toast({
+          title: "No Available Employees",
+          description: "All employees are currently busy. Please try again later.",
+          variant: "destructive"
+        });
+        return { success: false, error: "No available employees" };
       }
 
-      return requestId;
+      // Randomly select an employee
+      const selectedEmployee = eligibleEmployees[Math.floor(Math.random() * eligibleEmployees.length)];
+      
+      // Assign employee to request
+      await supabaseService.assignEmployeeToRequest(serviceRequest.id, selectedEmployee.id);
+      
+      // Update employee availability
+      await supabaseService.updateEmployeeAvailability(selectedEmployee.id, false);
+
+      toast({
+        title: "Request Submitted",
+        description: `Your roadside assistance request has been assigned to ${selectedEmployee.name}.`,
+      });
+
+      return { 
+        success: true, 
+        requestId: serviceRequest.id,
+        employeeName: selectedEmployee.name,
+        priceQuote 
+      };
+
     } catch (error) {
-      console.error('Error sending request:', error);
-      throw error;
+      console.error('Error requesting roadside assistance:', error);
+      toast({
+        title: "Request Failed",
+        description: "Failed to submit your roadside assistance request. Please try again.",
+        variant: "destructive"
+      });
+      return { success: false, error: error.message };
     }
   }
 
-  async acceptQuote(requestId: string): Promise<void> {
+  static async acceptQuote(userId: string, requestId: string) {
     try {
-      const request = this.activeRequests.get(requestId);
-      if (!request) {
-        throw new Error('Request not found');
-      }
-
-      await this.supabaseService.updateServiceRequest(requestId, { status: 'accepted' });
-      request.status = 'accepted';
+      const isValidPrice = await supabaseService.validatePrice('roadside_assistance', 0); // Default validation
       
-      this.triggerUI('show_request_started', request);
-
-      if (this.isSimulation) {
-        await this.simulateEmployeeMovement(request);
-      } else {
-        this.notifyEmployee(request.assignedEmployeeId!, 'user_accepted_quote');
-        this.triggerUI('show_employee_en_route', request);
+      if (!isValidPrice) {
+        toast({
+          title: "Invalid Price",
+          description: "The price quote is invalid. Please request a new quote.",
+          variant: "destructive"
+        });
+        return { success: false, error: "Invalid price" };
       }
+
+      await supabaseService.updateServiceRequest(requestId, {
+        status: 'accepted'
+      });
+
+      toast({
+        title: "Quote Accepted",
+        description: "You have accepted the price quote. The technician will arrive shortly.",
+      });
+
+      return { success: true };
+
     } catch (error) {
       console.error('Error accepting quote:', error);
-      throw error;
+      return { success: false, error: error.message };
     }
   }
 
-  async declineQuote(requestId: string): Promise<void> {
+  static async declineQuote(userId: string, requestId: string) {
     try {
-      const request = this.activeRequests.get(requestId);
-      if (!request) return;
-
-      request.declineCount++;
-      await this.supabaseService.updateServiceRequest(requestId, { 
-        declineCount: request.declineCount 
-      });
-
-      if (request.declineCount === 1 && !request.revisedPriceQuote) {
-        // First decline - request revision
-        await this.requestPriceRevision(requestId);
-      } else {
-        // Second decline or already revised - blacklist and find new employee
-        await this.blacklistEmployeeAndFindNew(requestId);
-      }
-    } catch (error) {
-      console.error('Error declining quote:', error);
-      throw error;
-    }
-  }
-
-  async cancelRequest(requestId: string): Promise<void> {
-    try {
-      const request = this.activeRequests.get(requestId);
-      if (!request) return;
-
-      await this.supabaseService.updateServiceRequest(requestId, { status: 'cancelled' });
-      await this.supabaseService.resetBlacklist(requestId);
+      const isValidPrice = await supabaseService.validatePrice('roadside_assistance', 0); // Default validation
       
-      this.activeRequests.delete(requestId);
-      
-      toast({
-        title: "Request Cancelled",
-        description: "Your service request has been cancelled."
-      });
-    } catch (error) {
-      console.error('Error cancelling request:', error);
-      throw error;
-    }
-  }
-
-  // Employee Actions
-  async sendPriceQuote(employeeId: string, requestId: string, price: number): Promise<void> {
-    try {
-      const request = this.activeRequests.get(requestId);
-      if (!request) return;
-
-      const isValid = await this.supabaseService.validatePrice(request.type, price);
-      if (!isValid) {
-        throw new Error('Invalid price for service type');
+      if (!isValidPrice) {
+        toast({
+          title: "Invalid Price",
+          description: "The price quote is invalid. Please request a new quote.",
+          variant: "destructive"
+        });
+        return { success: false, error: "Invalid price" };
       }
 
-      await this.supabaseService.updateServiceRequest(requestId, {
-        priceQuote: price,
-        status: 'quote_sent',
-        assignedEmployeeId: employeeId
-      });
-
-      request.priceQuote = price;
-      request.status = 'quote_sent';
-      request.assignedEmployeeId = employeeId;
-
-      this.triggerUI('show_price_quote_received', request);
-    } catch (error) {
-      console.error('Error sending price quote:', error);
-      throw error;
-    }
-  }
-
-  async editPriceQuote(employeeId: string, requestId: string, newPrice: number, explanation: string): Promise<void> {
-    try {
-      const request = this.activeRequests.get(requestId);
-      if (!request || !request.priceQuote) return;
-
-      const isValid = await this.supabaseService.validatePrice(request.type, newPrice);
-      if (!isValid || 
-          newPrice >= request.priceQuote ||
-          explanation.length < 15 || 
-          explanation.length > 50) {
-        throw new Error('Invalid price edit parameters');
+      // Get current request
+      const request = await supabaseService.getUserActiveRequest(userId);
+      if (!request) {
+        return { success: false, error: "No active request found" };
       }
 
-      await this.supabaseService.updateServiceRequest(requestId, {
-        revisedPriceQuote: newPrice,
-        status: 'quote_revised'
-      });
-
-      request.revisedPriceQuote = newPrice;
-      request.status = 'quote_revised';
-
-      this.triggerUI('show_price_edit_notification', { request, explanation });
-    } catch (error) {
-      console.error('Error editing price quote:', error);
-      throw error;
-    }
-  }
-
-  // Simulation Logic
-  private async assignSimulatedEmployee(requestId: string): Promise<void> {
-    try {
-      const employees = await this.supabaseService.getAvailableSimulatedEmployees();
-      const blacklisted = await this.supabaseService.getBlacklistedEmployees(requestId);
+      // Increment decline count
+      const newDeclineCount = (request.declineCount || 0) + 1;
       
-      const availableEmployees = employees.filter(emp => 
-        !blacklisted.includes(emp.id)
+      if (newDeclineCount >= 3) {
+        // Cancel request after 3 declines
+        await supabaseService.updateServiceRequest(requestId, {
+          status: 'cancelled',
+          declineCount: newDeclineCount
+        });
+
+        toast({
+          title: "Request Cancelled",
+          description: "Your request has been cancelled after 3 declines.",
+          variant: "destructive"
+        });
+
+        return { success: true, cancelled: true };
+      }
+
+      // Find new employee
+      const availableEmployees = await supabaseService.getAvailableSimulatedEmployees();
+      const blacklistedEmployees = await supabaseService.getBlacklistedEmployees(userId, requestId);
+      
+      // Add current employee to blacklist
+      if (request.assignedEmployeeId) {
+        const employees = await supabaseService.getAvailableEmployees();
+        const currentEmployee = employees.find(emp => emp.id === request.assignedEmployeeId);
+        if (currentEmployee) {
+          await supabaseService.blacklistEmployee(userId, currentEmployee.name, requestId);
+        }
+      }
+
+      const eligibleEmployees = availableEmployees.filter(emp => 
+        !blacklistedEmployees.includes(emp.name) && emp.id !== request.assignedEmployeeId
       );
 
-      if (availableEmployees.length === 0) {
-        this.triggerUI('show_no_technicians_available');
-        await this.supabaseService.updateServiceRequest(requestId, { status: 'cancelled' });
-        return;
-      }
-
-      const randomEmployee = availableEmployees[Math.floor(Math.random() * availableEmployees.length)];
-      const request = this.activeRequests.get(requestId);
-      if (!request) return;
-
-      await this.supabaseService.updateServiceRequest(requestId, {
-        assignedEmployeeId: randomEmployee.id
-      });
-
-      request.assignedEmployeeId = randomEmployee.id;
-      this.triggerUI('show_request_accepted', request);
-
-      // Generate quote after 2-5 seconds
-      setTimeout(async () => {
-        try {
-          const price = await this.supabaseService.generatePriceQuote(request.type);
-          await this.sendPriceQuote(randomEmployee.id, requestId, price);
-        } catch (error) {
-          console.error('Error generating simulated quote:', error);
-        }
-      }, 2000 + Math.random() * 3000);
-
-    } catch (error) {
-      console.error('Error assigning simulated employee:', error);
-      this.triggerUI('show_no_technicians_available');
-    }
-  }
-
-  private async simulateEmployeeMovement(request: ServiceRequest): Promise<void> {
-    this.triggerUI('show_live_tracking', request);
-
-    // Simulate service in progress
-    setTimeout(async () => {
-      try {
-        await this.supabaseService.updateServiceRequest(request.id, { status: 'in_progress' });
-        request.status = 'in_progress';
+      if (eligibleEmployees.length === 0) {
+        // Reset blacklist if no employees available
+        await supabaseService.resetBlacklist(userId, requestId);
         
-        // Complete service after another delay
-        setTimeout(async () => {
-          await this.completeRequest(request.id);
-        }, 15000); // 15 seconds for service completion
-      } catch (error) {
-        console.error('Error updating service progress:', error);
+        toast({
+          title: "No Available Employees",
+          description: "All employees are currently busy. Your request remains active.",
+        });
+        return { success: false, error: "No available employees" };
       }
-    }, 5000); // 5 seconds travel time
-  }
 
-  private async requestPriceRevision(requestId: string): Promise<void> {
-    const request = this.activeRequests.get(requestId);
-    if (!request || !request.assignedEmployeeId) return;
-
-    if (this.isSimulation) {
-      // Simulate revised quote generation
-      setTimeout(async () => {
-        try {
-          const originalPrice = request.priceQuote || 50;
-          const revisedPrice = Math.max(
-            originalPrice * 0.7, // 30% discount minimum
-            originalPrice - 20 // Or 20 BGN discount minimum
-          );
-          
-          await this.editPriceQuote(
-            request.assignedEmployeeId!,
-            requestId,
-            Math.round(revisedPrice),
-            'Revised price due to customer feedback'
-          );
-        } catch (error) {
-          console.error('Error generating revised quote:', error);
-        }
-      }, 3000);
-    } else {
-      this.notifyEmployee(request.assignedEmployeeId, 'quote_declined_revision_requested');
-    }
-  }
-
-  private async blacklistEmployeeAndFindNew(requestId: string): Promise<void> {
-    try {
-      const request = this.activeRequests.get(requestId);
-      if (!request || !request.assignedEmployeeId) return;
-
-      // Blacklist current employee
-      await this.supabaseService.blacklistEmployee(
-        requestId,
-        request.assignedEmployeeId,
-        request.userId
-      );
-
-      // Reset request state
-      await this.supabaseService.updateServiceRequest(requestId, {
-        assignedEmployeeId: null,
-        priceQuote: null,
-        revisedPriceQuote: null,
+      // Generate new price quote
+      const newPriceQuote = await supabaseService.generatePriceQuote(request.type);
+      
+      // Select new employee
+      const newEmployee = eligibleEmployees[Math.floor(Math.random() * eligibleEmployees.length)];
+      
+      // Update request with new employee and price
+      await supabaseService.updateServiceRequest(requestId, {
+        assignedEmployeeId: newEmployee.id,
+        revisedPriceQuote: newPriceQuote,
+        declineCount: newDeclineCount,
         status: 'pending'
       });
 
-      request.assignedEmployeeId = undefined;
-      request.priceQuote = undefined;
-      request.revisedPriceQuote = undefined;
-      request.status = 'pending';
+      toast({
+        title: "New Quote Generated",
+        description: `A new technician has been assigned with a revised quote.`,
+      });
 
-      this.triggerUI('show_searching_technician', request);
+      return { 
+        success: true, 
+        newEmployeeName: newEmployee.name, 
+        newPriceQuote 
+      };
 
-      // Find new employee
-      if (this.isSimulation) {
-        setTimeout(() => {
-          this.assignSimulatedEmployee(requestId);
-        }, 2000);
-      }
     } catch (error) {
-      console.error('Error blacklisting employee:', error);
+      console.error('Error declining quote:', error);
+      return { success: false, error: error.message };
     }
   }
 
-  private async completeRequest(requestId: string): Promise<void> {
+  static async cancelRequest(userId: string, requestId: string) {
     try {
-      const request = this.activeRequests.get(requestId);
-      if (!request) return;
+      await supabaseService.updateServiceRequest(requestId, {
+        status: 'cancelled'
+      });
 
-      await this.supabaseService.updateServiceRequest(requestId, { status: 'completed' });
-      await this.supabaseService.addToHistory(request);
-      await this.supabaseService.resetBlacklist(requestId);
+      // Free up the assigned employee
+      const request = await supabaseService.getUserActiveRequest(userId);
+      if (request && request.assignedEmployeeId) {
+        await supabaseService.updateEmployeeAvailability(request.assignedEmployeeId, true);
+      }
 
-      request.status = 'completed';
-      this.triggerUI('show_service_completed', request);
+      // Clean up blacklist
+      await supabaseService.resetBlacklist(userId, requestId);
 
-      // Clean up after showing completion
-      setTimeout(() => {
-        this.activeRequests.delete(requestId);
-      }, 5000);
+      toast({
+        title: "Request Cancelled",
+        description: "Your roadside assistance request has been cancelled.",
+      });
+
+      return { success: true };
+
+    } catch (error) {
+      console.error('Error cancelling request:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  static async completeRequest(userId: string, requestId: string) {
+    try {
+      const request = await supabaseService.getUserActiveRequest(userId);
+      if (!request) {
+        return { success: false, error: "No active request found" };
+      }
+
+      // Add to history
+      await supabaseService.addToHistory({
+        user_id: userId,
+        username: userId, // This should be actual username
+        service_type: request.type,
+        status: 'completed',
+        employee_name: request.assignedEmployeeId, // This should be actual employee name
+        price_paid: request.revisedPriceQuote || request.priceQuote,
+        service_fee: 5,
+        total_price: (request.revisedPriceQuote || request.priceQuote || 0) + 5,
+        request_date: request.createdAt,
+        completion_date: new Date().toISOString(),
+        latitude: request.userLocation?.lat,
+        longitude: request.userLocation?.lng
+      });
+
+      // Update request status
+      await supabaseService.updateServiceRequest(requestId, {
+        status: 'completed'
+      });
+
+      // Free up employee
+      if (request.assignedEmployeeId) {
+        await supabaseService.updateEmployeeAvailability(request.assignedEmployeeId, true);
+      }
+
+      // Clean up blacklist
+      await supabaseService.resetBlacklist(userId, requestId);
 
       toast({
         title: "Service Completed",
-        description: `Your ${request.type} service has been completed successfully.`
+        description: "Your roadside assistance service has been completed successfully.",
       });
+
+      return { success: true };
+
     } catch (error) {
       console.error('Error completing request:', error);
+      return { success: false, error: error.message };
     }
   }
 
-  // Utility Methods
-  private addToEmployeeDashboard(request: ServiceRequest): void {
-    // This would notify real employees in production
-    console.log('Adding request to employee dashboard:', request);
-  }
-
-  private notifyEmployee(employeeId: string, notification: string): void {
-    // This would send real notifications in production
-    console.log(`Notifying employee ${employeeId}: ${notification}`);
-  }
-
-  // Ban System
-  handleUserLogout(userId: string): void {
-    this.supabaseService.getUserActiveRequest(userId).then(request => {
-      if (request) {
-        const timer = setTimeout(() => {
-          this.banUser(userId);
-          this.cancelRequest(request.id);
-        }, 5 * 60 * 1000); // 5 minutes
-        
-        this.userSessions.set(userId, timer);
-      }
-    });
-  }
-
-  handleUserLogin(userId: string): void {
-    const timer = this.userSessions.get(userId);
-    if (timer) {
-      clearTimeout(timer);
-      this.userSessions.delete(userId);
-    }
-  }
-
-  private async banUser(userId: string): Promise<void> {
+  static async getUserActiveRequest(userId: string) {
     try {
-      // This would need to be implemented with actual user management
-      console.log(`Banning user ${userId} for abandoning service request`);
+      const request = await supabaseService.getUserActiveRequest(userId);
+      return { success: true, request };
     } catch (error) {
-      console.error('Error banning user:', error);
+      console.error('Error getting user active request:', error);
+      return { success: false, error: error.message };
     }
-  }
-
-  // Public getters
-  getActiveRequest(requestId: string): ServiceRequest | undefined {
-    return this.activeRequests.get(requestId);
-  }
-
-  setSimulationMode(enabled: boolean): void {
-    this.isSimulation = enabled;
-  }
-
-  isSimulationMode(): boolean {
-    return this.isSimulation;
   }
 }
-
-// Singleton instance
-export const roadsideAssistanceSystem = new RoadsideAssistanceSystem();

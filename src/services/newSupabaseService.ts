@@ -105,12 +105,64 @@ class NewSupabaseService {
     }));
   }
 
+  async getUserActiveRequest(userId: string): Promise<ServiceRequest | null> {
+    const { data, error } = await supabase
+      .from('service_requests')
+      .select('*')
+      .eq('user_id', userId)
+      .in('status', ['pending', 'assigned', 'in_progress'])
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error;
+    if (!data) return null;
+
+    return {
+      id: data.id,
+      type: data.type,
+      description: data.description,
+      userId: data.user_id,
+      status: data.status,
+      assignedEmployeeId: data.assigned_employee_id,
+      priceQuote: data.price_quote,
+      revisedPriceQuote: data.revised_price_quote,
+      userLocation: data.user_location && typeof data.user_location === 'string' ? {
+        lat: parseFloat(data.user_location.split(',')[0].replace('(', '')),
+        lng: parseFloat(data.user_location.split(',')[1].replace(')', ''))
+      } : undefined,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+      declineCount: data.decline_count || 0,
+    };
+  }
+
   // Employee Methods
   async getAvailableEmployees(): Promise<Employee[]> {
     const { data, error } = await supabase
       .from('employee_accounts')
       .select('*')
       .eq('is_available', true)
+      .eq('status', 'active');
+
+    if (error) throw error;
+
+    return data.map(employee => ({
+      id: employee.id,
+      name: employee.real_name || employee.username,
+      isAvailable: employee.is_available || false,
+      isSimulated: employee.is_simulated || false,
+      location: employee.location ? {
+        lat: (employee.location as any).x || 0,
+        lng: (employee.location as any).y || 0,
+      } : { lat: 0, lng: 0 },
+    }));
+  }
+
+  async getAvailableSimulatedEmployees(): Promise<Employee[]> {
+    const { data, error } = await supabase
+      .from('employee_accounts')
+      .select('*')
+      .eq('is_available', true)
+      .eq('is_simulated', true)
       .eq('status', 'active');
 
     if (error) throw error;
@@ -223,6 +275,76 @@ class NewSupabaseService {
         status: 'assigned'
       })
       .eq('id', requestId);
+
+    if (error) throw error;
+  }
+
+  // Price validation and generation methods
+  async validatePrice(serviceType: string, price: number): Promise<boolean> {
+    const { data, error } = await supabase
+      .from('price_ranges')
+      .select('*')
+      .eq('service_type', serviceType)
+      .single();
+
+    if (error || !data) return false;
+
+    return price >= data.min_price && price <= data.max_price;
+  }
+
+  async generatePriceQuote(serviceType: string): Promise<number> {
+    const { data, error } = await supabase
+      .from('price_ranges')
+      .select('*')
+      .eq('service_type', serviceType)
+      .single();
+
+    if (error || !data) return 50; // Default price
+
+    const randomPrice = data.min_price + (Math.random() * (data.max_price - data.min_price));
+    return Math.round(randomPrice);
+  }
+
+  // Blacklist methods
+  async getBlacklistedEmployees(userId: string, requestId: string): Promise<string[]> {
+    const { data, error } = await supabase
+      .from('simulated_employees_blacklist')
+      .select('employee_name')
+      .eq('user_id', userId)
+      .eq('request_id', requestId);
+
+    if (error) throw error;
+
+    return data.map(item => item.employee_name);
+  }
+
+  async blacklistEmployee(userId: string, employeeName: string, requestId: string): Promise<void> {
+    const { error } = await supabase
+      .from('simulated_employees_blacklist')
+      .insert({
+        user_id: userId,
+        employee_name: employeeName,
+        request_id: requestId
+      });
+
+    if (error) throw error;
+  }
+
+  async resetBlacklist(userId: string, requestId: string): Promise<void> {
+    const { error } = await supabase
+      .from('simulated_employees_blacklist')
+      .delete()
+      .eq('user_id', userId)
+      .eq('request_id', requestId);
+
+    if (error) throw error;
+  }
+
+  // History method
+  async addToHistory(historyData: any): Promise<void> {
+    const { error } = await supabase
+      .from('user_history')
+      .insert(historyData);
 
     if (error) throw error;
   }
