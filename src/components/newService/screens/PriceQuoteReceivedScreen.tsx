@@ -3,10 +3,11 @@ import React from 'react';
 import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { DollarSign, User } from 'lucide-react';
+import { User } from 'lucide-react';
 import { ServiceRequest } from '@/types/newServiceRequest';
 import { useApp } from '@/contexts/AppContext';
 import { useTranslation } from '@/utils/translations';
+import PriceBreakdown from '../../../service/price-quote/PriceBreakdown';
 
 interface PriceQuoteReceivedScreenProps {
   request: ServiceRequest;
@@ -25,6 +26,8 @@ const PriceQuoteReceivedScreen: React.FC<PriceQuoteReceivedScreenProps> = ({
   const t = useTranslation(language);
 
   const employeeName = request.assignedEmployeeName || `Employee #${request.assignedEmployeeId}`;
+  const serviceFee = 5;
+  const totalPrice = (request.priceQuote || 0) + serviceFee;
 
   return (
     <>
@@ -35,22 +38,16 @@ const PriceQuoteReceivedScreen: React.FC<PriceQuoteReceivedScreenProps> = ({
       <div className="space-y-4">
         <Card>
           <CardContent className="p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                <DollarSign className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <h3 className="font-medium">{t('quoted-price')}</h3>
-                <p className="text-2xl font-bold text-green-600">
-                  {request.priceQuote} BGN
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 text-sm text-gray-600">
+            <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
               <User className="h-4 w-4" />
               <span>{t('assigned-employee')}: {employeeName}</span>
             </div>
+
+            <PriceBreakdown
+              priceQuote={request.priceQuote || 0}
+              serviceFee={serviceFee}
+              totalPrice={totalPrice}
+            />
           </CardContent>
         </Card>
 
@@ -59,7 +56,7 @@ const PriceQuoteReceivedScreen: React.FC<PriceQuoteReceivedScreenProps> = ({
             onClick={onAccept}
             className="w-full bg-green-600 hover:bg-green-700"
           >
-            {t('confirm')} - {request.priceQuote} BGN
+            {t('confirm')} - {totalPrice.toFixed(2)} BGN
           </Button>
           
           <Button 

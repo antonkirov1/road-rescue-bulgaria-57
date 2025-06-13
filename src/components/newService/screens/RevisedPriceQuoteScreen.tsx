@@ -3,10 +3,11 @@ import React from 'react';
 import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { DollarSign, User, RefreshCw } from 'lucide-react';
+import { User, RefreshCw } from 'lucide-react';
 import { ServiceRequest } from '@/types/newServiceRequest';
 import { useApp } from '@/contexts/AppContext';
 import { useTranslation } from '@/utils/translations';
+import PriceBreakdown from '../../../service/price-quote/PriceBreakdown';
 
 interface RevisedPriceQuoteScreenProps {
   request: ServiceRequest;
@@ -25,7 +26,9 @@ const RevisedPriceQuoteScreen: React.FC<RevisedPriceQuoteScreenProps> = ({
   const t = useTranslation(language);
 
   const employeeName = request.assignedEmployeeName || `Employee #${request.assignedEmployeeId}`;
-  const revisedPrice = request.revisedPriceQuote || request.priceQuote;
+  const revisedPrice = request.revisedPriceQuote || request.priceQuote || 0;
+  const serviceFee = 5;
+  const totalPrice = revisedPrice + serviceFee;
 
   return (
     <>
@@ -45,27 +48,22 @@ const RevisedPriceQuoteScreen: React.FC<RevisedPriceQuoteScreenProps> = ({
 
         <Card>
           <CardContent className="p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                <DollarSign className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <h3 className="font-medium">{t('quoted-price')}</h3>
-                <p className="text-2xl font-bold text-green-600">
-                  {revisedPrice} BGN
-                </p>
-                {request.priceQuote && revisedPrice !== request.priceQuote && (
-                  <p className="text-sm text-gray-500 line-through">
-                    Was: {request.priceQuote} BGN
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 text-sm text-gray-600">
+            <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
               <User className="h-4 w-4" />
               <span>{t('assigned-employee')}: {employeeName}</span>
             </div>
+
+            <PriceBreakdown
+              priceQuote={revisedPrice}
+              serviceFee={serviceFee}
+              totalPrice={totalPrice}
+            />
+
+            {request.priceQuote && revisedPrice !== request.priceQuote && (
+              <p className="text-sm text-gray-500 line-through mt-2">
+                Original: {request.priceQuote} BGN + {serviceFee} BGN = {(request.priceQuote + serviceFee).toFixed(2)} BGN
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -74,7 +72,7 @@ const RevisedPriceQuoteScreen: React.FC<RevisedPriceQuoteScreenProps> = ({
             onClick={onAccept}
             className="w-full bg-green-600 hover:bg-green-700"
           >
-            {t('confirm')} - {revisedPrice} BGN
+            {t('confirm')} - {totalPrice.toFixed(2)} BGN
           </Button>
           
           <Button 
