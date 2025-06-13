@@ -2,7 +2,10 @@
 import { useState, useEffect } from 'react';
 import { ServiceRequest } from '@/types/newServiceRequest';
 import { toast } from '@/components/ui/use-toast';
-import { employeeIntegrationService, EmployeeResponse } from '@/services/newEmployeeIntegration';
+import { useServiceRequestState } from '@/hooks/useServiceRequestState';
+import { useEmployeeManagement } from '@/hooks/useEmployeeManagement';
+import { useQuoteHandling } from '@/hooks/useQuoteHandling';
+import { createServiceRequest, handleAcceptQuote, handleCancelRequest } from '@/services/serviceRequestActions';
 
 interface UseServiceRequestLogicProps {
   type: ServiceRequest['type'];
@@ -19,12 +22,61 @@ export const useServiceRequestLogic = ({
   userId,
   onClose
 }: UseServiceRequestLogicProps) => {
-  const [currentScreen, setCurrentScreen] = useState<string | null>(null);
-  const [currentRequest, setCurrentRequest] = useState<ServiceRequest | null>(null);
-  const [assignedEmployee, setAssignedEmployee] = useState<EmployeeResponse | null>(null);
-  const [blacklistedEmployees, setBlacklistedEmployees] = useState<string[]>([]);
-  const [employeeDeclineCount, setEmployeeDeclineCount] = useState<number>(0);
-  const [hasReceivedRevision, setHasReceivedRevision] = useState<boolean>(false);
+  const {
+    currentScreen,
+    currentRequest,
+    assignedEmployee,
+    blacklistedEmployees,
+    employeeDeclineCount,
+    hasReceivedRevision,
+    setCurrentScreen,
+    setCurrentRequest,
+    setAssignedEmployee,
+    setBlacklistedEmployees,
+    setEmployeeDeclineCount,
+    setHasReceivedRevision,
+    resetState,
+    resetEmployeeTracking
+  } = useServiceRequestState();
+
+  const { generateQuote, handleDeclineQuote } = useQuoteHandling({
+    setCurrentRequest,
+    setCurrentScreen,
+    setAssignedEmployee,
+    employeeDeclineCount,
+    setEmployeeDeclineCount,
+    hasReceivedRevision,
+    setHasReceivedRevision,
+    blacklistCurrentEmployee: (employeeName: string) => {
+      setBlacklistedEmployees(prev => [...prev, employeeName]);
+    },
+    resetEmployeeTracking,
+    findEmployee: async () => {} // Will be set below
+  });
+
+  const { findEmployee, blacklistCurrentEmployee } = useEmployeeManagement({
+    setCurrentScreen,
+    setAssignedEmployee,
+    resetEmployeeTracking,
+    blacklistedEmployees,
+    setBlacklistedEmployees,
+    onClose,
+    generateQuote
+  });
+
+  // Update the generateQuote dependency
+  const quoteHandling = useQuoteHandling({
+    setCurrentRequest,
+    setCurrentScreen,
+    setAssignedEmployee,
+    employeeDeclineCount,
+    setEmployeeDeclineCount,
+    hasReceivedRevision,
+    setHasReceivedRevision,
+    blacklistCurrentEmployee,
+    resetEmployeeTracking,
+    findEmployee
+  });
 
   // Initialize when dialog opens
   useEffect(() => {
@@ -37,12 +89,7 @@ export const useServiceRequestLogic = ({
   // Reset state when dialog closes
   useEffect(() => {
     if (!open) {
-      setCurrentScreen(null);
-      setCurrentRequest(null);
-      setAssignedEmployee(null);
-      setBlacklistedEmployees([]);
-      setEmployeeDeclineCount(0);
-      setHasReceivedRevision(false);
+      resetState();
     }
   }, [open]);
 
@@ -50,26 +97,14 @@ export const useServiceRequestLogic = ({
     try {
       console.log('Starting service request for:', type);
       
-      // Create a service request
-      const newRequest: ServiceRequest = {
-        id: `req_${Date.now()}`,
-        type: type,
-        status: 'pending',
-        userLocation: userLocation,
-        userId: userId,
-        description: `I need ${type} assistance`,
-        declineCount: 0,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-      
+      const newRequest = createServiceRequest(type, userLocation, userId);
       setCurrentRequest(newRequest);
       setCurrentScreen('show_searching_technician');
       
-      // Find available employee using the new integration service
+      // Find available employee
       setTimeout(async () => {
         await findEmployee(newRequest);
-      }, 2000 + Math.random() * 2000); // 2-4 seconds search time
+      }, 2000 + Math.random() * 2000);
       
     } catch (error) {
       console.error('Error creating service request:', error);
@@ -82,236 +117,23 @@ export const useServiceRequestLogic = ({
     }
   };
 
-  const findEmployee = async (request: ServiceRequest) => {
-    try {
-      const employee = await employeeIntegrationService.findAvailableEmployee(request, blacklistedEmployees);
-      
-      if (!employee) {
-        setCurrentScreen('show_no_technicians_available');
-        setTimeout(() => {
-          onClose();
-        }, 3000);
-        return;
-      }
-
-      setAssignedEmployee(employee);
-      // Reset decline tracking for new employee
-      setEmployeeDeclineCount(0);
-      setHasReceivedRevision(false);
-      console.log('Found employee:', employee.name);
-      
-      // Notify employee and wait for acceptance
-      const notified = await employeeIntegrationService.notifyEmployeeOfRequest(employee, request);
-      
-      if (notified) {
-        // Generate quote
-        setTimeout(() => {
-          generateQuote(request, employee, false);
-        }, 1000 + Math.random() * 2000);
-      } else {
-        // Employee couldn't be notified, find another
-        setBlacklistedEmployees(prev => [...prev, employee.name]);
-        setTimeout(() => {
-          findEmployee(request);
-        }, 1000);
-      }
-    } catch (error) {
-      console.error('Error finding employee:', error);
-      setCurrentScreen('show_no_technicians_available');
-    }
-  };
-
-  const generateQuote = (request: ServiceRequest, employee: EmployeeResponse, isRevised: boolean = false) => {
-    const quote = employeeIntegrationService.generateQuote(request.type, isRevised);
-    
-    const updatedRequest = {
-      ...request,
-      status: isRevised ? 'quote_revised' as const : 'quote_sent' as const,
-      priceQuote: quote.amount,
-      assignedEmployeeId: employee.id,
-      assignedEmployeeName: employee.name
-    };
-
-    if (isRevised) {
-      updatedRequest.revisedPriceQuote = quote.amount;
-    }
-    
-    setCurrentRequest(updatedRequest);
-    setCurrentScreen(isRevised ? 'show_revised_price_quote' : 'show_price_quote_received');
-    
-    toast({
-      title: isRevised ? "Revised Quote Received" : "Price Quote Received",
-      description: `${employee.name} sent you a ${isRevised ? 'revised ' : ''}quote of ${quote.amount} BGN.`
-    });
-  };
-
-  const handleAcceptQuote = async () => {
+  const handleAcceptQuoteWrapper = async () => {
     if (!currentRequest || !assignedEmployee) return;
-    
-    try {
-      const updatedRequest = {
-        ...currentRequest,
-        status: 'accepted' as const
-      };
-      setCurrentRequest(updatedRequest);
-      setCurrentScreen('show_request_accepted');
-      
-      // Notify employee of acceptance
-      if (assignedEmployee) {
-        await employeeIntegrationService.employeeAcceptedRequest(assignedEmployee.id, currentRequest.id);
-      }
-      
-      toast({
-        title: "Quote Accepted",
-        description: `${assignedEmployee.name} is on the way to your location.`
-      });
-      
-      // Simulate service progression
-      setTimeout(() => {
-        setCurrentScreen('show_live_tracking');
-      }, 2000);
-      
-      setTimeout(() => {
-        const completedRequest = {
-          ...updatedRequest,
-          status: 'completed' as const
-        };
-        setCurrentRequest(completedRequest);
-        setCurrentScreen('show_service_completed');
-      }, 8000);
-      
-    } catch (error) {
-      console.error('Error accepting quote:', error);
-      toast({
-        title: "Error",
-        description: "Failed to accept quote. Please try again.",
-        variant: "destructive"
-      });
-    }
+    await handleAcceptQuote(currentRequest, assignedEmployee, setCurrentRequest, setCurrentScreen);
   };
 
-  const handleDeclineQuote = async () => {
+  const handleDeclineQuoteWrapper = async () => {
     if (!currentRequest || !assignedEmployee) return;
-    
-    try {
-      const newDeclineCount = employeeDeclineCount + 1;
-      setEmployeeDeclineCount(newDeclineCount);
-      
-      console.log(`Decline #${newDeclineCount} for employee ${assignedEmployee.name}`);
-      
-      if (newDeclineCount === 1 && !hasReceivedRevision) {
-        // First decline - same employee sends revision
-        console.log('First decline - generating revised quote with lower price');
-        
-        const updatedRequest = {
-          ...currentRequest,
-          declineCount: currentRequest.declineCount + 1,
-          status: 'quote_declined' as const
-        };
-        setCurrentRequest(updatedRequest);
-        setHasReceivedRevision(true);
-        
-        toast({
-          title: "Quote Declined",
-          description: `${assignedEmployee.name} will send you a revised quote with a lower price.`
-        });
-        
-        // Generate revised quote after a short delay
-        setTimeout(() => {
-          generateQuote(updatedRequest, assignedEmployee, true);
-        }, 1500);
-        
-      } else {
-        // Second decline OR decline after revision - blacklist employee and find new one
-        console.log(`Second decline (total: ${newDeclineCount}) - blacklisting employee ${assignedEmployee.name} and finding new one`);
-        
-        // Add current employee to blacklist
-        setBlacklistedEmployees(prev => [...prev, assignedEmployee.name]);
-        
-        // Notify current employee of decline
-        await employeeIntegrationService.employeeDeclinedRequest(
-          assignedEmployee.id, 
-          currentRequest.id, 
-          newDeclineCount === 1 ? 'Customer declined revised quote' : 'Customer declined quote twice'
-        );
-        
-        // Reset employee assignment for new search
-        setAssignedEmployee(null);
-        setEmployeeDeclineCount(0);
-        setHasReceivedRevision(false);
-        setCurrentScreen('show_searching_technician');
-        
-        toast({
-          title: "Quote Declined", 
-          description: "Looking for another available employee..."
-        });
-        
-        // Find new employee after delay
-        setTimeout(() => {
-          const updatedRequest = {
-            ...currentRequest,
-            revisedPriceQuote: undefined,
-            priceQuote: undefined,
-            assignedEmployeeId: undefined,
-            assignedEmployeeName: undefined,
-            status: 'pending' as const
-          };
-          setCurrentRequest(updatedRequest);
-          findEmployee(updatedRequest);
-        }, 2000);
-      }
-    } catch (error) {
-      console.error('Error declining quote:', error);
-      toast({
-        title: "Error",
-        description: "Failed to decline quote. Please try again.",
-        variant: "destructive"
-      });
-    }
+    await quoteHandling.handleDeclineQuote(currentRequest, assignedEmployee);
   };
 
-  const handleCancelRequest = async () => {
+  const handleCancelRequestWrapper = async () => {
     if (!currentRequest) return;
-    
-    try {
-      // Notify assigned employee if any
-      if (assignedEmployee) {
-        await employeeIntegrationService.employeeDeclinedRequest(
-          assignedEmployee.id,
-          currentRequest.id,
-          'Customer cancelled request'
-        );
-      }
-      
-      setCurrentScreen(null);
-      setCurrentRequest(null);
-      setAssignedEmployee(null);
-      setBlacklistedEmployees([]);
-      setEmployeeDeclineCount(0);
-      setHasReceivedRevision(false);
-      onClose();
-      
-      toast({
-        title: "Request Cancelled",
-        description: "Your service request has been cancelled."
-      });
-    } catch (error) {
-      console.error('Error cancelling request:', error);
-      toast({
-        title: "Error",
-        description: "Failed to cancel request. Please try again.",
-        variant: "destructive"
-      });
-    }
+    await handleCancelRequest(currentRequest, assignedEmployee, resetState, onClose);
   };
 
   const handleClose = () => {
-    setCurrentScreen(null);
-    setCurrentRequest(null);
-    setAssignedEmployee(null);
-    setBlacklistedEmployees([]);
-    setEmployeeDeclineCount(0);
-    setHasReceivedRevision(false);
+    resetState();
     onClose();
   };
 
@@ -319,9 +141,9 @@ export const useServiceRequestLogic = ({
     currentScreen,
     currentRequest,
     assignedEmployee,
-    handleAcceptQuote,
-    handleDeclineQuote,
-    handleCancelRequest,
+    handleAcceptQuote: handleAcceptQuoteWrapper,
+    handleDeclineQuote: handleDeclineQuoteWrapper,
+    handleCancelRequest: handleCancelRequestWrapper,
     handleClose
   };
 };
