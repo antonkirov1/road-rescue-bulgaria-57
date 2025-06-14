@@ -5,6 +5,7 @@ import { AppProvider } from '@/contexts/AppContext';
 import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/components/theme-provider';
 import Auth from '@/pages/user/Auth';
+import UserPortalSelection from '@/pages/user/UserPortalSelection';
 import NewDashboard from '@/pages/user/NewDashboard';
 import EmployeeAuth from '@/pages/employee/EmployeeAuth';
 import EmployeeDashboard from '@/pages/employee/EmployeeDashboard';
@@ -25,6 +26,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/user" element={<Auth />} />
+              <Route path="/user/portal-selection" element={<UserPortalSelection />} />
               <Route path="/user/dashboard" element={<NewDashboard />} />
               <Route path="/employee" element={<EmployeeAuth />} />
               <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
