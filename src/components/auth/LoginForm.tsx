@@ -38,19 +38,16 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onCreateAccount, isEmplo
 
     setIsLoading(true);
     
-    // For admin authentication, pass credentials directly to parent handler
-    if (isAdmin) {
+    // For admin and user authentication, pass credentials directly to parent handler
+    if (isAdmin || !isEmployee) {
       onLogin({ username, password });
       setIsLoading(false);
       return;
     }
     
-    // For demo purposes, we'll simulate authentication for other user types
-    // Updated test accounts with simpler credentials
+    // For employee authentication, use updated credentials
     setTimeout(() => {
-      if (isEmployee && username === 'admin' && password === 'admin123') {
-        onLogin({ username, password });
-      } else if (!isEmployee && username === 'user' && password === 'user123') {
+      if (isEmployee && username === 'employee' && password === 'employee123') {
         onLogin({ username, password });
       } else {
         toast({
@@ -80,6 +77,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onCreateAccount, isEmplo
     ? 'border-purple-600 text-purple-600 hover:bg-purple-50'
     : 'border-green-600 text-green-600 hover:bg-green-50';
 
+  // Get demo credentials based on user type
+  const getDemoCredentials = () => {
+    if (isEmployee) return 'employee / employee123';
+    if (isAdmin) return 'account_admin / AdminAcc93';
+    return 'user / user123';
+  };
+
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
@@ -88,7 +92,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onCreateAccount, isEmplo
           {isEmployee ? t('Welcome back to RoadSaver') : isAdmin ? t('Welcome back to RoadSaver') : t('Welcome back to RoadSaver')}
           {/* Demo credentials hint */}
           <div className="mt-2 text-xs text-muted-foreground">
-            Demo: {isEmployee ? 'admin / admin123' : 'user / user123'}
+            Demo: {getDemoCredentials()}
           </div>
         </CardDescription>
       </CardHeader>

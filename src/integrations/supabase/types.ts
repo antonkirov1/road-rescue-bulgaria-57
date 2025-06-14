@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_accounts: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          is_builtin: boolean | null
+          password_hash: string
+          real_name: string | null
+          status: string | null
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_builtin?: boolean | null
+          password_hash: string
+          real_name?: string | null
+          status?: string | null
+          username: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_builtin?: boolean | null
+          password_hash?: string
+          real_name?: string | null
+          status?: string | null
+          username?: string
+        }
+        Relationships: []
+      }
       chat_message_reactions: {
         Row: {
           created_at: string
@@ -250,6 +283,7 @@ export type Database = {
           employee_role: string | null
           id: string
           is_available: boolean | null
+          is_builtin: boolean | null
           is_simulated: boolean | null
           location: unknown | null
           password_hash: string | null
@@ -265,6 +299,7 @@ export type Database = {
           employee_role?: string | null
           id?: string
           is_available?: boolean | null
+          is_builtin?: boolean | null
           is_simulated?: boolean | null
           location?: unknown | null
           password_hash?: string | null
@@ -280,6 +315,7 @@ export type Database = {
           employee_role?: string | null
           id?: string
           is_available?: boolean | null
+          is_builtin?: boolean | null
           is_simulated?: boolean | null
           location?: unknown | null
           password_hash?: string | null
@@ -343,96 +379,6 @@ export type Database = {
           employee_number?: number
           full_name?: string
           id?: number
-        }
-        Relationships: []
-      }
-      existing_user_accounts: {
-        Row: {
-          auth_user_id: string | null
-          created_at: string
-          created_by_admin: boolean | null
-          email: string
-          full_name: string | null
-          gender: string | null
-          id: string
-          migrated_from_new_accounts: string | null
-          password_hash: string | null
-          phone_number: string | null
-          secret_answer_1: string | null
-          secret_answer_2: string | null
-          secret_question_1: string | null
-          secret_question_2: string | null
-          status: string | null
-          username: string
-        }
-        Insert: {
-          auth_user_id?: string | null
-          created_at?: string
-          created_by_admin?: boolean | null
-          email: string
-          full_name?: string | null
-          gender?: string | null
-          id?: string
-          migrated_from_new_accounts?: string | null
-          password_hash?: string | null
-          phone_number?: string | null
-          secret_answer_1?: string | null
-          secret_answer_2?: string | null
-          secret_question_1?: string | null
-          secret_question_2?: string | null
-          status?: string | null
-          username: string
-        }
-        Update: {
-          auth_user_id?: string | null
-          created_at?: string
-          created_by_admin?: boolean | null
-          email?: string
-          full_name?: string | null
-          gender?: string | null
-          id?: string
-          migrated_from_new_accounts?: string | null
-          password_hash?: string | null
-          phone_number?: string | null
-          secret_answer_1?: string | null
-          secret_answer_2?: string | null
-          secret_question_1?: string | null
-          secret_question_2?: string | null
-          status?: string | null
-          username?: string
-        }
-        Relationships: []
-      }
-      new_user_accounts: {
-        Row: {
-          created_at: string
-          email: string
-          gender: string | null
-          id: string
-          password_hash: string
-          phone_number: string | null
-          processed_at: string | null
-          username: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          gender?: string | null
-          id?: string
-          password_hash: string
-          phone_number?: string | null
-          processed_at?: string | null
-          username: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          gender?: string | null
-          id?: string
-          password_hash?: string
-          phone_number?: string | null
-          processed_at?: string | null
-          username?: string
         }
         Relationships: []
       }
@@ -619,6 +565,66 @@ export type Database = {
           id?: string
           key?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      user_accounts: {
+        Row: {
+          auth_user_id: string | null
+          created_at: string
+          created_by_admin: boolean | null
+          email: string
+          full_name: string | null
+          gender: string | null
+          id: string
+          is_builtin: boolean | null
+          migrated_from_new_accounts: string | null
+          password_hash: string | null
+          phone_number: string | null
+          secret_answer_1: string | null
+          secret_answer_2: string | null
+          secret_question_1: string | null
+          secret_question_2: string | null
+          status: string | null
+          username: string
+        }
+        Insert: {
+          auth_user_id?: string | null
+          created_at?: string
+          created_by_admin?: boolean | null
+          email: string
+          full_name?: string | null
+          gender?: string | null
+          id?: string
+          is_builtin?: boolean | null
+          migrated_from_new_accounts?: string | null
+          password_hash?: string | null
+          phone_number?: string | null
+          secret_answer_1?: string | null
+          secret_answer_2?: string | null
+          secret_question_1?: string | null
+          secret_question_2?: string | null
+          status?: string | null
+          username: string
+        }
+        Update: {
+          auth_user_id?: string | null
+          created_at?: string
+          created_by_admin?: boolean | null
+          email?: string
+          full_name?: string | null
+          gender?: string | null
+          id?: string
+          is_builtin?: boolean | null
+          migrated_from_new_accounts?: string | null
+          password_hash?: string | null
+          phone_number?: string | null
+          secret_answer_1?: string | null
+          secret_answer_2?: string | null
+          secret_question_1?: string | null
+          secret_question_2?: string | null
+          status?: string | null
+          username?: string
         }
         Relationships: []
       }

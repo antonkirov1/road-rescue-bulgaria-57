@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { UserAccountService } from '@/services/userAccountService';
@@ -12,7 +11,7 @@ const MigrationPanel: React.FC = () => {
   const [currentView, setCurrentView] = useState<'dashboard' | 'users' | 'employees' | 'simulation'>('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [stats, setStats] = useState({
-    pendingUsers: 0,
+    pendingUsers: 0, // No longer used since new_user_accounts is removed
     existingUsers: 0,
     employees: 0,
     simulationEmployees: 0,
@@ -24,10 +23,9 @@ const MigrationPanel: React.FC = () => {
   const refreshStats = async () => {
     try {
       console.log('Refreshing stats...');
-      const [pendingUsers, employees, existingUsersData] = await Promise.all([
-        UserAccountService.getPendingNewUsers(), 
+      const [employees, usersData] = await Promise.all([
         EmployeeAccountService.getAllEmployees(),
-        supabase.from('users').select('*')
+        supabase.from('user_accounts').select('*') // Updated table name
       ]);
       
       // Get simulation employees count
@@ -35,17 +33,15 @@ const MigrationPanel: React.FC = () => {
         .from('employee_simulation')
         .select('*');
 
-      const existingUsers = existingUsersData.data || [];
-      const bannedUsers = existingUsers.filter(user => 
-        user.banned_until && new Date(user.banned_until) > new Date()
-      ).length;
+      const users = usersData.data || [];
+      const bannedUsers = users.filter(user => user.status === 'banned').length;
 
       const activeEmployees = employees.filter(emp => emp.status === 'active').length;
       const suspendedEmployees = employees.filter(emp => emp.status === 'suspended').length;
       
       const newStats = {
-        pendingUsers: pendingUsers.length,
-        existingUsers: existingUsers.length,
+        pendingUsers: 0, // No pending users since new_user_accounts is removed
+        existingUsers: users.length,
         employees: employees.length,
         simulationEmployees: simulationEmployees?.length || 0,
         bannedUsers,
@@ -67,16 +63,9 @@ const MigrationPanel: React.FC = () => {
     const usersChannel = supabase
       .channel('admin-users-changes')
       .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'users' }, 
+        { event: '*', schema: 'public', table: 'user_accounts' }, // Updated table name
         (payload) => {
-          console.log('Users table changed:', payload);
-          refreshStats();
-        }
-      )
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'new_user_accounts' }, 
-        (payload) => {
-          console.log('New user accounts changed:', payload);
+          console.log('User accounts table changed:', payload);
           refreshStats();
         }
       )

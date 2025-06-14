@@ -9,6 +9,7 @@ import { toast } from '@/components/ui/use-toast';
 import { useApp } from '@/contexts/AppContext';
 import { useTranslation } from '@/utils/translations';
 import ThemeToggle from '@/components/ui/theme-toggle';
+import { EmployeeAccountService } from '@/services/employeeAccountService';
 
 const EmployeeAuth: React.FC = () => {
   const navigate = useNavigate();
@@ -32,15 +33,40 @@ const EmployeeAuth: React.FC = () => {
 
     setLoading(true);
     
-    // Simulate authentication
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      // Check against employee accounts with updated credentials
+      const { data: employees, error } = await supabase
+        .from('employee_accounts')
+        .select('*')
+        .eq('username', username)
+        .eq('status', 'active')
+        .single();
+
+      if (error || !employees || employees.password_hash !== password) {
+        toast({
+          title: "Error",
+          description: "Invalid username or password. Try username: employee, password: employee123",
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
+
       toast({
         title: "Login Successful",
         description: "Welcome to the Employee Portal"
       });
       navigate('/employee/dashboard');
-    }, 1000);
+    } catch (error) {
+      console.error('Employee authentication error:', error);
+      toast({
+        title: "Error",
+        description: "Authentication failed. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -81,6 +107,9 @@ const EmployeeAuth: React.FC = () => {
             <CardTitle className="text-2xl">Employee Login</CardTitle>
             <CardDescription>
               Access the employee portal to manage service requests
+              <div className="mt-2 text-xs text-muted-foreground">
+                Demo: employee / employee123
+              </div>
             </CardDescription>
           </CardHeader>
           <CardContent>

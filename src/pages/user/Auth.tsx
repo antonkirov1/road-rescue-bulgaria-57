@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Globe } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ThemeToggle from '@/components/ui/theme-toggle';
+import { UserAccountService } from '@/services/userAccountService';
 
 const Auth: React.FC = () => {
   const [showRegister, setShowRegister] = useState(false);
@@ -18,22 +19,59 @@ const Auth: React.FC = () => {
   const t = useTranslation(language);
   const isMobile = useIsMobile();
   
-  const handleLogin = (credentials: { username: string; password: string }) => {
-    login({ username: credentials.username });
-    navigate('/user/dashboard');
-    toast({
-      title: t("login-successful"),
-      description: t("welcome-to-roadsaver")
-    });
+  const handleLogin = async (credentials: { username: string; password: string }) => {
+    try {
+      const user = await UserAccountService.authenticateUser(credentials.username, credentials.password);
+      
+      if (user) {
+        login({ username: user.username, email: user.email });
+        navigate('/user/dashboard');
+        toast({
+          title: t("login-successful"),
+          description: t("welcome-to-roadsaver")
+        });
+      } else {
+        toast({
+          title: t("auth-error"),
+          description: t("invalid-username-password"),
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('User authentication error:', error);
+      toast({
+        title: t("auth-error"),
+        description: "Authentication failed. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
   
-  const handleRegister = (userData: { username: string; email: string; password: string; gender?: string; phoneNumber?: string }) => {
-    login({ username: userData.username, email: userData.email });
-    navigate('/user/dashboard');
-    toast({
-      title: t("registration-successful"),
-      description: t("account-created-welcome")
-    });
+  const handleRegister = async (userData: { username: string; email: string; password: string; gender?: string; phoneNumber?: string }) => {
+    try {
+      await UserAccountService.createUserAccount({
+        username: userData.username,
+        email: userData.email,
+        password_hash: userData.password,
+        phone_number: userData.phoneNumber,
+        gender: userData.gender,
+        full_name: userData.username // Default to username if no full name provided
+      });
+
+      login({ username: userData.username, email: userData.email });
+      navigate('/user/dashboard');
+      toast({
+        title: t("registration-successful"),
+        description: t("account-created-welcome")
+      });
+    } catch (error) {
+      console.error('User registration error:', error);
+      toast({
+        title: t("auth-error"),
+        description: "Registration failed. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
   
   if (showRegister) {

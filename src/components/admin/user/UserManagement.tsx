@@ -6,17 +6,7 @@ import { UserPlus } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import UserTable from './UserTable';
 import UserForm from './UserForm';
-import { supabase } from '@/integrations/supabase/client';
-
-interface UserAccount {
-  id: string;
-  username: string;
-  email: string;
-  name?: string;
-  created_at: string;
-  ban_count?: number;
-  banned_until?: string;
-}
+import { UserAccountService, UserAccount } from '@/services/userAccountService';
 
 interface UserManagementProps {
   onStatsUpdate?: () => void;
@@ -42,13 +32,8 @@ const UserManagement: React.FC<UserManagementProps> = ({ onStatsUpdate }) => {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setUsers(data || []);
+      const data = await UserAccountService.getAllUsers();
+      setUsers(data);
       
       // Trigger stats update in parent component
       if (onStatsUpdate) {
@@ -75,7 +60,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ onStatsUpdate }) => {
     const filtered = users.filter(user =>
       user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (user.name && user.name.toLowerCase().includes(searchTerm.toLowerCase()))
+      (user.full_name && user.full_name.toLowerCase().includes(searchTerm.toLowerCase()))
     );
     setFilteredUsers(filtered);
   };
@@ -110,23 +95,10 @@ const UserManagement: React.FC<UserManagementProps> = ({ onStatsUpdate }) => {
 
   const handleBanUser = async (user: UserAccount) => {
     try {
-      // Ban user for 30 days
-      const banUntil = new Date();
-      banUntil.setDate(banUntil.getDate() + 30);
-      
-      const { error } = await supabase
-        .from('users')
-        .update({ 
-          banned_until: banUntil.toISOString(),
-          ban_count: (user.ban_count || 0) + 1
-        })
-        .eq('id', user.id);
-
-      if (error) throw error;
-
+      await UserAccountService.banUser(user.id);
       toast({
         title: "User Banned",
-        description: `${user.username} has been banned until ${banUntil.toLocaleDateString()}.`
+        description: `${user.username} has been banned.`
       });
       loadUsers();
     } catch (error) {
@@ -141,13 +113,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ onStatsUpdate }) => {
 
   const handleUnbanUser = async (user: UserAccount) => {
     try {
-      const { error } = await supabase
-        .from('users')
-        .update({ banned_until: null })
-        .eq('id', user.id);
-
-      if (error) throw error;
-
+      await UserAccountService.unbanUser(user.id);
       toast({
         title: "User Unbanned",
         description: `${user.username} has been unbanned.`
@@ -169,13 +135,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ onStatsUpdate }) => {
     }
 
     try {
-      const { error } = await supabase
-        .from('users')
-        .delete()
-        .eq('id', user.id);
-
-      if (error) throw error;
-
+      await UserAccountService.deleteUser(user.id);
       toast({
         title: "User Deleted",
         description: `${user.username} has been permanently deleted.`

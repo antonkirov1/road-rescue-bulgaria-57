@@ -8,29 +8,40 @@ import { useTranslation } from '@/utils/translations';
 import { Button } from "@/components/ui/button";
 import { Globe } from 'lucide-react';
 import ThemeToggle from '@/components/ui/theme-toggle';
+import { AdminAccountService } from '@/services/adminAccountService';
 
 const AdminAuth: React.FC = () => {
   const navigate = useNavigate();
   const { login, language, setLanguage } = useApp();
   const t = useTranslation(language);
   
-  const handleLogin = (credentials: { username: string; password: string }) => {
+  const handleLogin = async (credentials: { username: string; password: string }) => {
     console.log('Admin login attempt:', { username: credentials.username });
     
-    // Check for Account Administrator credentials - exact match required
-    if (credentials.username.trim() === 'account_admin' && credentials.password === 'AdminAcc93') {
-      console.log('Admin credentials valid, logging in...');
-      login({ username: credentials.username });
-      navigate('/admin/dashboard');
-      toast({
-        title: "Admin Login Successful",
-        description: "Welcome to RoadSaver Account Manager"
-      });
-    } else {
-      console.log('Invalid admin credentials provided');
+    try {
+      const admin = await AdminAccountService.authenticateAdmin(credentials.username, credentials.password);
+      
+      if (admin) {
+        console.log('Admin credentials valid, logging in...');
+        login({ username: admin.username, email: admin.email });
+        navigate('/admin/dashboard');
+        toast({
+          title: "Admin Login Successful",
+          description: "Welcome to RoadSaver Account Manager"
+        });
+      } else {
+        console.log('Invalid admin credentials provided');
+        toast({
+          title: t("auth-error"),
+          description: "Invalid admin credentials. Use username: account_admin and password: AdminAcc93",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Admin authentication error:', error);
       toast({
         title: t("auth-error"),
-        description: "Invalid admin credentials. Use username: account_admin and password: AdminAcc93",
+        description: "Authentication failed. Please try again.",
         variant: "destructive",
       });
     }
