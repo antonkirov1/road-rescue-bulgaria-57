@@ -13,6 +13,21 @@ const Home: React.FC = () => {
   const { language, setLanguage } = useApp();
   const t = useTranslation(language);
 
+  const handleCustomerPortalClick = () => {
+    console.log('Customer portal button clicked, navigating to /user/portal-selection');
+    navigate('/user/portal-selection');
+  };
+
+  const handleEmployeeClick = () => {
+    console.log('Employee button clicked, navigating to /employee');
+    navigate('/employee');
+  };
+
+  const handleAdminClick = () => {
+    console.log('Admin button clicked, navigating to /admin-selection');
+    navigate('/admin-selection');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
       <div className="absolute top-4 right-4 flex items-center gap-2">
@@ -57,7 +72,7 @@ const Home: React.FC = () => {
             </CardHeader>
             <CardContent>
               <Button 
-                onClick={() => navigate('/user/portal-selection')}
+                onClick={handleCustomerPortalClick}
                 className="w-full bg-green-600 hover:bg-green-700"
               >
                 {t('access-customer-portal')}
@@ -78,7 +93,7 @@ const Home: React.FC = () => {
             </CardHeader>
             <CardContent>
               <Button 
-                onClick={() => navigate('/employee')}
+                onClick={handleEmployeeClick}
                 className="w-full bg-blue-600 hover:bg-blue-700"
               >
                 {t('employee-login')}
@@ -99,7 +114,7 @@ const Home: React.FC = () => {
             </CardHeader>
             <CardContent>
               <Button 
-                onClick={() => navigate('/admin-selection')}
+                onClick={handleAdminClick}
                 className="w-full bg-purple-600 hover:bg-purple-700"
               >
                 {t('admin-panel')}
