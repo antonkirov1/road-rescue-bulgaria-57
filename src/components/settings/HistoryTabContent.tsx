@@ -25,7 +25,10 @@ const HistoryTabContent: React.FC<HistoryTabContentProps> = ({ t }) => {
     if (!user) return;
     
     try {
+      setIsLoading(true);
+      console.log('Loading user history for user:', user.username);
       const history = await UserHistoryService.getUserHistory(user.username, user.username);
+      console.log('Loaded history entries:', history.length, history);
       setHistoryEntries(history);
     } catch (error) {
       console.error('Error loading user history:', error);
@@ -52,7 +55,7 @@ const HistoryTabContent: React.FC<HistoryTabContentProps> = ({ t }) => {
       <div className="h-full flex items-center justify-center">
         <div className="text-center">
           <HistoryIcon className="h-12 w-12 mx-auto text-green-600 mb-2 animate-spin" />
-          <p className="text-sm text-muted-foreground">Loading history...</p>
+          <p className="text-sm text-muted-foreground">{t('loading')}...</p>
         </div>
       </div>
     );
@@ -111,7 +114,7 @@ const HistoryTabContent: React.FC<HistoryTabContentProps> = ({ t }) => {
                   {entry.status === 'completed' && entry.total_price && (
                     <div className="flex items-center gap-1 text-sm text-muted-foreground">
                       <DollarSign className="h-4 w-4" />
-                      <span>{t('total-price')}: {entry.total_price} BGN</span>
+                      <span>{t('total-price')}: {entry.total_price.toFixed(2)} BGN</span>
                     </div>
                   )}
 
@@ -140,7 +143,10 @@ const HistoryTabContent: React.FC<HistoryTabContentProps> = ({ t }) => {
               );
             })
           ) : (
-            <p className="text-center text-muted-foreground">{t('no-requests')}</p>
+            <div className="text-center py-8">
+              <HistoryIcon className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+              <p className="text-center text-muted-foreground">{t('no-requests')}</p>
+            </div>
           )}
         </div>
       </ScrollArea>

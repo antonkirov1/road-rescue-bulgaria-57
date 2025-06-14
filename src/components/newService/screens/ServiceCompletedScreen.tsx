@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -7,6 +6,7 @@ import { CheckCircle2, Star, DollarSign } from 'lucide-react';
 import { ServiceRequest } from '@/types/newServiceRequest';
 import { useApp } from '@/contexts/AppContext';
 import { useTranslation } from '@/utils/translations';
+import { UserHistoryService } from '@/services/userHistoryService';
 
 interface ServiceCompletedScreenProps {
   request: ServiceRequest;
@@ -17,8 +17,44 @@ const ServiceCompletedScreen: React.FC<ServiceCompletedScreenProps> = ({
   request,
   onClose
 }) => {
-  const { language } = useApp();
+  const { language, user, userLocation } = useApp();
   const t = useTranslation(language);
+
+  useEffect(() => {
+    // Store the completed request in user_history table
+    const storeCompletedRequest = async () => {
+      if (!user || !request.assignedEmployeeName || !request.priceQuote) return;
+
+      try {
+        await UserHistoryService.addHistoryEntry({
+          user_id: user.username,
+          username: user.username,
+          service_type: request.type,
+          status: 'completed',
+          employee_name: request.assignedEmployeeName,
+          price_paid: request.priceQuote,
+          service_fee: 5,
+          total_price: request.priceQuote + 5,
+          request_date: new Date().toISOString(),
+          completion_date: new Date().toISOString(),
+          address_street: 'Sofia Center, Bulgaria',
+          latitude: userLocation.lat,
+          longitude: userLocation.lng
+        });
+
+        console.log('Service completion stored in user history');
+
+        // Clean up old history entries (keep only latest 30)
+        await UserHistoryService.cleanupOldHistory(user.username, user.username);
+      } catch (error) {
+        console.error('Error storing completed request:', error);
+      }
+    };
+
+    storeCompletedRequest();
+  }, [user, request, userLocation]);
+
+  const totalPrice = (request.priceQuote || 0) + 5;
 
   return (
     <>
@@ -47,13 +83,13 @@ const ServiceCompletedScreen: React.FC<ServiceCompletedScreenProps> = ({
             <div className="flex items-center justify-between mb-4">
               <span className="text-sm text-gray-600">{t('total-price')}</span>
               <span className="text-lg font-semibold text-green-600">
-                {request.priceQuote} BGN
+                {totalPrice.toFixed(2)} BGN
               </span>
             </div>
             
-            {request.assignedEmployeeId && (
+            {request.assignedEmployeeName && (
               <div className="text-sm text-gray-600">
-                {t('assigned-employee')}: Employee #{request.assignedEmployeeId}
+                {t('assigned-employee')}: {request.assignedEmployeeName}
               </div>
             )}
           </CardContent>

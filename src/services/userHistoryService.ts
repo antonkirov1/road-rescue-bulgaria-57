@@ -23,6 +23,7 @@ export interface UserHistoryEntry {
 export class UserHistoryService {
   static async addHistoryEntry(entry: Omit<UserHistoryEntry, 'id' | 'created_at'>) {
     try {
+      console.log('Adding history entry:', entry);
       const { data, error } = await supabase
         .from('user_history')
         .insert(entry)
@@ -34,6 +35,7 @@ export class UserHistoryService {
         throw error;
       }
 
+      console.log('Successfully added history entry:', data);
       return data;
     } catch (error) {
       console.error('Error in addHistoryEntry:', error);
@@ -43,6 +45,7 @@ export class UserHistoryService {
 
   static async getUserHistory(userId: string, username: string): Promise<UserHistoryEntry[]> {
     try {
+      console.log('Fetching user history for:', userId, username);
       const { data, error } = await supabase
         .from('user_history')
         .select('*')
@@ -55,6 +58,8 @@ export class UserHistoryService {
         console.error('Error fetching user history:', error);
         throw error;
       }
+
+      console.log('Fetched user history data:', data?.length || 0, 'entries');
 
       // Transform the data to ensure proper typing
       const transformedData: UserHistoryEntry[] = (data || []).map(item => ({
@@ -85,6 +90,7 @@ export class UserHistoryService {
 
   static async cleanupOldHistory(userId: string, username: string) {
     try {
+      console.log('Cleaning up old history for user:', userId);
       const { data: allEntries, error: fetchError } = await supabase
         .from('user_history')
         .select('id, completion_date')
@@ -102,6 +108,8 @@ export class UserHistoryService {
         const entriesToDelete = allEntries.slice(30);
         const idsToDelete = entriesToDelete.map(entry => entry.id);
 
+        console.log('Deleting old history entries:', idsToDelete.length);
+
         const { error: deleteError } = await supabase
           .from('user_history')
           .delete()
@@ -109,6 +117,8 @@ export class UserHistoryService {
 
         if (deleteError) {
           console.error('Error deleting old entries:', deleteError);
+        } else {
+          console.log('Successfully cleaned up old history entries');
         }
       }
     } catch (error) {
