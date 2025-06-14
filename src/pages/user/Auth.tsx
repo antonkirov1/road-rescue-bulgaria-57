@@ -21,11 +21,23 @@ const Auth: React.FC = () => {
   
   const handleLogin = async (credentials: { username: string; password: string }) => {
     try {
+      // Check for demo credentials first
+      if (credentials.username === 'user' && credentials.password === 'user123') {
+        login({ username: 'user', email: 'user@demo.com' });
+        navigate('/user/portal-selection');
+        toast({
+          title: t("login-successful"),
+          description: t("welcome-to-roadsaver")
+        });
+        return;
+      }
+
+      // Try database authentication
       const user = await UserAccountService.authenticateUser(credentials.username, credentials.password);
       
       if (user) {
         login({ username: user.username, email: user.email });
-        navigate('/user/dashboard');
+        navigate('/user/portal-selection');
         toast({
           title: t("login-successful"),
           description: t("welcome-to-roadsaver")
@@ -59,7 +71,7 @@ const Auth: React.FC = () => {
       });
 
       login({ username: userData.username, email: userData.email });
-      navigate('/user/dashboard');
+      navigate('/user/portal-selection');
       toast({
         title: t("registration-successful"),
         description: t("account-created-welcome")
