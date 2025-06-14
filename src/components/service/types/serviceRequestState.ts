@@ -1,11 +1,18 @@
 
 export interface ServiceRequestState {
+  id: string;
+  type: ServiceType;
+  userLocation: { lat: number; lng: number };
+  blacklistedEmployees: string[];
+  timestamp: string;
+  priceQuote: number | null;
+  assignedEmployeeName: string;
+  employeeLocation?: { lat: number; lng: number };
+  etaSeconds: number;
   message: string;
   isSubmitting: boolean;
   showRealTimeUpdate: boolean;
   showPriceQuote: boolean;
-  priceQuote: number;
-  employeeLocation?: { lat: number; lng: number };
   status: 'pending' | 'accepted' | 'declined';
   declineReason: string;
   serviceFee?: number;
