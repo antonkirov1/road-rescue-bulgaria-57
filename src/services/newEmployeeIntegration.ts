@@ -87,6 +87,23 @@ class EmployeeIntegrationService {
   ): Promise<void> {
     console.log(`Employee ${employeeId} declined request ${requestId}: ${reason}`);
   }
+
+  async registerRealEmployee(employee: {
+    id: string;
+    name: string;
+    location: { lat: number; lng: number };
+    isAvailable: boolean;
+  }): Promise<void> {
+    console.log(`Registering real employee: ${employee.name}`);
+  }
+
+  async updateEmployeeAvailability(employeeId: string, available: boolean): Promise<void> {
+    console.log(`Updating employee ${employeeId} availability to ${available}`);
+  }
+
+  async employeeAcceptedRequest(employeeId: string, requestId: string): Promise<void> {
+    console.log(`Employee ${employeeId} accepted request ${requestId}`);
+  }
 }
 
 export const employeeIntegrationService = new EmployeeIntegrationService();
