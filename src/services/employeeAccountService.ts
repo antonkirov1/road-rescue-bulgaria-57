@@ -6,7 +6,7 @@ export interface EmployeeAccount {
   username: string;
   email: string;
   phone_number?: string;
-  employee_role?: 'technician' | 'support' | 'admin';
+  employee_role?: 'technician' | 'support' | 'admin' | 'supervisor' | 'manager' | 'district manager' | 'owner' | 'co-owner' | 'partner';
   status?: 'active' | 'inactive' | 'suspended';
   real_name?: string;
   created_at: string;
@@ -29,7 +29,7 @@ export class EmployeeAccountService {
     // Cast the data to ensure proper typing
     return (data || []).map(employee => ({
       ...employee,
-      employee_role: employee.employee_role as 'technician' | 'support' | 'admin',
+      employee_role: employee.employee_role as 'technician' | 'support' | 'admin' | 'supervisor' | 'manager' | 'district manager' | 'owner' | 'co-owner' | 'partner',
       status: employee.status as 'active' | 'inactive' | 'suspended'
     }));
   }
@@ -38,7 +38,7 @@ export class EmployeeAccountService {
     username: string;
     email: string;
     phone_number?: string;
-    employee_role?: 'technician' | 'support' | 'admin';
+    employee_role?: 'technician' | 'support' | 'admin' | 'supervisor' | 'manager' | 'district manager' | 'owner' | 'co-owner' | 'partner';
     real_name?: string;
     is_available?: boolean;
     is_simulated?: boolean;
@@ -60,7 +60,7 @@ export class EmployeeAccountService {
     // Cast the data to ensure proper typing
     return {
       ...data,
-      employee_role: data.employee_role as 'technician' | 'support' | 'admin',
+      employee_role: data.employee_role as 'technician' | 'support' | 'admin' | 'supervisor' | 'manager' | 'district manager' | 'owner' | 'co-owner' | 'partner',
       status: data.status as 'active' | 'inactive' | 'suspended'
     };
   }
@@ -81,7 +81,7 @@ export class EmployeeAccountService {
     // Cast the data to ensure proper typing
     return {
       ...data,
-      employee_role: data.employee_role as 'technician' | 'support' | 'admin',
+      employee_role: data.employee_role as 'technician' | 'support' | 'admin' | 'supervisor' | 'manager' | 'district manager' | 'owner' | 'co-owner' | 'partner',
       status: data.status as 'active' | 'inactive' | 'suspended'
     };
   }
@@ -126,7 +126,7 @@ export class EmployeeAccountService {
     // Cast the data to ensure proper typing
     return (data || []).map(employee => ({
       ...employee,
-      employee_role: employee.employee_role as 'technician' | 'support' | 'admin',
+      employee_role: employee.employee_role as 'technician' | 'support' | 'admin' | 'supervisor' | 'manager' | 'district manager' | 'owner' | 'co-owner' | 'partner',
       status: employee.status as 'active' | 'inactive' | 'suspended'
     }));
   }

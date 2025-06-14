@@ -1,16 +1,14 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { EmployeeAccountService, EmployeeAccount } from '@/services/employeeAccountService';
-import { usePasswordValidation, useConfirmPasswordValidation } from '@/hooks/useAuthValidation';
-import { useTranslation } from '@/utils/translations';
-import { useApp } from '@/contexts/AppContext';
+import { UpperManagementService } from '@/services/upperManagementService';
 
 interface EmployeeFormProps {
   employee?: EmployeeAccount;
@@ -19,82 +17,57 @@ interface EmployeeFormProps {
 }
 
 const EmployeeForm: React.FC<EmployeeFormProps> = ({ employee, onSubmit, onCancel }) => {
-  const { language } = useApp();
-  const t = useTranslation(language);
-  
   const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    phone_number: '',
-    employee_role: 'technician' as 'technician' | 'support' | 'admin',
-    real_name: '',
-    is_available: true
+    username: employee?.username || '',
+    email: employee?.email || '',
+    phone_number: employee?.phone_number || '',
+    employee_role: employee?.employee_role || 'technician',
+    real_name: employee?.real_name || '',
+    is_available: employee?.is_available ?? true,
+    is_simulated: employee?.is_simulated ?? false,
   });
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Password validation hooks
-  const passwordValidation = usePasswordValidation(t);
-  const confirmPasswordValidation = useConfirmPasswordValidation(passwordValidation.value, t);
-
-  useEffect(() => {
-    if (employee) {
-      setFormData({
-        username: employee.username || '',
-        email: employee.email || '',
-        phone_number: employee.phone_number || '',
-        employee_role: employee.employee_role || 'technician',
-        real_name: employee.real_name || '',
-        is_available: employee.is_available ?? true
-      });
-    }
-  }, [employee]);
+  const isUpperManagementRole = (role: string) => {
+    return ['supervisor', 'manager', 'district manager', 'owner', 'co-owner', 'partner'].includes(role);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.username || !formData.email) {
-      toast({
-        title: "Validation Error",
-        description: "Username and email are required fields.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // For new employees, validate password
-    if (!employee) {
-      if (!passwordValidation.isValid || !confirmPasswordValidation.isValid) {
-        toast({
-          title: "Validation Error",
-          description: "Please fix password validation errors before submitting.",
-          variant: "destructive"
-        });
-        return;
-      }
-    }
-
     setLoading(true);
-    try {
-      const employeeData = {
-        ...formData,
-        ...((!employee && passwordValidation.value) && { password: passwordValidation.value })
-      };
 
+    try {
       if (employee) {
-        await EmployeeAccountService.updateEmployee(employee.id, employeeData);
-        toast({
-          title: "Employee Updated",
-          description: `${formData.username} has been updated successfully.`
-        });
+        // Update existing employee
+        const updatedEmployee = await EmployeeAccountService.updateEmployee(employee.id, formData);
+        
+        // Handle upper management role changes
+        if (isUpperManagementRole(formData.employee_role)) {
+          await UpperManagementService.createOrUpdateUpperManagement(
+            updatedEmployee.id, 
+            formData.employee_role as any
+          );
+        } else {
+          // Remove from upper management if role changed to non-management
+          await UpperManagementService.removeFromUpperManagement(updatedEmployee.id);
+        }
       } else {
-        await EmployeeAccountService.createEmployeeAccount(employeeData);
-        toast({
-          title: "Employee Created",
-          description: `${formData.username} has been created successfully.`
-        });
+        // Create new employee
+        const newEmployee = await EmployeeAccountService.createEmployeeAccount(formData);
+        
+        // Add to upper management if applicable
+        if (isUpperManagementRole(formData.employee_role)) {
+          await UpperManagementService.createOrUpdateUpperManagement(
+            newEmployee.id, 
+            formData.employee_role as any
+          );
+        }
       }
+
+      toast({
+        title: "Success",
+        description: `Employee ${employee ? 'updated' : 'created'} successfully.`
+      });
       onSubmit();
     } catch (error) {
       console.error('Error saving employee:', error);
@@ -108,8 +81,11 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ employee, onSubmit, onCance
     }
   };
 
-  const handleChange = (field: string, value: string | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleInputChange = (field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   return (
@@ -117,164 +93,132 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ employee, onSubmit, onCance
       <Card>
         <CardHeader>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={onCancel}>
+            <Button variant="ghost" size="icon" onClick={onCancel}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <div>
-              <CardTitle className="text-xl md:text-2xl">
-                {employee ? 'Edit Employee' : 'Add Employee'}
-              </CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                {employee ? 'Update employee information' : 'Create a new employee account'}
-              </p>
-            </div>
+            <CardTitle>
+              {employee ? 'Edit Employee' : 'Add New Employee'}
+            </CardTitle>
           </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="username">Username *</Label>
                 <Input
                   id="username"
+                  type="text"
                   value={formData.username}
-                  onChange={(e) => handleChange('username', e.target.value)}
-                  placeholder="Enter username"
+                  onChange={(e) => handleInputChange('username', e.target.value)}
                   required
+                  placeholder="Enter username"
                 />
               </div>
-              
-              <div>
+
+              <div className="space-y-2">
                 <Label htmlFor="email">Email *</Label>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
-                  onChange={(e) => handleChange('email', e.target.value)}
-                  placeholder="Enter email"
+                  onChange={(e) => handleInputChange('email', e.target.value)}
                   required
+                  placeholder="Enter email address"
                 />
               </div>
-              
-              <div>
+
+              <div className="space-y-2">
                 <Label htmlFor="real_name">Real Name</Label>
                 <Input
                   id="real_name"
+                  type="text"
                   value={formData.real_name}
-                  onChange={(e) => handleChange('real_name', e.target.value)}
+                  onChange={(e) => handleInputChange('real_name', e.target.value)}
                   placeholder="Enter real name"
                 />
               </div>
-              
-              <div>
+
+              <div className="space-y-2">
                 <Label htmlFor="phone_number">Phone Number</Label>
                 <Input
                   id="phone_number"
+                  type="tel"
                   value={formData.phone_number}
-                  onChange={(e) => handleChange('phone_number', e.target.value)}
+                  onChange={(e) => handleInputChange('phone_number', e.target.value)}
                   placeholder="Enter phone number"
                 />
               </div>
-              
-              <div>
-                <Label htmlFor="employee_role">Role</Label>
-                <Select value={formData.employee_role} onValueChange={(value) => handleChange('employee_role', value)}>
+
+              <div className="space-y-2">
+                <Label htmlFor="employee_role">Role *</Label>
+                <Select 
+                  value={formData.employee_role} 
+                  onValueChange={(value) => handleInputChange('employee_role', value)}
+                >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Select role" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="technician">Technician</SelectItem>
                     <SelectItem value="support">Support</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="supervisor">Supervisor</SelectItem>
+                    <SelectItem value="manager">Manager</SelectItem>
+                    <SelectItem value="district manager">District Manager</SelectItem>
+                    <SelectItem value="owner">Owner</SelectItem>
+                    <SelectItem value="co-owner">Co-Owner</SelectItem>
+                    <SelectItem value="partner">Partner</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              
-              <div>
-                <Label htmlFor="is_available">Availability</Label>
+
+              <div className="space-y-2">
+                <Label htmlFor="is_available">Availability Status</Label>
                 <Select 
-                  value={formData.is_available ? "true" : "false"} 
-                  onValueChange={(value) => handleChange('is_available', value === "true")}
+                  value={formData.is_available ? 'available' : 'unavailable'} 
+                  onValueChange={(value) => handleInputChange('is_available', value === 'available')}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="true">Available</SelectItem>
-                    <SelectItem value="false">Unavailable</SelectItem>
+                    <SelectItem value="available">Available</SelectItem>
+                    <SelectItem value="unavailable">Unavailable</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              {/* Password fields - only show for new employees */}
-              {!employee && (
-                <>
-                  <div>
-                    <Label htmlFor="password">Password *</Label>
-                    <div className="relative">
-                      <Input
-                        id="password"
-                        type={showPassword ? 'text' : 'password'}
-                        placeholder="Enter password"
-                        value={passwordValidation.value}
-                        onChange={(e) => passwordValidation.setValue(e.target.value)}
-                        className={`pr-10 ${passwordValidation.error ? 'border-red-500' : ''}`}
-                        required
-                      />
-                      <button
-                        type="button"
-                        className="absolute inset-y-0 right-0 flex items-center px-3"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? (
-                          <EyeOff size={18} className="text-gray-500" />
-                        ) : (
-                          <Eye size={18} className="text-gray-500" />
-                        )}
-                      </button>
-                    </div>
-                    {passwordValidation.error && (
-                      <p className="text-sm text-red-600 mt-1">{passwordValidation.error}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <Label htmlFor="confirmPassword">Confirm Password *</Label>
-                    <div className="relative">
-                      <Input
-                        id="confirmPassword"
-                        type={showConfirmPassword ? 'text' : 'password'}
-                        placeholder="Confirm password"
-                        value={confirmPasswordValidation.value}
-                        onChange={(e) => confirmPasswordValidation.setValue(e.target.value)}
-                        className={`pr-10 ${confirmPasswordValidation.error ? 'border-red-500' : ''}`}
-                        required
-                      />
-                      <button
-                        type="button"
-                        className="absolute inset-y-0 right-0 flex items-center px-3"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      >
-                        {showConfirmPassword ? (
-                          <EyeOff size={18} className="text-gray-500" />
-                        ) : (
-                          <Eye size={18} className="text-gray-500" />
-                        )}
-                      </button>
-                    </div>
-                    {confirmPasswordValidation.error && (
-                      <p className="text-sm text-red-600 mt-1">{confirmPasswordValidation.error}</p>
-                    )}
-                  </div>
-                </>
-              )}
+              <div className="space-y-2">
+                <Label htmlFor="is_simulated">Account Type</Label>
+                <Select 
+                  value={formData.is_simulated ? 'simulated' : 'real'} 
+                  onValueChange={(value) => handleInputChange('is_simulated', value === 'simulated')}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="real">Real Account</SelectItem>
+                    <SelectItem value="simulated">Simulated Account</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            
-            <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <Button type="submit" disabled={loading} className="flex-1">
-                {loading ? 'Saving...' : (employee ? 'Update Employee' : 'Create Employee')}
+
+            {isUpperManagementRole(formData.employee_role) && (
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <strong>Note:</strong> This employee will be added to the upper management accounts due to their selected role.
+                </p>
+              </div>
+            )}
+
+            <div className="flex gap-4 pt-4">
+              <Button type="submit" disabled={loading}>
+                {loading ? 'Saving...' : employee ? 'Update Employee' : 'Create Employee'}
               </Button>
-              <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+              <Button type="button" variant="outline" onClick={onCancel}>
                 Cancel
               </Button>
             </div>

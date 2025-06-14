@@ -568,6 +568,38 @@ export type Database = {
         }
         Relationships: []
       }
+      upper_management_accounts: {
+        Row: {
+          created_at: string
+          employee_id: string
+          id: string
+          management_role: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          employee_id: string
+          id?: string
+          management_role: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          employee_id?: string
+          id?: string
+          management_role?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "upper_management_accounts_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: true
+            referencedRelation: "employee_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_accounts: {
         Row: {
           auth_user_id: string | null
