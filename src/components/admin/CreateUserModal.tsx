@@ -1,132 +1,59 @@
+
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { X } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { UserAccountService } from '@/services/userAccountService';
-import { Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { useApp } from '@/contexts/AppContext';
-import { useTranslation } from '@/utils/translations';
-import {
-  useUsernameValidation,
-  useEmailValidation,
-  usePhoneNumberValidation,
-  usePasswordValidation
-} from '@/hooks/useAuthValidation';
-import { useSecretQuestions } from '@/hooks/useSecretQuestions';
-import SecretQuestionField from '@/components/auth/SecretQuestionField';
 
 interface CreateUserModalProps {
-  isOpen: boolean;
   onClose: () => void;
   onUserCreated: () => void;
 }
 
-const CreateUserModal: React.FC<CreateUserModalProps> = ({ isOpen, onClose, onUserCreated }) => {
-  const { language } = useApp();
-  const t = useTranslation(language);
-  
-  const [name, setName] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Use validation hooks
-  const {
-    value: username,
-    setValue: setUsername,
-    error: usernameError,
-    isValid: isUsernameValid
-  } = useUsernameValidation(t);
-
-  const {
-    value: email,
-    setValue: setEmail,
-    error: emailError,
-    isValid: isEmailValid
-  } = useEmailValidation(t);
-
-  const {
-    value: phoneNumber,
-    setValue: setPhoneNumber,
-    error: phoneError,
-    isValid: isPhoneValid
-  } = usePhoneNumberValidation(t);
-
-  const {
-    value: password,
-    setValue: setPassword,
-    error: passwordError,
-    isValid: isPasswordValid
-  } = usePasswordValidation(t);
-
-  const [gender, setGender] = useState('');
-
-  // Secret questions
-  const secretQuestions = useSecretQuestions(t);
-
-  const renderValidationIcon = (isValid: boolean, error: string) => {
-    if (error) return <AlertCircle className="h-5 w-5 text-red-500" />;
-    if (isValid) return <CheckCircle2 className="h-5 w-5 text-green-500" />;
-    return null;
-  };
+const CreateUserModal: React.FC<CreateUserModalProps> = ({ onClose, onUserCreated }) => {
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    phone_number: '',
+    gender: '',
+    full_name: ''
+  });
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate all required fields
-    if (!name.trim()) {
+    if (!formData.username || !formData.email || !formData.password) {
       toast({
         title: "Error",
-        description: "Name is required",
+        description: "Please fill in all required fields",
         variant: "destructive"
       });
       return;
     }
 
-    if (!isUsernameValid || !isEmailValid || !isPasswordValid || !isPhoneValid || !secretQuestions.isSecretQuestionsValid) {
-      toast({
-        title: "Error",
-        description: "Please ensure all fields meet the requirements",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsLoading(true);
-
+    setLoading(true);
+    
     try {
-      await UserAccountService.createUserByAdmin({
-        username: username,
-        email: email,
-        password: password,
-        phone_number: phoneNumber || undefined,
-        gender: gender || undefined,
-        name: name.trim(),
-        secretQuestion1: secretQuestions.getQuestion1Text(),
-        secretAnswer1: secretQuestions.secretAnswer1,
-        secretQuestion2: secretQuestions.getQuestion2Text(),
-        secretAnswer2: secretQuestions.secretAnswer2
+      await UserAccountService.createUserAccount({
+        username: formData.username,
+        email: formData.email,
+        password_hash: formData.password,
+        phone_number: formData.phone_number || undefined,
+        gender: formData.gender || undefined,
+        full_name: formData.full_name || undefined
       });
 
       toast({
         title: "Success",
         description: "User account created successfully"
       });
-
-      // Reset form
-      setName('');
-      setUsername('');
-      setEmail('');
-      setPassword('');
-      setPhoneNumber('+359');
-      setGender('');
-      secretQuestions.setSecretAnswer1('');
-      secretQuestions.setSecretAnswer2('');
-      secretQuestions.handleSecretQuestion1Change('');
-      secretQuestions.handleSecretQuestion2Change('');
-
+      
       onUserCreated();
       onClose();
     } catch (error) {
@@ -137,201 +64,114 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ isOpen, onClose, onUs
         variant: "destructive"
       });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const isFormValid = name.trim() && isUsernameValid && isEmailValid && isPasswordValid && 
-                    isPhoneValid && secretQuestions.isSecretQuestionsValid;
+  const handleChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Create New User Account</DialogTitle>
-          <DialogDescription>
-            Create a new user account that will be stored in the existing user accounts database.
-          </DialogDescription>
-        </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 gap-4">
-            {/* Name Field */}
-            <div className="space-y-2">
-              <Label htmlFor="name">Name *</Label>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Create New User</CardTitle>
+              <CardDescription>Add a new user account to the system</CardDescription>
+            </div>
+            <Button variant="ghost" size="icon" onClick={onClose}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="username">Username *</Label>
               <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Enter full name (Name, Surname)"
+                id="username"
+                type="text"
+                value={formData.username}
+                onChange={(e) => handleChange('username', e.target.value)}
+                disabled={loading}
                 required
               />
             </div>
-
-            {/* Username Field with Validation */}
-            <div className="space-y-2">
-              <Label htmlFor="username">Username *</Label>
-              <div className="relative">
-                <Input
-                  id="username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value.toLowerCase())}
-                  placeholder="Enter username"
-                  required
-                  className={`pr-10 ${usernameError ? 'border-red-500' : isUsernameValid ? 'border-green-500' : ''}`}
-                />
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                  {renderValidationIcon(isUsernameValid, usernameError)}
-                </div>
-              </div>
-              {usernameError && <p className="text-red-500 text-xs mt-1">{usernameError}</p>}
-              {!usernameError && isUsernameValid && <p className="text-green-500 text-xs mt-1">Username is valid</p>}
-              <p className="text-xs text-muted-foreground">Must be 6-20 characters, start with letter/number</p>
-            </div>
-
-            {/* Email Field with Validation */}
-            <div className="space-y-2">
+            
+            <div>
               <Label htmlFor="email">Email *</Label>
-              <div className="relative">
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter email address"
-                  required
-                  className={`pr-10 ${emailError ? 'border-red-500' : isEmailValid ? 'border-green-500' : ''}`}
-                />
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                  {renderValidationIcon(isEmailValid, emailError)}
-                </div>
-              </div>
-              {emailError && <p className="text-red-500 text-xs mt-1">{emailError}</p>}
-              {!emailError && isEmailValid && <p className="text-green-500 text-xs mt-1">Email is valid</p>}
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleChange('email', e.target.value)}
+                disabled={loading}
+                required
+              />
             </div>
-
-            {/* Password Field with Validation */}
-            <div className="space-y-2">
+            
+            <div>
               <Label htmlFor="password">Password *</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter password"
-                  required
-                  className={`pr-20 ${passwordError ? 'border-red-500' : isPasswordValid ? 'border-green-500' : ''}`}
-                />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-10 flex items-center px-3"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeOff size={18} className="text-gray-500" />
-                  ) : (
-                    <Eye size={18} className="text-gray-500" />
-                  )}
-                </button>
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                  {renderValidationIcon(isPasswordValid, passwordError)}
-                </div>
-              </div>
-              {passwordError && <p className="text-red-500 text-xs mt-1">{passwordError}</p>}
-              {!passwordError && isPasswordValid && <p className="text-green-500 text-xs mt-1">Password is valid</p>}
-              <p className="text-xs text-muted-foreground">
-                Must be 8+ characters with uppercase, lowercase, number, and special character
-              </p>
+              <Input
+                id="password"
+                type="password"
+                value={formData.password}
+                onChange={(e) => handleChange('password', e.target.value)}
+                disabled={loading}
+                required
+              />
             </div>
-
-            {/* Phone Number Field with Validation */}
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <div className="relative">
-                <Input
-                  id="phone"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="+359XXXXXXXXX"
-                  className={`pr-10 ${phoneError ? 'border-red-500' : isPhoneValid ? 'border-green-500' : ''}`}
-                />
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                  {renderValidationIcon(isPhoneValid, phoneError)}
-                </div>
-              </div>
-              {phoneError && <p className="text-red-500 text-xs mt-1">{phoneError}</p>}
-              <p className="text-xs text-muted-foreground">Must be 13 characters starting with +359</p>
+            
+            <div>
+              <Label htmlFor="full_name">Full Name</Label>
+              <Input
+                id="full_name"
+                type="text"
+                value={formData.full_name}
+                onChange={(e) => handleChange('full_name', e.target.value)}
+                disabled={loading}
+              />
             </div>
-
-            {/* Gender Field */}
-            <div className="space-y-2">
+            
+            <div>
+              <Label htmlFor="phone_number">Phone Number</Label>
+              <Input
+                id="phone_number"
+                type="tel"
+                value={formData.phone_number}
+                onChange={(e) => handleChange('phone_number', e.target.value)}
+                disabled={loading}
+              />
+            </div>
+            
+            <div>
               <Label htmlFor="gender">Gender</Label>
-              <Select value={gender} onValueChange={setGender}>
+              <Select value={formData.gender} onValueChange={(value) => handleChange('gender', value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select gender (optional)" />
+                  <SelectValue placeholder="Select gender" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="male">Male</SelectItem>
                   <SelectItem value="female">Female</SelectItem>
                   <SelectItem value="other">Other</SelectItem>
-                  <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-
-            {/* Secret Question 1 */}
-            <SecretQuestionField
-              questionNumber={1}
-              selectedQuestion={secretQuestions.secretQuestion1}
-              onQuestionChange={secretQuestions.handleSecretQuestion1Change}
-              answer={secretQuestions.secretAnswer1}
-              onAnswerChange={(e) => secretQuestions.setSecretAnswer1(e.target.value)}
-              questionError={secretQuestions.secretQuestion1Error}
-              answerError={secretQuestions.secretAnswer1Error}
-              isQuestionValid={secretQuestions.isSecretQuestion1Valid}
-              isAnswerValid={secretQuestions.isSecretAnswer1Valid}
-              customQuestion={secretQuestions.customQuestion1}
-              onCustomQuestionChange={secretQuestions.handleCustomQuestion1Change}
-              customQuestionError={secretQuestions.customQuestion1Error}
-              isCustomQuestionValid={secretQuestions.isCustomQuestion1Valid}
-              t={t}
-            />
-
-            {/* Secret Question 2 */}
-            <SecretQuestionField
-              questionNumber={2}
-              selectedQuestion={secretQuestions.secretQuestion2}
-              onQuestionChange={secretQuestions.handleSecretQuestion2Change}
-              answer={secretQuestions.secretAnswer2}
-              onAnswerChange={(e) => secretQuestions.setSecretAnswer2(e.target.value)}
-              questionError={secretQuestions.secretQuestion2Error}
-              answerError={secretQuestions.secretAnswer2Error}
-              isQuestionValid={secretQuestions.isSecretQuestion2Valid}
-              isAnswerValid={secretQuestions.isSecretAnswer2Valid}
-              customQuestion={secretQuestions.customQuestion2}
-              onCustomQuestionChange={secretQuestions.handleCustomQuestion2Change}
-              customQuestionError={secretQuestions.customQuestion2Error}
-              isCustomQuestionValid={secretQuestions.isCustomQuestion2Valid}
-              t={t}
-            />
-          </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button 
-              type="submit" 
-              disabled={isLoading || !isFormValid} 
-              className="bg-purple-600 hover:bg-purple-700"
-            >
-              {isLoading ? 'Creating...' : 'Create User'}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+            
+            <div className="flex gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={onClose} disabled={loading} className="flex-1">
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading} className="flex-1">
+                {loading ? 'Creating...' : 'Create User'}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
