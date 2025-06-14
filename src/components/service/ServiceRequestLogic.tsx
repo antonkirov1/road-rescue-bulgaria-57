@@ -1,11 +1,28 @@
-
+import React, { useState, useEffect } from 'react';
 import { ServiceType } from './types/serviceRequestState';
-import { ServiceRequestState } from '@/services/serviceRequest/types';
-import { ServiceRequestState } from '@/services/serviceRequest/types';
 import { toast } from "@/components/ui/use-toast";
 import { UserHistoryService } from '@/services/userHistoryService';
 import { useApp } from '@/contexts/AppContext';
 import { useRequestSimulation } from './hooks/useRequestSimulation';
+
+// Define the correct ServiceRequestState interface
+interface ServiceRequestState {
+  id: string;
+  type: ServiceType;
+  status: 'pending' | 'accepted' | 'declined';
+  userLocation: { lat: number; lng: number };
+  blacklistedEmployees: string[];
+  timestamp: string;
+  priceQuote: number | null;
+  assignedEmployeeName: string;
+  employeeLocation?: { lat: number; lng: number };
+  etaSeconds: number;
+  message: string;
+  isSubmitting: boolean;
+  showRealTimeUpdate: boolean;
+  showPriceQuote: boolean;
+  declineReason: string;
+}
 
 interface ServiceRequestLogicProps {
   type: ServiceType;
@@ -16,28 +33,22 @@ interface ServiceRequestLogicProps {
 export const useServiceRequestLogic = ({ type, userLocation, onClose }: ServiceRequestLogicProps) => {
   const { user } = useApp();
   const [request, setRequest] = useState<ServiceRequestState>({
-  id: '',
-  type,
-  status: 'pending',
-  userLocation,
-  blacklistedEmployees: [],
-  timestamp: new Date().toISOString(),
-  priceQuote: null,
-  assignedEmployeeName: '',
-  employeeLocation: undefined,
-  etaSeconds: 0,
-  message: '',
-  isSubmitting: false,
-  showRealTimeUpdate: false,
-  showPriceQuote: false,
-  declineReason: ''
-});
-
-  isWaitingForRevision: undefined,
-  currentEmployeeName: undefined,
-  declinedEmployees: undefined
-});
-
+    id: '',
+    type,
+    status: 'pending',
+    userLocation,
+    blacklistedEmployees: [],
+    timestamp: new Date().toISOString(),
+    priceQuote: null,
+    assignedEmployeeName: '',
+    employeeLocation: undefined,
+    etaSeconds: 0,
+    message: '',
+    isSubmitting: false,
+    showRealTimeUpdate: false,
+    showPriceQuote: false,
+    declineReason: ''
+  });
 
   const [showSearching, setShowSearching] = useState(false);
   const [showPriceQuote, setShowPriceQuote] = useState(false);
