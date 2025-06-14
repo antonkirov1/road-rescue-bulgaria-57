@@ -78,7 +78,7 @@ const Index: React.FC = () => {
             </CardHeader>
             <CardContent>
               <Button 
-                onClick={() => navigate('/employee/auth')}
+                onClick={() => navigate('/employee')}
                 className="w-full bg-blue-600 hover:bg-blue-700"
               >
                 {t('employee-login')}
@@ -99,7 +99,7 @@ const Index: React.FC = () => {
             </CardHeader>
             <CardContent>
               <Button 
-                onClick={() => navigate('/admin/auth')}
+                onClick={() => navigate('/admin-selection')}
                 className="w-full bg-purple-600 hover:bg-purple-700"
               >
                 {t('admin-panel')}
