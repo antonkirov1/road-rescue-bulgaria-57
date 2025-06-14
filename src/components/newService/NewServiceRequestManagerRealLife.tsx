@@ -6,6 +6,7 @@ import NewUIEventHandler from './NewUIEventHandler';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Minimize, X, Activity } from 'lucide-react';
+import Map from "@/components/Map";
 
 interface NewServiceRequestManagerRealLifeProps {
   type: ServiceRequest['type'];
@@ -69,6 +70,7 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
   const defaultLocation = { lat: 42.6977, lng: 23.3219 }; // Sofia, Bulgaria
   const location = userLocation || defaultLocation;
 
+  // Use your hook to get actual real request state from backend (no simulation):
   const {
     currentScreen,
     currentRequest,
@@ -76,7 +78,7 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
     handleDeclineQuote,
     handleCancelRequest,
     handleClose,
-    handleMinimize
+    handleMinimize,
   } = useServiceRequestLogicRealLife({
     type,
     open,
@@ -84,45 +86,41 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
     userId,
     onClose,
     onMinimize,
-    persistentState
+    persistentState,
   });
 
-  /**
-   * Exact minimize/close handling as simulation:
-   * - clicking outside OR pressing escape => minimize if not finished, else close
-   */
+  // Open/close logic -- close only, no minimize unless explicitly requested:
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
-      if (currentRequest && !['completed', 'cancelled'].includes(currentRequest.status)) {
-        handleMinimize();
-      } else {
-        handleClose();
-      }
-    }
-  };
-  const handleInteractOutside = (e: Event) => {
-    e.preventDefault();
-    if (currentRequest && !['completed', 'cancelled'].includes(currentRequest.status)) {
-      handleMinimize();
-    } else {
       handleClose();
     }
   };
 
+  const handleInteractOutside = (e: Event) => {
+    e.preventDefault();
+    handleClose();
+  };
+
   if (!open) return null;
 
-  const compatibleRequest = currentRequest ? {
-    ...currentRequest,
-    userId,
-    type: getDisplayName(currentRequest.type),
-    message: currentRequest.message || `Service request for ${type}`,
-    location: { lat: location.lat, lng: location.lng },
-    status: mapToServiceRequestStatus(currentRequest.status),
-    timestamp: currentRequest.timestamp || new Date().toISOString(),
-    username: userId,
-    createdAt: currentRequest.timestamp ? new Date(currentRequest.timestamp) : new Date(),
-    updatedAt: currentRequest.timestamp ? new Date(currentRequest.timestamp) : new Date()
-  } : null;
+  const compatibleRequest = currentRequest
+    ? {
+        ...currentRequest,
+        userId,
+        type: getDisplayName(currentRequest.type),
+        message: currentRequest.message || `Service request for ${type}`,
+        location: { lat: location.lat, lng: location.lng },
+        status: mapToServiceRequestStatus(currentRequest.status),
+        timestamp: currentRequest.timestamp || new Date().toISOString(),
+        username: userId,
+        createdAt: currentRequest.timestamp
+          ? new Date(currentRequest.timestamp)
+          : new Date(),
+        updatedAt: currentRequest.timestamp
+          ? new Date(currentRequest.timestamp)
+          : new Date(),
+      }
+    : null;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -131,24 +129,13 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
         onInteractOutside={handleInteractOutside}
       >
         <div className="flex items-center border-b justify-between px-6 py-5">
-          {/* Mini icon/logo to match simulation style, adjust if needed */}
-          <span className="text-red-600 text-2xl" aria-label="app icon">🚨</span>
+          {/* Remove left icon and minimize. Only title + close */}
           <DialogHeader className="flex flex-1 items-center justify-center">
             <DialogTitle className="!mb-0 flex items-center gap-1 text-xl font-extrabold font-clash tracking-tight">
               RoadSaver
             </DialogTitle>
           </DialogHeader>
-          {/* Minimize and Close on right */}
-          <div className="flex gap-2">
-            <Button
-              size="icon"
-              variant="ghost"
-              className="text-gray-500 hover:text-red-700"
-              aria-label="Minimize"
-              onClick={handleMinimize}
-            >
-              <Minimize className="w-4 h-4" />
-            </Button>
+          <div>
             <Button
               size="icon"
               variant="ghost"
@@ -161,10 +148,9 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
           </div>
         </div>
 
-        {/* Map placeholder (replace with Google Maps as soon as component is ready) */}
+        {/* Google/Mapbox Map with real data */}
         <div className="w-full bg-background/70 h-40 flex items-center justify-center">
-          {/* Future: <GoogleMap ... /> */}
-          <span className="text-sm text-muted-foreground">Location map goes here</span>
+          {location && <Map lat={location.lat} lng={location.lng} />}
         </div>
 
         <div className="flex-1 px-6 pb-4 overflow-y-auto">
