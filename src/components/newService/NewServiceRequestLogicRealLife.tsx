@@ -35,6 +35,17 @@ const getServiceTypeEnum = (displayName: string): ServiceType => {
   return mapping[displayName] || 'other-car-problems';
 };
 
+const getDisplayName = (serviceType: ServiceType): ServiceRequest['type'] => {
+  const mapping: Record<ServiceType, ServiceRequest['type']> = {
+    'flat-tyre': 'Flat Tyre',
+    'out-of-fuel': 'Out of Fuel',
+    'car-battery': 'Car Battery',
+    'other-car-problems': 'Other Car Problems',
+    'tow-truck': 'Tow Truck'
+  };
+  return mapping[serviceType] || 'Other Car Problems';
+};
+
 export const useServiceRequestLogicRealLife = ({
   type,
   open,
@@ -63,7 +74,8 @@ export const useServiceRequestLogicRealLife = ({
     try {
       setCurrentScreen('show_creating_request');
       
-      const requestId = await createRequest(type, userLocation, `Service request for ${type}`);
+      const serviceTypeEnum = getServiceTypeEnum(type);
+      const requestId = await createRequest(serviceTypeEnum, userLocation, `Service request for ${type}`);
       
       // Simulate finding an employee
       setTimeout(() => {
@@ -79,6 +91,7 @@ export const useServiceRequestLogicRealLife = ({
   const findEmployee = useCallback(() => {
     // Simulate finding a real employee
     setTimeout(() => {
+      const serviceTypeEnum = getServiceTypeEnum(type);
       const mockEmployee: RealLifeEmployee = {
         id: 'real-emp-' + Math.random().toString(36).substr(2, 9),
         name: `Real Employee ${Math.floor(Math.random() * 100)}`,
@@ -86,7 +99,7 @@ export const useServiceRequestLogicRealLife = ({
           lat: userLocation.lat + (Math.random() - 0.5) * 0.01,
           lng: userLocation.lng + (Math.random() - 0.5) * 0.01
         },
-        specialties: [getServiceTypeEnum(type.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()))],
+        specialties: [serviceTypeEnum],
         rating: 4.5 + Math.random() * 0.5,
         vehicleInfo: `Van ${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
         isAvailable: true

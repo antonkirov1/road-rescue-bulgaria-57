@@ -15,6 +15,17 @@ interface NewServiceRequestManagerRealLifeProps {
   persistentState: ReturnType<typeof usePersistentServiceRequest>;
 }
 
+const getDisplayName = (serviceType: string): ServiceRequest['type'] => {
+  const mapping: Record<string, ServiceRequest['type']> = {
+    'flat-tyre': 'Flat Tyre',
+    'out-of-fuel': 'Out of Fuel',
+    'car-battery': 'Car Battery',
+    'other-car-problems': 'Other Car Problems',
+    'tow-truck': 'Tow Truck'
+  };
+  return mapping[serviceType] || 'Other Car Problems';
+};
+
 const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLifeProps> = ({
   type,
   open,
@@ -61,8 +72,8 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
   // Create a compatible request object for the UI handler
   const compatibleRequest = currentRequest ? {
     ...currentRequest,
-    userId: userId, // Add the missing userId property
-    type: currentRequest.type,
+    userId: userId,
+    type: getDisplayName(currentRequest.type),
     message: currentRequest.message || `Service request for ${type}`,
     location: { lat: location.lat, lng: location.lng },
     status: currentRequest.status as 'pending' | 'accepted' | 'declined',
