@@ -15,17 +15,28 @@ interface ServiceRequestLogicProps {
 export const useServiceRequestLogic = ({ type, userLocation, onClose }: ServiceRequestLogicProps) => {
   const { user } = useApp();
   const [request, setRequest] = useState<ServiceRequestState>({
-    id: '',
-    type,
-    status: 'pending',
-    userLocation,
-    blacklistedEmployees: [],
-    timestamp: new Date().toISOString(),
-    priceQuote: null,
-    assignedEmployeeName: '',
-    employeeLocation: undefined,
-    etaSeconds: 0
-  });
+  id: '',
+  type,
+  status: 'pending',
+  userLocation,
+  blacklistedEmployees: [],
+  timestamp: new Date().toISOString(),
+  priceQuote: null,
+  assignedEmployeeName: '',
+  employeeLocation: undefined,
+  etaSeconds: 0,
+  message: '',
+  isSubmitting: false,
+  showRealTimeUpdate: false,
+  showPriceQuote: false,
+  declineReason: '',
+  serviceFee: undefined,
+  hasDeclinedOnce: undefined,
+  isWaitingForRevision: undefined,
+  currentEmployeeName: undefined,
+  declinedEmployees: undefined
+});
+
 
   const [showSearching, setShowSearching] = useState(false);
   const [showPriceQuote, setShowPriceQuote] = useState(false);
