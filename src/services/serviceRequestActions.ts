@@ -1,6 +1,6 @@
 
 import { ServiceRequest } from '@/types/newServiceRequest';
-import { employeeIntegrationService, EmployeeResponse } from '@/services/newEmployeeIntegration';
+import { EmployeeResponse } from './newEmployeeIntegration';
 import { toast } from '@/components/ui/use-toast';
 
 export const createServiceRequest = (
@@ -9,12 +9,11 @@ export const createServiceRequest = (
   userId: string
 ): ServiceRequest => {
   return {
-    id: `req_${Date.now()}`,
-    type: type,
+    id: `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    type,
     status: 'pending',
-    userLocation: userLocation,
-    userId: userId,
-    description: `I need ${type} assistance`,
+    userLocation,
+    userId,
     declineCount: 0,
     createdAt: new Date(),
     updatedAt: new Date()
@@ -22,44 +21,34 @@ export const createServiceRequest = (
 };
 
 export const handleAcceptQuote = async (
-  currentRequest: ServiceRequest,
-  assignedEmployee: EmployeeResponse | null,
+  request: ServiceRequest,
+  employee: EmployeeResponse,
   setCurrentRequest: (request: ServiceRequest) => void,
-  setCurrentScreen: (screen: string | null) => void
-) => {
-  if (!currentRequest || !assignedEmployee) return;
-  
+  setCurrentScreen: (screen: string) => void
+): Promise<void> => {
   try {
     const updatedRequest = {
-      ...currentRequest,
-      status: 'accepted' as const
+      ...request,
+      status: 'accepted' as const,
+      updatedAt: new Date()
     };
+    
     setCurrentRequest(updatedRequest);
     setCurrentScreen('show_request_accepted');
     
-    // Notify employee of acceptance
-    if (assignedEmployee) {
-      await employeeIntegrationService.employeeAcceptedRequest(assignedEmployee.id, currentRequest.id);
-    }
-    
     toast({
       title: "Quote Accepted",
-      description: `${assignedEmployee.name} is on the way to your location.`
+      description: `${employee.name} will be with you shortly.`
     });
-    
+
     // Simulate service progression
     setTimeout(() => {
-      setCurrentScreen('show_live_tracking');
+      setCurrentScreen('show_employee_en_route');
     }, 2000);
-    
+
     setTimeout(() => {
-      const completedRequest = {
-        ...updatedRequest,
-        status: 'completed' as const
-      };
-      setCurrentRequest(completedRequest);
       setCurrentScreen('show_service_completed');
-    }, 8000);
+    }, 10000);
     
   } catch (error) {
     console.error('Error accepting quote:', error);
@@ -72,32 +61,26 @@ export const handleAcceptQuote = async (
 };
 
 export const handleCancelRequest = async (
-  currentRequest: ServiceRequest | null,
-  assignedEmployee: EmployeeResponse | null,
+  request: ServiceRequest,
+  employee: EmployeeResponse | null,
   resetState: () => void,
   onClose: () => void
-) => {
-  if (!currentRequest) return;
-  
+): Promise<void> => {
   try {
-    // Notify assigned employee if any
-    if (assignedEmployee) {
-      await employeeIntegrationService.employeeDeclinedRequest(
-        assignedEmployee.id,
-        currentRequest.id,
-        'Customer cancelled request'
-      );
+    if (employee) {
+      console.log(`Canceling request ${request.id} with employee ${employee.name}`);
     }
-    
-    resetState();
-    onClose();
     
     toast({
       title: "Request Cancelled",
       description: "Your service request has been cancelled."
     });
+    
+    resetState();
+    onClose();
+    
   } catch (error) {
-    console.error('Error cancelling request:', error);
+    console.error('Error canceling request:', error);
     toast({
       title: "Error",
       description: "Failed to cancel request. Please try again.",
