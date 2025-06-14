@@ -27,12 +27,13 @@ export class EmployeeAssignmentService {
       const dbBlacklisted = await SimulatedEmployeeBlacklistService.getBlacklistedEmployees(request.id);
       const allBlacklisted = [...request.blacklistedEmployees, ...dbBlacklisted];
       
-      console.log('Finding employee from employee_simulation, blacklisted:', allBlacklisted);
+      console.log('Finding simulated employee, blacklisted:', allBlacklisted);
       
       // Only use employees from employee_simulation table
       const employee = getRandomEmployee(allBlacklisted);
       
       if (!employee) {
+        console.log('No available simulated employees found');
         toast({
           title: "No employees available",
           description: "All simulated employees are currently busy. Please try again later.",
@@ -44,7 +45,7 @@ export class EmployeeAssignmentService {
       console.log('Found simulated employee:', employee.full_name, 'Employee ID:', employee.id);
       
       return {
-        name: employee.full_name,
+        name: employee.full_name, // Use full_name from employee_simulation
         id: employee.id.toString(),
         location: {
           lat: request.userLocation.lat + (Math.random() - 0.5) * 0.02,
@@ -60,12 +61,13 @@ export class EmployeeAssignmentService {
 
   async blacklistEmployee(requestId: string, employeeName: string): Promise<void> {
     try {
+      console.log('Blacklisting simulated employee:', employeeName);
       await SimulatedEmployeeBlacklistService.addToBlacklist(
         requestId,
         employeeName,
         'current_user'
       );
-      console.log('Simulated employee blacklisted:', employeeName);
+      console.log('Simulated employee blacklisted successfully:', employeeName);
     } catch (error) {
       console.error('Error blacklisting simulated employee:', error);
       throw error;

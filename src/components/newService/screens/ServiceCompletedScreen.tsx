@@ -22,6 +22,11 @@ const ServiceCompletedScreen: React.FC<ServiceCompletedScreenProps> = ({
 
   const totalPrice = (request.priceQuote || 0) + 5;
 
+  // Ensure we display the correct employee name
+  const employeeName = request.assignedEmployeeName || 'Unknown Employee';
+
+  console.log('ServiceCompletedScreen - displaying employee name:', employeeName);
+
   return (
     <>
       <DialogHeader>
@@ -53,11 +58,9 @@ const ServiceCompletedScreen: React.FC<ServiceCompletedScreenProps> = ({
               </span>
             </div>
             
-            {request.assignedEmployeeName && (
-              <div className="text-sm text-gray-600">
-                {t('assigned-employee')}: {request.assignedEmployeeName}
-              </div>
-            )}
+            <div className="text-sm text-gray-600">
+              {t('assigned-employee')}: {employeeName}
+            </div>
           </CardContent>
         </Card>
 

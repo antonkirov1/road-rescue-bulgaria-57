@@ -23,7 +23,7 @@ export interface UserHistoryEntry {
 export class UserHistoryService {
   static async addHistoryEntry(entry: Omit<UserHistoryEntry, 'id' | 'created_at'>) {
     try {
-      console.log('Adding history entry:', entry);
+      console.log('Adding history entry with employee name:', entry.employee_name);
       const { data, error } = await supabase
         .from('user_history')
         .insert(entry)
@@ -35,7 +35,7 @@ export class UserHistoryService {
         throw error;
       }
 
-      console.log('Successfully added history entry:', data);
+      console.log('Successfully added history entry with employee:', data.employee_name);
       return data;
     } catch (error) {
       console.error('Error in addHistoryEntry:', error);

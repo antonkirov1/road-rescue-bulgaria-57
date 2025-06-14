@@ -26,19 +26,20 @@ export const useRequestSimulation = () => {
     blacklistedEmployees: string[] = []
   ) => {
     try {
+      console.log('Starting employee simulation...');
       await loadEmployees();
       
       // Load blacklisted employees from database for this request
       const dbBlacklistedEmployees = await SimulatedEmployeeBlacklistService.getBlacklistedEmployees(requestId);
       const allBlacklistedEmployees = [...blacklistedEmployees, ...dbBlacklistedEmployees];
       
-      console.log('Finding employee with blacklist:', allBlacklistedEmployees);
+      console.log('Finding simulated employee with blacklist:', allBlacklistedEmployees);
       
       // Get employee from employee_simulation table only
       const employee = getRandomEmployee(allBlacklistedEmployees);
       
       if (!employee) {
-        console.log('No available employees found in employee_simulation table');
+        console.log('No available simulated employees found');
         setStatus('declined');
         setDeclineReason('No available employees. Please try again later.');
         setShowRealTimeUpdate(false);
@@ -46,9 +47,9 @@ export const useRequestSimulation = () => {
         return;
       }
 
-      console.log('Selected employee from simulation:', employee.full_name, 'ID:', employee.id);
+      console.log('Selected simulated employee:', employee.full_name, 'ID:', employee.id);
       
-      // Set the employee name from the employee_simulation table
+      // Set the employee name from the employee_simulation table - this is crucial!
       setCurrentEmployeeName(employee.full_name);
 
       // Simulate employee response delay (2-5 seconds)
@@ -95,6 +96,7 @@ export const useRequestSimulation = () => {
     userLocation: { lat: number; lng: number },
     employeeStartLocation: { lat: number; lng: number },
     etaSeconds: number,
+    serviceType: ServiceType,
     onEtaUpdate: (remaining: number) => void,
     onLocationUpdate: (location: { lat: number; lng: number }) => void,
     onCompletion: () => void
@@ -136,12 +138,13 @@ export const useRequestSimulation = () => {
         // Store completion in user_history before calling onCompletion
         setTimeout(async () => {
           try {
+            console.log('Storing completed simulated service in history with employee:', employeeName);
             await UserHistoryService.addHistoryEntry({
               user_id: user.username,
               username: user.username,
-              service_type: 'emergency', // This should be passed as parameter
+              service_type: serviceType,
               status: 'completed',
-              employee_name: employeeName,
+              employee_name: employeeName, // This should be the full_name from employee_simulation
               price_paid: priceQuote,
               service_fee: 5,
               total_price: priceQuote + 5,
@@ -152,10 +155,10 @@ export const useRequestSimulation = () => {
               longitude: userLocation.lng
             });
 
-            console.log('Service completion stored in user history');
+            console.log('Simulated service completion stored in user history with employee name:', employeeName);
             await UserHistoryService.cleanupOldHistory(user.username, user.username);
           } catch (error) {
-            console.error('Error storing completed request:', error);
+            console.error('Error storing completed simulated request:', error);
           }
           
           onCompletion();

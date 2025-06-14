@@ -15,7 +15,7 @@ export const useEmployeeSimulation = () => {
 
   const loadEmployees = useMemo(() => async () => {
     try {
-      console.log('Loading employees from employee_simulation table...');
+      console.log('Loading simulated employees from employee_simulation table...');
       const { data, error } = await supabase
         .from('employee_simulation')
         .select('id, employee_number, full_name, created_at')
@@ -44,7 +44,8 @@ export const useEmployeeSimulation = () => {
       !excludedNames.includes(emp.full_name)
     );
     
-    console.log('Available simulated employees:', availableEmployees.length, 'Excluded:', excludedNames);
+    console.log('Available simulated employees after filtering:', availableEmployees.length, 'Excluded:', excludedNames);
+    console.log('Available employees:', availableEmployees.map(emp => emp.full_name));
     
     if (availableEmployees.length === 0) {
       console.log('No available simulated employees found');
