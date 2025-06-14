@@ -41,7 +41,9 @@ const getDisplayName = (serviceType: ServiceType): ServiceRequest['type'] => {
     'out-of-fuel': 'Out of Fuel',
     'car-battery': 'Car Battery',
     'other-car-problems': 'Other Car Problems',
-    'tow-truck': 'Tow Truck'
+    'tow-truck': 'Tow Truck',
+    'emergency': 'Other Car Problems', // Map to closest equivalent
+    'support': 'Other Car Problems' // Map to closest equivalent
   };
   return mapping[serviceType] || 'Other Car Problems';
 };

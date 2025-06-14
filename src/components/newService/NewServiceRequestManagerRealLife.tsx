@@ -26,6 +26,18 @@ const getDisplayName = (serviceType: string): ServiceRequest['type'] => {
   return mapping[serviceType] || 'Other Car Problems';
 };
 
+const mapToServiceRequestStatus = (status: string): ServiceRequest['status'] => {
+  const mapping: Record<string, ServiceRequest['status']> = {
+    'pending': 'pending',
+    'accepted': 'accepted',
+    'declined': 'quote_declined',
+    'in_progress': 'in_progress',
+    'completed': 'completed',
+    'cancelled': 'cancelled'
+  };
+  return mapping[status] || 'pending';
+};
+
 const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLifeProps> = ({
   type,
   open,
@@ -76,7 +88,7 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
     type: getDisplayName(currentRequest.type),
     message: currentRequest.message || `Service request for ${type}`,
     location: { lat: location.lat, lng: location.lng },
-    status: currentRequest.status as 'pending' | 'accepted' | 'declined',
+    status: mapToServiceRequestStatus(currentRequest.status),
     timestamp: currentRequest.timestamp || new Date().toISOString(),
     username: userId
   } : null;
