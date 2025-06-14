@@ -85,7 +85,14 @@ export const useServiceRequestLogicRealLife = ({
         location: {
           lat: userLocation.lat + (Math.random() - 0.5) * 0.01,
           lng: userLocation.lng + (Math.random() - 0.5) * 0.01
-        }
+        },
+        specialties: [request.type], // Use the service type as specialty
+        rating: 4.5 + Math.random() * 0.5, // Random rating between 4.5-5.0
+        vehicleInfo: {
+          type: 'Service Van',
+          licensePlate: `SV${Math.random().toString(36).substr(2, 4).toUpperCase()}`
+        },
+        isAvailable: true
       };
       
       setAssignedEmployee(employeeResponse);
