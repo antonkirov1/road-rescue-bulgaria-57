@@ -1,6 +1,6 @@
 
-import { useState, useEffect } from 'react';
 import { ServiceType } from './types/serviceRequestState';
+import { ServiceRequestState } from '@/services/serviceRequest/types';
 import { ServiceRequestState } from '@/services/serviceRequest/types';
 import { toast } from "@/components/ui/use-toast";
 import { UserHistoryService } from '@/services/userHistoryService';
