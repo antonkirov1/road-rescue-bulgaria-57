@@ -5,9 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { EmployeeAccountService, EmployeeAccount } from '@/services/employeeAccountService';
+import { usePasswordValidation, useConfirmPasswordValidation } from '@/hooks/useAuthValidation';
+import { useTranslation } from '@/utils/translations';
+import { useApp } from '@/contexts/AppContext';
 
 interface EmployeeFormProps {
   employee?: EmployeeAccount;
@@ -16,6 +19,9 @@ interface EmployeeFormProps {
 }
 
 const EmployeeForm: React.FC<EmployeeFormProps> = ({ employee, onSubmit, onCancel }) => {
+  const { language } = useApp();
+  const t = useTranslation(language);
+  
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -25,6 +31,12 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ employee, onSubmit, onCance
     is_available: true
   });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Password validation hooks
+  const passwordValidation = usePasswordValidation(t);
+  const confirmPasswordValidation = useConfirmPasswordValidation(passwordValidation.value, t);
 
   useEffect(() => {
     if (employee) {
@@ -51,16 +63,33 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ employee, onSubmit, onCance
       return;
     }
 
+    // For new employees, validate password
+    if (!employee) {
+      if (!passwordValidation.isValid || !confirmPasswordValidation.isValid) {
+        toast({
+          title: "Validation Error",
+          description: "Please fix password validation errors before submitting.",
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+
     setLoading(true);
     try {
+      const employeeData = {
+        ...formData,
+        ...((!employee && passwordValidation.value) && { password: passwordValidation.value })
+      };
+
       if (employee) {
-        await EmployeeAccountService.updateEmployee(employee.id, formData);
+        await EmployeeAccountService.updateEmployee(employee.id, employeeData);
         toast({
           title: "Employee Updated",
           description: `${formData.username} has been updated successfully.`
         });
       } else {
-        await EmployeeAccountService.createEmployeeAccount(formData);
+        await EmployeeAccountService.createEmployeeAccount(employeeData);
         toast({
           title: "Employee Created",
           description: `${formData.username} has been created successfully.`
@@ -176,6 +205,69 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ employee, onSubmit, onCance
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Password fields - only show for new employees */}
+              {!employee && (
+                <>
+                  <div>
+                    <Label htmlFor="password">Password *</Label>
+                    <div className="relative">
+                      <Input
+                        id="password"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Enter password"
+                        value={passwordValidation.value}
+                        onChange={(e) => passwordValidation.setValue(e.target.value)}
+                        className={`pr-10 ${passwordValidation.error ? 'border-red-500' : ''}`}
+                        required
+                      />
+                      <button
+                        type="button"
+                        className="absolute inset-y-0 right-0 flex items-center px-3"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff size={18} className="text-gray-500" />
+                        ) : (
+                          <Eye size={18} className="text-gray-500" />
+                        )}
+                      </button>
+                    </div>
+                    {passwordValidation.error && (
+                      <p className="text-sm text-red-600 mt-1">{passwordValidation.error}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="confirmPassword">Confirm Password *</Label>
+                    <div className="relative">
+                      <Input
+                        id="confirmPassword"
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        placeholder="Confirm password"
+                        value={confirmPasswordValidation.value}
+                        onChange={(e) => confirmPasswordValidation.setValue(e.target.value)}
+                        className={`pr-10 ${confirmPasswordValidation.error ? 'border-red-500' : ''}`}
+                        required
+                      />
+                      <button
+                        type="button"
+                        className="absolute inset-y-0 right-0 flex items-center px-3"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff size={18} className="text-gray-500" />
+                        ) : (
+                          <Eye size={18} className="text-gray-500" />
+                        )}
+                      </button>
+                    </div>
+                    {confirmPasswordValidation.error && (
+                      <p className="text-sm text-red-600 mt-1">{confirmPasswordValidation.error}</p>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
