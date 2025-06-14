@@ -1,11 +1,18 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useCallback } from 'react';
 import { ServiceRequest } from '@/types/newServiceRequest';
-import { toast } from '@/components/ui/use-toast';
-import { EmployeeResponse } from '@/components/service/types/serviceRequestState';
-import { useQuoteHandling } from '@/hooks/useQuoteHandling';
-import { createServiceRequest, handleAcceptQuote, handleCancelRequest } from '@/services/serviceRequestActions';
-import { usePersistentServiceRequest } from '@/hooks/usePersistentServiceRequest';
 import { ServiceType } from '@/components/service/types/serviceRequestState';
+import { useServiceRequestManagerRealLife } from '@/hooks/useServiceRequestManagerRealLife';
+
+interface RealLifeEmployee {
+  id: string;
+  name: string;
+  location: { lat: number; lng: number };
+  specialties: ServiceType[];
+  rating: number;
+  vehicleInfo: string;
+  isAvailable: boolean;
+}
 
 interface UseServiceRequestLogicRealLifeProps {
   type: ServiceRequest['type'];
@@ -14,8 +21,19 @@ interface UseServiceRequestLogicRealLifeProps {
   userId: string;
   onClose: () => void;
   onMinimize: () => void;
-  persistentState: ReturnType<typeof usePersistentServiceRequest>;
+  persistentState: any;
 }
+
+const getServiceTypeEnum = (displayName: string): ServiceType => {
+  const mapping: Record<string, ServiceType> = {
+    'Flat Tyre': 'flat-tyre',
+    'Out of Fuel': 'out-of-fuel',
+    'Car Battery': 'car-battery',
+    'Other Car Problems': 'other-car-problems',
+    'Tow Truck': 'tow-truck'
+  };
+  return mapping[displayName] || 'other-car-problems';
+};
 
 export const useServiceRequestLogicRealLife = ({
   type,
@@ -26,219 +44,148 @@ export const useServiceRequestLogicRealLife = ({
   onMinimize,
   persistentState
 }: UseServiceRequestLogicRealLifeProps) => {
-  const [currentScreen, setCurrentScreen] = useState<'initial' | 'finding-employee' | 'price-quote' | 'waiting-revision' | 'employee-on-way' | 'employee-arrived' | 'service-in-progress' | 'completed'>('initial');
-  const [currentRequest, setCurrentRequest] = useState<ServiceRequest | null>(null);
-  const [currentEmployee, setCurrentEmployee] = useState<EmployeeResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [currentScreen, setCurrentScreen] = useState<string | null>(null);
+  const [assignedEmployee, setAssignedEmployee] = useState<RealLifeEmployee | null>(null);
+  const [showPriceQuote, setShowPriceQuote] = useState(false);
+  const [priceQuote, setPriceQuote] = useState<number | null>(null);
+  const [hasDeclinedOnce, setHasDeclinedOnce] = useState(false);
+  const [isWaitingForRevision, setIsWaitingForRevision] = useState(false);
 
-  const {
-    showPriceQuote,
-    priceQuote,
-    employeeName,
-    hasDeclinedOnce,
-    showWaitingForRevision,
-    handleAcceptQuoteAction,
-    handleDeclineQuoteAction,
-    resetQuoteState
-  } = useQuoteHandling({
-    onAcceptQuote: () => {
-      console.log('Quote accepted in real-life mode');
-      setCurrentScreen('employee-on-way');
-    },
-    onDeclineQuote: () => {
-      console.log('Quote declined in real-life mode - finding new employee');
-      setCurrentScreen('finding-employee');
-    },
-    onCancelRequest: () => {
-      console.log('Request cancelled in real-life mode');
-      handleClose();
+  const { currentRequest, createRequest, acceptQuote, declineQuote, cancelRequest } = useServiceRequestManagerRealLife();
+
+  useEffect(() => {
+    if (open && !currentRequest) {
+      handleCreateRequest();
     }
-  });
+  }, [open, type]);
 
-  const [employeeManager] = useState({
-    loadEmployees: async () => {},
-    findEmployee: async () => {}
-  });
-
-  const getServiceTypeEnum = (serviceType: string): ServiceType => {
-    const serviceTypeMap: Record<string, ServiceType> = {
-      'Flat Tyre': 'flat-tyre',
-      'Out of Fuel': 'out-of-fuel',
-      'Car Battery': 'car-battery',
-      'Other Car Problems': 'other-car-problems',
-      'Tow Truck': 'tow-truck'
-    };
-    
-    if (Object.values(serviceTypeMap).includes(serviceType as ServiceType)) {
-      return serviceType as ServiceType;
-    }
-    
-    return serviceTypeMap[serviceType] || 'other-car-problems';
-  };
-
-  const findEmployee = async (request: ServiceRequest) => {
-    console.log('Finding real-life employee for request:', request.id);
-    
+  const handleCreateRequest = useCallback(async () => {
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      setCurrentScreen('show_creating_request');
       
-      const employeeResponse: EmployeeResponse = {
-        id: `emp-${Date.now()}`,
+      const requestId = await createRequest(type, userLocation, `Service request for ${type}`);
+      
+      // Simulate finding an employee
+      setTimeout(() => {
+        setCurrentScreen('show_searching_technician');
+        findEmployee();
+      }, 1500);
+      
+    } catch (error) {
+      console.error('Error creating request:', error);
+    }
+  }, [type, userLocation, createRequest]);
+
+  const findEmployee = useCallback(() => {
+    // Simulate finding a real employee
+    setTimeout(() => {
+      const mockEmployee: RealLifeEmployee = {
+        id: 'real-emp-' + Math.random().toString(36).substr(2, 9),
         name: `Real Employee ${Math.floor(Math.random() * 100)}`,
         location: {
           lat: userLocation.lat + (Math.random() - 0.5) * 0.01,
           lng: userLocation.lng + (Math.random() - 0.5) * 0.01
         },
-        specialties: [getServiceTypeEnum(request.type)],
+        specialties: [getServiceTypeEnum(type.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()))],
         rating: 4.5 + Math.random() * 0.5,
-        vehicleInfo: `Service Van - License: ABC${Math.floor(Math.random() * 1000)}`,
+        vehicleInfo: `Van ${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
         isAvailable: true
       };
-      
-      console.log('Real-life employee found:', employeeResponse);
-      setCurrentEmployee(employeeResponse);
-      
-      const quote = 50 + Math.random() * 100;
-      handleAcceptQuoteAction(employeeResponse, quote);
-      setCurrentScreen('price-quote');
-      
-    } catch (error) {
-      console.error('Error finding real-life employee:', error);
-      toast({
-        title: "Error",
-        description: "Failed to find an available employee. Please try again.",
-        variant: "destructive"
-      });
-      setCurrentScreen('initial');
-    }
-  };
 
-  useEffect(() => {
-    if (open && !currentRequest) {
-      console.log('Real-life service request opened:', type);
-      handleCreateRequest();
-    }
-  }, [open, type]);
+      setAssignedEmployee(mockEmployee);
+      setCurrentScreen('show_employee_found');
+      
+      // Generate quote after employee is found
+      setTimeout(() => {
+        generateQuote(mockEmployee);
+      }, 2000);
+      
+    }, 3000);
+  }, [userLocation, type]);
 
-  const handleCreateRequest = async () => {
-    if (isLoading) return;
-    
-    setIsLoading(true);
-    setCurrentScreen('finding-employee');
-    
+  const generateQuote = useCallback((employee: RealLifeEmployee) => {
+    const basePrice = Math.floor(Math.random() * 50) + 50; // 50-100 BGN
+    setPriceQuote(basePrice);
+    setShowPriceQuote(true);
+    setCurrentScreen('show_price_quote_received');
+  }, []);
+
+  const handleAcceptQuote = useCallback(async () => {
     try {
-      const requestId = await createServiceRequest(type, userLocation, userId, 'Finding real employee...');
+      await acceptQuote();
+      setCurrentScreen('show_service_in_progress');
       
-      const newRequest: ServiceRequest = {
-        id: requestId,
-        type,
-        userId,
-        userLocation,
-        status: 'finding-employee',
-        description: 'Finding real employee...',
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
+      // Simulate service completion
+      setTimeout(() => {
+        setCurrentScreen('show_service_completed');
+      }, 10000);
       
-      setCurrentRequest(newRequest);
-      persistentState.setCurrentRequest(newRequest);
-      
-      await findEmployee(newRequest);
-      
-    } catch (error) {
-      console.error('Error creating real-life service request:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create service request. Please try again.",
-        variant: "destructive"
-      });
-      setCurrentScreen('initial');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleAcceptQuote = async () => {
-    if (!currentRequest || !currentEmployee) return;
-    
-    try {
-      await handleAcceptQuote(currentRequest.id, priceQuote);
-      setCurrentScreen('employee-on-way');
-      
-      toast({
-        title: "Quote Accepted",
-        description: `${employeeName} is on the way to your location.`,
-      });
     } catch (error) {
       console.error('Error accepting quote:', error);
-      toast({
-        title: "Error",
-        description: "Failed to accept quote. Please try again.",
-        variant: "destructive"
-      });
     }
-  };
+  }, [acceptQuote]);
 
-  const handleDeclineQuote = async () => {
-    if (!currentRequest) return;
-    
+  const handleDeclineQuote = useCallback(async () => {
     try {
-      setCurrentScreen('finding-employee');
-      await findEmployee(currentRequest);
+      if (!hasDeclinedOnce) {
+        // First decline - offer revision
+        setHasDeclinedOnce(true);
+        setIsWaitingForRevision(true);
+        setCurrentScreen('show_waiting_for_revision');
+        
+        // Simulate revised quote
+        setTimeout(() => {
+          const revisedPrice = priceQuote ? Math.floor(priceQuote * 0.8) : 40;
+          setPriceQuote(revisedPrice);
+          setIsWaitingForRevision(false);
+          setCurrentScreen('show_revised_price_quote');
+        }, 3000);
+        
+      } else {
+        // Second decline - find new employee
+        await declineQuote();
+        setAssignedEmployee(null);
+        setShowPriceQuote(false);
+        setPriceQuote(null);
+        setHasDeclinedOnce(false);
+        setCurrentScreen('show_searching_technician');
+        findEmployee();
+      }
     } catch (error) {
       console.error('Error declining quote:', error);
-      toast({
-        title: "Error",
-        description: "Failed to find alternative employee. Please try again.",
-        variant: "destructive"
-      });
     }
-  };
+  }, [hasDeclinedOnce, priceQuote, declineQuote, findEmployee]);
 
-  const handleCancelRequest = async () => {
-    if (!currentRequest) return;
-    
+  const handleCancelRequest = useCallback(async () => {
     try {
-      await handleCancelRequest(currentRequest.id);
-      handleClose();
-      
-      toast({
-        title: "Request Cancelled",
-        description: "Your service request has been cancelled.",
-      });
+      await cancelRequest();
+      setCurrentScreen(null);
+      onClose();
     } catch (error) {
-      console.error('Error cancelling request:', error);
-      toast({
-        title: "Error",
-        description: "Failed to cancel request. Please try again.",
-        variant: "destructive"
-      });
+      console.error('Error canceling request:', error);
     }
-  };
+  }, [cancelRequest, onClose]);
 
-  const handleClose = () => {
-    setCurrentRequest(null);
-    setCurrentEmployee(null);
-    setCurrentScreen('initial');
-    resetQuoteState();
-    persistentState.resetState();
-    onClose();
-  };
+  const handleClose = useCallback(() => {
+    if (currentRequest && !['completed', 'cancelled'].includes(currentRequest.status)) {
+      handleCancelRequest();
+    } else {
+      onClose();
+    }
+  }, [currentRequest, handleCancelRequest, onClose]);
 
-  const handleMinimize = () => {
+  const handleMinimize = useCallback(() => {
     onMinimize();
-  };
+  }, [onMinimize]);
 
   return {
     currentScreen,
     currentRequest,
-    currentEmployee,
-    isLoading,
+    assignedEmployee,
     showPriceQuote,
     priceQuote,
-    employeeName,
     hasDeclinedOnce,
-    showWaitingForRevision,
+    isWaitingForRevision,
     handleAcceptQuote,
     handleDeclineQuote,
     handleCancelRequest,
