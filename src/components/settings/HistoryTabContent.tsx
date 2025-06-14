@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { History as HistoryIcon, MapPin, Clock, User, DollarSign } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { History as HistoryIcon, MapPin, Clock, User, DollarSign, RefreshCw } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { UserHistoryService, UserHistoryEntry } from '@/services/userHistoryService';
 import { getServiceIconAndTitle, ServiceType } from '@/components/service/serviceIcons';
@@ -37,6 +38,10 @@ const HistoryTabContent: React.FC<HistoryTabContentProps> = ({ t }) => {
     }
   };
 
+  const handleRefresh = () => {
+    loadUserHistory();
+  };
+
   const openGoogleMaps = (lat: number, lng: number) => {
     const url = `https://www.google.com/maps?q=${lat},${lng}`;
     window.open(url, '_blank');
@@ -69,6 +74,15 @@ const HistoryTabContent: React.FC<HistoryTabContentProps> = ({ t }) => {
         <p className="text-sm text-muted-foreground mb-2">
           {t('requests-desc')}
         </p>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleRefresh}
+          className="mb-2"
+        >
+          <RefreshCw className="h-4 w-4 mr-1" />
+          {t('refresh')}
+        </Button>
       </div>
       
       <ScrollArea className="flex-grow">

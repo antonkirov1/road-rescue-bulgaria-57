@@ -132,7 +132,34 @@ export const useRequestSimulation = () => {
       
       if (step >= totalSteps) {
         clearInterval(movementInterval);
-        setTimeout(onCompletion, 5000);
+        
+        // Store completion in user_history before calling onCompletion
+        setTimeout(async () => {
+          try {
+            await UserHistoryService.addHistoryEntry({
+              user_id: user.username,
+              username: user.username,
+              service_type: 'emergency', // This should be passed as parameter
+              status: 'completed',
+              employee_name: employeeName,
+              price_paid: priceQuote,
+              service_fee: 5,
+              total_price: priceQuote + 5,
+              request_date: new Date().toISOString(),
+              completion_date: new Date().toISOString(),
+              address_street: 'Sofia Center, Bulgaria',
+              latitude: userLocation.lat,
+              longitude: userLocation.lng
+            });
+
+            console.log('Service completion stored in user history');
+            await UserHistoryService.cleanupOldHistory(user.username, user.username);
+          } catch (error) {
+            console.error('Error storing completed request:', error);
+          }
+          
+          onCompletion();
+        }, 5000);
       }
     }, 2000);
     
