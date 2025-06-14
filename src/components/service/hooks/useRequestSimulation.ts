@@ -46,7 +46,7 @@ export const useRequestSimulation = () => {
         return;
       }
 
-      console.log('Selected employee from simulation:', employee.full_name);
+      console.log('Selected employee from simulation:', employee.full_name, 'ID:', employee.id);
       
       // Set the employee name from the employee_simulation table
       setCurrentEmployeeName(employee.full_name);

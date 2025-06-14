@@ -41,10 +41,10 @@ export class EmployeeAssignmentService {
         return null;
       }
       
-      console.log('Found simulated employee:', employee.full_name);
+      console.log('Found simulated employee:', employee.full_name, 'Employee ID:', employee.id);
       
       return {
-        name: employee.full_name, // Use the full_name from employee_simulation
+        name: employee.full_name,
         id: employee.id.toString(),
         location: {
           lat: request.userLocation.lat + (Math.random() - 0.5) * 0.02,
@@ -63,7 +63,7 @@ export class EmployeeAssignmentService {
       await SimulatedEmployeeBlacklistService.addToBlacklist(
         requestId,
         employeeName,
-        'current_user' // This should be actual user ID
+        'current_user'
       );
       console.log('Simulated employee blacklisted:', employeeName);
     } catch (error) {

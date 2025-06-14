@@ -27,7 +27,8 @@ const PriceQuoteReceivedScreen: React.FC<PriceQuoteReceivedScreenProps> = ({
   const t = useTranslation(language);
   const [showCancelWarning, setShowCancelWarning] = useState(false);
 
-  const employeeName = request.assignedEmployeeName || `Employee #${request.assignedEmployeeId}`;
+  // Use assignedEmployeeName if available, otherwise fall back to a generic display
+  const employeeName = request.assignedEmployeeName || 'Assigned Technician';
   const serviceFee = 5;
   const totalPrice = (request.priceQuote || 0) + serviceFee;
 

@@ -26,7 +26,7 @@ export const useEmployeeSimulation = () => {
         return;
       }
 
-      console.log('Loaded simulated employees:', data?.length || 0);
+      console.log('Loaded simulated employees:', data?.length || 0, data);
       setEmployees(data || []);
     } catch (error) {
       console.error('Error in loadEmployees:', error);
@@ -52,7 +52,7 @@ export const useEmployeeSimulation = () => {
     }
     
     const selectedEmployee = availableEmployees[Math.floor(Math.random() * availableEmployees.length)];
-    console.log('Selected simulated employee:', selectedEmployee.full_name);
+    console.log('Selected simulated employee:', selectedEmployee.full_name, 'ID:', selectedEmployee.id);
     
     return selectedEmployee;
   }, [employees]);
