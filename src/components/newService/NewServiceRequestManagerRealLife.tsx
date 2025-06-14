@@ -90,7 +90,9 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
     location: { lat: location.lat, lng: location.lng },
     status: mapToServiceRequestStatus(currentRequest.status),
     timestamp: currentRequest.timestamp || new Date().toISOString(),
-    username: userId
+    username: userId,
+    createdAt: currentRequest.timestamp ? new Date(currentRequest.timestamp) : new Date(),
+    updatedAt: currentRequest.timestamp ? new Date(currentRequest.timestamp) : new Date()
   } : null;
 
   return (
