@@ -90,23 +90,25 @@ export const useServiceRequestLogicRealLife = ({
     }
 
     switch (currentRequest.status) {
-      case 'searching_for_employee':
+      case 'pending':
+      case 'request_created':
         setCurrentScreen('show_searching_technician');
         break;
-      case 'no_employees_available':
-        setCurrentScreen('show_no_technicians_available');
+      // 'no_employees_available' is a simulation state, and there's no equivalent in the real backend state.
+      // The service manager should handle this case, likely by canceling the request.
+      case 'quote_received':
+        if (currentRequest.hasReceivedRevision) {
+          setCurrentScreen('show_revised_price_quote');
+        } else {
+          setCurrentScreen('show_price_quote_received');
+        }
         break;
-      case 'quote_provided':
-        setCurrentScreen('show_price_quote_received');
-        break;
-      case 'quote_revised':
-        setCurrentScreen('show_revised_price_quote');
-        break;
-      case 'accepted':
+      case 'request_accepted':
+      case 'quote_accepted':
       case 'employee_assigned':
+      case 'accepted':
         setCurrentScreen('show_request_accepted');
         break;
-      case 'employee_en_route':
       case 'in_progress':
         setCurrentScreen('show_live_tracking');
         break;
@@ -115,6 +117,7 @@ export const useServiceRequestLogicRealLife = ({
         break;
       case 'cancelled':
       case 'quote_declined':
+      case 'declined':
         onClose();
         break;
       default:
