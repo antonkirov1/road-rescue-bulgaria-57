@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { ServiceRequest } from '@/types/newServiceRequest';
 import { ServiceType } from '@/components/service/types/serviceRequestState';
@@ -58,83 +57,75 @@ export const useServiceRequestLogicRealLife = ({
   persistentState
 }: UseServiceRequestLogicRealLifeProps) => {
   const [currentScreen, setCurrentScreen] = useState<string | null>(null);
-  const [assignedEmployee, setAssignedEmployee] = useState<RealLifeEmployee | null>(null);
-  const [showPriceQuote, setShowPriceQuote] = useState(false);
-  const [priceQuote, setPriceQuote] = useState<number | null>(null);
-  const [hasDeclinedOnce, setHasDeclinedOnce] = useState(false);
-  const [isWaitingForRevision, setIsWaitingForRevision] = useState(false);
-
   const { currentRequest, createRequest, acceptQuote, declineQuote, cancelRequest } = useServiceRequestManagerRealLife();
 
   useEffect(() => {
     if (open && !currentRequest) {
       handleCreateRequest();
     }
-  }, [open, type]);
+  }, [open, currentRequest, type]);
 
   const handleCreateRequest = useCallback(async () => {
     try {
       setCurrentScreen('show_creating_request');
-      
       const serviceTypeEnum = getServiceTypeEnum(type);
-      const requestId = await createRequest(serviceTypeEnum, userLocation, `Service request for ${type}`);
-      
-      // Simulate finding an employee
-      setTimeout(() => {
-        setCurrentScreen('show_searching_technician');
-        findEmployee();
-      }, 1500);
-      
+      await createRequest(serviceTypeEnum, userLocation, `Service request for ${type}`);
     } catch (error) {
       console.error('Error creating request:', error);
+      onClose();
     }
-  }, [type, userLocation, createRequest]);
+  }, [type, userLocation, createRequest, onClose]);
 
-  const findEmployee = useCallback(() => {
-    // Simulate finding a real employee
-    setTimeout(() => {
-      const serviceTypeEnum = getServiceTypeEnum(type);
-      const mockEmployee: RealLifeEmployee = {
-        id: 'real-emp-' + Math.random().toString(36).substr(2, 9),
-        name: `Real Employee ${Math.floor(Math.random() * 100)}`,
-        location: {
-          lat: userLocation.lat + (Math.random() - 0.5) * 0.01,
-          lng: userLocation.lng + (Math.random() - 0.5) * 0.01
-        },
-        specialties: [serviceTypeEnum],
-        rating: 4.5 + Math.random() * 0.5,
-        vehicleInfo: `Van ${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
-        isAvailable: true
-      };
+  useEffect(() => {
+    if (!open) {
+      setCurrentScreen(null);
+      return;
+    }
 
-      setAssignedEmployee(mockEmployee);
-      setCurrentScreen('show_employee_found');
-      
-      // Generate quote after employee is found
-      setTimeout(() => {
-        generateQuote(mockEmployee);
-      }, 2000);
-      
-    }, 3000);
-  }, [userLocation, type]);
+    if (!currentRequest) {
+      if (!currentScreen) {
+        setCurrentScreen('show_creating_request');
+      }
+      return;
+    }
 
-  const generateQuote = useCallback((employee: RealLifeEmployee) => {
-    const basePrice = Math.floor(Math.random() * 50) + 50; // 50-100 BGN
-    setPriceQuote(basePrice);
-    setShowPriceQuote(true);
-    setCurrentScreen('show_price_quote_received');
-  }, []);
+    switch (currentRequest.status) {
+      case 'searching_for_employee':
+        setCurrentScreen('show_searching_technician');
+        break;
+      case 'no_employees_available':
+        setCurrentScreen('show_no_technicians_available');
+        break;
+      case 'quote_provided':
+        setCurrentScreen('show_price_quote_received');
+        break;
+      case 'quote_revised':
+        setCurrentScreen('show_revised_price_quote');
+        break;
+      case 'accepted':
+      case 'employee_assigned':
+        setCurrentScreen('show_request_accepted');
+        break;
+      case 'employee_en_route':
+      case 'in_progress':
+        setCurrentScreen('show_live_tracking');
+        break;
+      case 'completed':
+        setCurrentScreen('show_service_completed');
+        break;
+      case 'cancelled':
+      case 'quote_declined':
+        onClose();
+        break;
+      default:
+        setCurrentScreen(null);
+        break;
+    }
+  }, [currentRequest, open, onClose, currentScreen]);
 
   const handleAcceptQuote = useCallback(async () => {
     try {
       await acceptQuote();
-      setCurrentScreen('show_service_in_progress');
-      
-      // Simulate service completion
-      setTimeout(() => {
-        setCurrentScreen('show_service_completed');
-      }, 10000);
-      
     } catch (error) {
       console.error('Error accepting quote:', error);
     }
@@ -142,47 +133,22 @@ export const useServiceRequestLogicRealLife = ({
 
   const handleDeclineQuote = useCallback(async () => {
     try {
-      if (!hasDeclinedOnce) {
-        // First decline - offer revision
-        setHasDeclinedOnce(true);
-        setIsWaitingForRevision(true);
-        setCurrentScreen('show_waiting_for_revision');
-        
-        // Simulate revised quote
-        setTimeout(() => {
-          const revisedPrice = priceQuote ? Math.floor(priceQuote * 0.8) : 40;
-          setPriceQuote(revisedPrice);
-          setIsWaitingForRevision(false);
-          setCurrentScreen('show_revised_price_quote');
-        }, 3000);
-        
-      } else {
-        // Second decline - find new employee
-        await declineQuote();
-        setAssignedEmployee(null);
-        setShowPriceQuote(false);
-        setPriceQuote(null);
-        setHasDeclinedOnce(false);
-        setCurrentScreen('show_searching_technician');
-        findEmployee();
-      }
+      await declineQuote();
     } catch (error) {
       console.error('Error declining quote:', error);
     }
-  }, [hasDeclinedOnce, priceQuote, declineQuote, findEmployee]);
+  }, [declineQuote]);
 
   const handleCancelRequest = useCallback(async () => {
     try {
       await cancelRequest();
-      setCurrentScreen(null);
-      onClose();
     } catch (error) {
       console.error('Error canceling request:', error);
     }
-  }, [cancelRequest, onClose]);
+  }, [cancelRequest]);
 
   const handleClose = useCallback(() => {
-    if (currentRequest && !['completed', 'cancelled'].includes(currentRequest.status)) {
+    if (currentRequest && !['completed', 'cancelled', 'quote_declined'].includes(currentRequest.status)) {
       handleCancelRequest();
     } else {
       onClose();
@@ -196,11 +162,6 @@ export const useServiceRequestLogicRealLife = ({
   return {
     currentScreen,
     currentRequest,
-    assignedEmployee,
-    showPriceQuote,
-    priceQuote,
-    hasDeclinedOnce,
-    isWaitingForRevision,
     handleAcceptQuote,
     handleDeclineQuote,
     handleCancelRequest,
