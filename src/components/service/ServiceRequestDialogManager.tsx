@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import ServiceRequestDialog from './ServiceRequestDialog';
 import ServiceRequestForm from './ServiceRequestForm';
 import ServiceRequestStatus from './ServiceRequestStatus';
 import PriceQuoteDialog from './PriceQuoteDialog';
+import CancelRequestWarningDialog from './CancelRequestWarningDialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,6 +56,7 @@ const ServiceRequestDialogManager: React.FC<ServiceRequestDialogManagerProps> = 
 }) => {
   const { language } = useApp();
   const t = useTranslation(language);
+  const [showCancelWarning, setShowCancelWarning] = useState(false);
   
   const getStatusForDisplay = () => {
     if (!currentRequest) return 'pending';
@@ -83,6 +85,19 @@ const ServiceRequestDialogManager: React.FC<ServiceRequestDialogManagerProps> = 
       return 'Request was cancelled or no employees available.';
     }
     return '';
+  };
+
+  const handleCancelRequest = () => {
+    setShowCancelWarning(true);
+  };
+
+  const handleConfirmCancel = () => {
+    setShowCancelWarning(false);
+    actions.confirmCancelRequest();
+  };
+
+  const handleCancelWarningClose = () => {
+    setShowCancelWarning(false);
   };
   
   // Determine which dialog should be active (only one at a time)
@@ -162,12 +177,19 @@ const ServiceRequestDialogManager: React.FC<ServiceRequestDialogManagerProps> = 
           priceQuote={currentRequest.currentQuote.amount}
           onAccept={actions.handleAcceptQuote}
           onDecline={actions.handleDeclineQuote}
-          onCancelRequest={actions.confirmCancelRequest}
+          onCancelRequest={handleCancelRequest}
           hasDeclinedOnce={currentRequest.declineCount > 0 || currentRequest.hasReceivedRevision}
           employeeName={currentRequest.currentQuote.employeeName}
           showWaitingForRevision={false}
         />
       )}
+
+      {/* CANCEL REQUEST WARNING DIALOG */}
+      <CancelRequestWarningDialog
+        open={showCancelWarning}
+        onClose={handleCancelWarningClose}
+        onConfirmCancel={handleConfirmCancel}
+      />
 
       {/* CANCEL CONFIRMATION DIALOG */}
       {actions.showCancelConfirmDialog && (
