@@ -72,7 +72,6 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
       if (currentRequest && !['completed', 'cancelled'].includes(currentRequest.status)) {
-        console.log('Minimizing real-life request due to dialog close');
         handleMinimize();
       } else {
         handleClose();
@@ -82,9 +81,7 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
 
   const handleInteractOutside = (e: Event) => {
     e.preventDefault();
-    
     if (currentRequest && !['completed', 'cancelled'].includes(currentRequest.status)) {
-      console.log('Minimizing real-life request due to outside interaction');
       handleMinimize();
     } else {
       handleClose();
@@ -93,10 +90,10 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
 
   if (!open) return null;
 
-  // Create a compatible request object for the UI handler
+  // Compose request object for UI
   const compatibleRequest = currentRequest ? {
     ...currentRequest,
-    userId: userId,
+    userId,
     type: getDisplayName(currentRequest.type),
     message: currentRequest.message || `Service request for ${type}`,
     location: { lat: location.lat, lng: location.lng },
@@ -116,7 +113,7 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <span className="text-red-600">🚨</span>
-            Real-Life Service Request: {type}
+            RoadSaver
           </DialogTitle>
         </DialogHeader>
         
@@ -142,7 +139,14 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
             </p>
           </div>
         </div>
-
+        
+        {/* Insert Google Map integration or real world map with user/employee marker */}
+        {/* TODO: Replace this with a real Google Maps component, using userLocation and assigned employee location if any */}
+        <div className="mb-4">
+          {/* <GoogleMap userLocation={location} employeeLocation={currentRequest?.employeeLocation} /> */}
+          {/* Placeholder for real map */}
+        </div>
+        
         <NewUIEventHandler
           currentScreen={currentScreen}
           request={compatibleRequest}
