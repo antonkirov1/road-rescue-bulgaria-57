@@ -53,7 +53,22 @@ export class RequestLifecycleManager {
       blacklistedEmployees: [],
       hasReceivedRevision: false,
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      timestamp: new Date().toISOString(),
+      assignedEmployeeName: '',
+      priceQuote: null,
+      etaSeconds: 0,
+      message: '',
+      isSubmitting: false,
+      showRealTimeUpdate: false,
+      showPriceQuote: false,
+      declineReason: '',
+      serviceFee: 5,
+      hasDeclinedOnce: false,
+      isWaitingForRevision: false,
+      currentEmployeeName: '',
+      declinedEmployees: [],
+      employeeLocation: undefined
     };
   }
 
