@@ -86,7 +86,7 @@ export const useServiceRequestLogicRealLife = ({
           lat: userLocation.lat + (Math.random() - 0.5) * 0.01,
           lng: userLocation.lng + (Math.random() - 0.5) * 0.01
         },
-        specialties: [request.type], // Use the service type as specialty
+        specialties: [request.type], // request.type is already a ServiceType
         rating: 4.5 + Math.random() * 0.5, // Random rating between 4.5-5.0
         vehicleInfo: {
           type: 'Service Van',
@@ -178,6 +178,25 @@ export const useServiceRequestLogicRealLife = ({
     setShouldPreserveState(true);
     onMinimize();
   };
+
+  // Initialize when dialog opens and there's no current request
+  useEffect(() => {
+    if (open && !currentRequest && !shouldPreserveState) {
+      console.log('Initializing new real-life service request for:', type);
+      handleSubmitRequest();
+    } else if (open && shouldPreserveState) {
+      console.log('Restoring minimized real-life service request');
+      setShouldPreserveState(false);
+    }
+  }, [open, type]);
+
+  // Only reset state when dialog is actually closed (not minimized)
+  useEffect(() => {
+    if (!open && !shouldPreserveState) {
+      console.log('Real-life dialog closed - resetting state');
+      resetState();
+    }
+  }, [open, shouldPreserveState]);
 
   return {
     currentScreen,
