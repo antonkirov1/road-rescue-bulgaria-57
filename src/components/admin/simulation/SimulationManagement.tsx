@@ -33,10 +33,20 @@ const SimulationManagement: React.FC = () => {
         .select('*')
         .order('employee_number', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading simulated employees:', error);
+        toast({
+          title: "Error",
+          description: `Failed to load simulated employees: ${error.message}`,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      console.log('Loaded simulated employees:', data);
       setSimulatedEmployees(data || []);
     } catch (error) {
-      console.error('Error loading simulated employees:', error);
+      console.error('Error in loadSimulatedEmployees:', error);
       toast({
         title: "Error",
         description: "Failed to load simulated employees.",
@@ -59,29 +69,47 @@ const SimulationManagement: React.FC = () => {
 
     try {
       setCreating(true);
-      const nextNumber = Math.max(...simulatedEmployees.map(e => e.employee_number), 0) + 1;
       
-      const { error } = await supabase
+      // Calculate next employee number
+      const nextNumber = simulatedEmployees.length > 0 
+        ? Math.max(...simulatedEmployees.map(e => e.employee_number)) + 1 
+        : 1;
+      
+      console.log('Creating employee with number:', nextNumber, 'and name:', newEmployeeName.trim());
+      
+      const { data, error } = await supabase
         .from('employee_simulation')
         .insert({
           employee_number: nextNumber,
           full_name: newEmployeeName.trim()
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating simulated employee:', error);
+        toast({
+          title: "Error",
+          description: `Failed to create simulated employee: ${error.message}`,
+          variant: "destructive"
         });
+        return;
+      }
 
-      if (error) throw error;
-
+      console.log('Successfully created employee:', data);
+      
       toast({
         title: "Success",
         description: "Simulated employee created successfully."
       });
 
       setNewEmployeeName('');
-      loadSimulatedEmployees();
+      await loadSimulatedEmployees();
     } catch (error) {
-      console.error('Error creating simulated employee:', error);
+      console.error('Error in createSimulatedEmployee:', error);
       toast({
         title: "Error",
-        description: "Failed to create simulated employee.",
+        description: `Failed to create simulated employee: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive"
       });
     } finally {
@@ -100,16 +128,24 @@ const SimulationManagement: React.FC = () => {
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error deleting simulated employee:', error);
+        toast({
+          title: "Error",
+          description: `Failed to delete simulated employee: ${error.message}`,
+          variant: "destructive"
+        });
+        return;
+      }
 
       toast({
         title: "Success",
         description: "Simulated employee deleted successfully."
       });
 
-      loadSimulatedEmployees();
+      await loadSimulatedEmployees();
     } catch (error) {
-      console.error('Error deleting simulated employee:', error);
+      console.error('Error in deleteSimulatedEmployee:', error);
       toast({
         title: "Error",
         description: "Failed to delete simulated employee.",
@@ -145,10 +181,18 @@ const SimulationManagement: React.FC = () => {
                   value={newEmployeeName}
                   onChange={(e) => setNewEmployeeName(e.target.value)}
                   placeholder="Enter employee name"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      createSimulatedEmployee();
+                    }
+                  }}
                 />
               </div>
               <div className="flex items-end">
-                <Button onClick={createSimulatedEmployee} disabled={creating}>
+                <Button 
+                  onClick={createSimulatedEmployee} 
+                  disabled={creating || !newEmployeeName.trim()}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   {creating ? 'Creating...' : 'Add'}
                 </Button>
