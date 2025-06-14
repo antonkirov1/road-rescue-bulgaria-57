@@ -4,7 +4,7 @@ import { ServiceRequest } from '@/types/newServiceRequest';
 import { usePersistentServiceRequest } from '@/hooks/usePersistentServiceRequest';
 import { useServiceRequestLogicRealLife } from './NewServiceRequestLogicRealLife';
 import NewUIEventHandler from './NewUIEventHandler';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface NewServiceRequestManagerRealLifeProps {
   type: ServiceRequest['type'];
@@ -113,25 +113,26 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
         className="max-w-md max-h-[90vh] overflow-hidden flex flex-col"
         onInteractOutside={handleInteractOutside}
       >
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold flex items-center gap-2">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
             <span className="text-red-600">🚨</span>
             Real-Life Service Request: {type}
-          </h2>
-          <div className="flex gap-2">
-            <button
-              onClick={handleMinimize}
-              className="text-gray-500 hover:text-gray-700 text-sm"
-            >
-              Minimize
-            </button>
-            <button
-              onClick={handleClose}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              ✕
-            </button>
-          </div>
+          </DialogTitle>
+        </DialogHeader>
+        
+        <div className="flex justify-end gap-2 mb-4">
+          <button
+            onClick={handleMinimize}
+            className="text-gray-500 hover:text-gray-700 text-sm"
+          >
+            Minimize
+          </button>
+          <button
+            onClick={handleClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            ✕
+          </button>
         </div>
         
         <div className="mb-4">
