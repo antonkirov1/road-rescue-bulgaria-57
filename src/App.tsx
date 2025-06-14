@@ -4,9 +4,11 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AppProvider } from '@/contexts/AppContext';
 import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/components/theme-provider';
-import Auth from '@/pages/user/Auth';
 import UserPortalSelection from '@/pages/user/UserPortalSelection';
-import NewDashboard from '@/pages/user/NewDashboard';
+import SimulationAuth from '@/pages/user/simulation_user_dashboard/SimulationAuth';
+import SimulationDashboard from '@/pages/user/simulation_user_dashboard/SimulationDashboard';
+import RealLifeAuth from '@/pages/user/real_life_user_dashboard/RealLifeAuth';
+import RealLifeDashboard from '@/pages/user/real_life_user_dashboard/RealLifeDashboard';
 import EmployeeAuth from '@/pages/employee/EmployeeAuth';
 import EmployeeDashboard from '@/pages/employee/EmployeeDashboard';
 import AdminSelection from '@/pages/admin/AdminSelection';
@@ -25,9 +27,11 @@ function App() {
           <div className="App">
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/user" element={<Auth />} />
               <Route path="/user/portal-selection" element={<UserPortalSelection />} />
-              <Route path="/user/dashboard" element={<NewDashboard />} />
+              <Route path="/user/simulation-auth" element={<SimulationAuth />} />
+              <Route path="/user/simulation-dashboard" element={<SimulationDashboard />} />
+              <Route path="/user/real-life-auth" element={<RealLifeAuth />} />
+              <Route path="/user/real-life-dashboard" element={<RealLifeDashboard />} />
               <Route path="/employee" element={<EmployeeAuth />} />
               <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
               <Route path="/admin-selection" element={<AdminSelection />} />

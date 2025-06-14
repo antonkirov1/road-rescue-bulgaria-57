@@ -69,7 +69,7 @@ const UserPortalSelection: React.FC = () => {
             </CardHeader>
             <CardContent>
               <Button 
-                onClick={() => navigate('/user/dashboard')}
+                onClick={() => navigate('/user/simulation-auth')}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-lg py-6"
                 size="lg"
               >
@@ -91,7 +91,7 @@ const UserPortalSelection: React.FC = () => {
             </CardHeader>
             <CardContent>
               <Button 
-                onClick={() => navigate('/user/dashboard')}
+                onClick={() => navigate('/user/real-life-auth')}
                 className="w-full bg-green-600 hover:bg-green-700 text-lg py-6"
                 size="lg"
               >
