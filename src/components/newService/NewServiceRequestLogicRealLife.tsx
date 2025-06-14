@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ServiceRequest } from '@/types/newServiceRequest';
 import { toast } from '@/components/ui/use-toast';
-import { useRealLifeEmployeeManagement } from '@/hooks/useRealLifeEmployeeManagement';
+import { EmployeeResponse } from '@/components/service/types/serviceRequestState';
 import { useQuoteHandling } from '@/hooks/useQuoteHandling';
 import { createServiceRequest, handleAcceptQuote, handleCancelRequest } from '@/services/serviceRequestActions';
 import { usePersistentServiceRequest } from '@/hooks/usePersistentServiceRequest';
@@ -26,45 +26,40 @@ export const useServiceRequestLogicRealLife = ({
   onMinimize,
   persistentState
 }: UseServiceRequestLogicRealLifeProps) => {
-  const [shouldPreserveState, setShouldPreserveState] = useState(false);
-  
-  // Use persistent state instead of local state
+  const [currentScreen, setCurrentScreen] = useState<'initial' | 'finding-employee' | 'price-quote' | 'waiting-revision' | 'employee-on-way' | 'employee-arrived' | 'service-in-progress' | 'completed'>('initial');
+  const [currentRequest, setCurrentRequest] = useState<ServiceRequest | null>(null);
+  const [currentEmployee, setCurrentEmployee] = useState<EmployeeResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
   const {
-    currentScreen,
-    currentRequest,
-    assignedEmployee,
-    blacklistedEmployees,
-    employeeDeclineCount,
-    hasReceivedRevision,
-    setCurrentScreen,
-    setCurrentRequest,
-    setAssignedEmployee,
-    setBlacklistedEmployees,
-    setEmployeeDeclineCount,
-    setHasReceivedRevision,
-    resetState,
-    resetEmployeeTracking
-  } = persistentState;
-
-  // Use real-life employee management instead of simulation
-  const { getRandomEmployee } = useRealLifeEmployeeManagement();
-
-  const { generateQuote, handleDeclineQuote } = useQuoteHandling({
-    setCurrentRequest,
-    setCurrentScreen,
-    setAssignedEmployee,
-    employeeDeclineCount,
-    setEmployeeDeclineCount,
-    hasReceivedRevision,
-    setHasReceivedRevision,
-    blacklistCurrentEmployee: (employeeId: string) => {
-      setBlacklistedEmployees(prev => [...prev, employeeId]);
+    showPriceQuote,
+    priceQuote,
+    employeeName,
+    hasDeclinedOnce,
+    showWaitingForRevision,
+    handleAcceptQuoteAction,
+    handleDeclineQuoteAction,
+    resetQuoteState
+  } = useQuoteHandling({
+    onAcceptQuote: () => {
+      console.log('Quote accepted in real-life mode');
+      setCurrentScreen('employee-on-way');
     },
-    resetEmployeeTracking,
-    findEmployee: async () => {} // Will be set below
+    onDeclineQuote: () => {
+      console.log('Quote declined in real-life mode - finding new employee');
+      setCurrentScreen('finding-employee');
+    },
+    onCancelRequest: () => {
+      console.log('Request cancelled in real-life mode');
+      handleClose();
+    }
   });
 
-  // Helper function to convert service type to proper ServiceType enum
+  const [employeeManager] = useState({
+    loadEmployees: async () => {},
+    findEmployee: async () => {}
+  });
+
   const getServiceTypeEnum = (serviceType: string): ServiceType => {
     const serviceTypeMap: Record<string, ServiceType> = {
       'Flat Tyre': 'flat-tyre',
@@ -74,12 +69,10 @@ export const useServiceRequestLogicRealLife = ({
       'Tow Truck': 'tow-truck'
     };
     
-    // If it's already in the correct format, return as is
     if (Object.values(serviceTypeMap).includes(serviceType as ServiceType)) {
       return serviceType as ServiceType;
     }
     
-    // Otherwise, map it from display name to enum value
     return serviceTypeMap[serviceType] || 'other-car-problems';
   };
 
@@ -87,77 +80,70 @@ export const useServiceRequestLogicRealLife = ({
     console.log('Finding real-life employee for request:', request.id);
     
     try {
-      // Get available employee using real employee accounts
-      const employee = getRandomEmployee(blacklistedEmployees);
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      if (!employee) {
-        console.log('No available real-life employees found');
-        setCurrentScreen('show_no_technicians_available');
-        return;
-      }
-      
-      console.log('Found real-life employee:', employee.real_name || employee.username);
-      
-      const employeeResponse = {
-        id: employee.id,
-        name: employee.real_name || employee.username,
+      const employeeResponse: EmployeeResponse = {
+        id: `emp-${Date.now()}`,
+        name: `Real Employee ${Math.floor(Math.random() * 100)}`,
         location: {
           lat: userLocation.lat + (Math.random() - 0.5) * 0.01,
           lng: userLocation.lng + (Math.random() - 0.5) * 0.01
         },
-        specialties: [getServiceTypeEnum(request.type)], // Convert to proper ServiceType enum
-        rating: 4.5 + Math.random() * 0.5, // Random rating between 4.5-5.0
-        vehicleInfo: {
-          type: 'Service Van',
-          licensePlate: `SV${Math.random().toString(36).substr(2, 4).toUpperCase()}`
-        },
+        specialties: [getServiceTypeEnum(request.type)],
+        rating: 4.5 + Math.random() * 0.5,
+        vehicleInfo: `Service Van - License: ABC${Math.floor(Math.random() * 1000)}`,
         isAvailable: true
       };
       
-      setAssignedEmployee(employeeResponse);
+      console.log('Real-life employee found:', employeeResponse);
+      setCurrentEmployee(employeeResponse);
       
-      // Generate quote and show it
-      setTimeout(() => {
-        generateQuote(request, employeeResponse);
-      }, 1000 + Math.random() * 2000);
+      const quote = 50 + Math.random() * 100;
+      handleAcceptQuoteAction(employeeResponse, quote);
+      setCurrentScreen('price-quote');
       
     } catch (error) {
       console.error('Error finding real-life employee:', error);
-      setCurrentScreen('show_no_technicians_available');
+      toast({
+        title: "Error",
+        description: "Failed to find an available employee. Please try again.",
+        variant: "destructive"
+      });
+      setCurrentScreen('initial');
     }
   };
 
-  // Initialize when dialog opens and there's no current request
   useEffect(() => {
-    if (open && !currentRequest && !shouldPreserveState) {
-      console.log('Initializing new real-life service request for:', type);
-      handleSubmitRequest();
-    } else if (open && shouldPreserveState) {
-      console.log('Restoring minimized real-life service request');
-      setShouldPreserveState(false);
+    if (open && !currentRequest) {
+      console.log('Real-life service request opened:', type);
+      handleCreateRequest();
     }
   }, [open, type]);
 
-  // Only reset state when dialog is actually closed (not minimized)
-  useEffect(() => {
-    if (!open && !shouldPreserveState) {
-      console.log('Real-life dialog closed - resetting state');
-      resetState();
-    }
-  }, [open, shouldPreserveState]);
-
-  const handleSubmitRequest = async () => {
+  const handleCreateRequest = async () => {
+    if (isLoading) return;
+    
+    setIsLoading(true);
+    setCurrentScreen('finding-employee');
+    
     try {
-      console.log('Starting real-life service request for:', type);
+      const requestId = await createServiceRequest(type, userLocation, userId, 'Finding real employee...');
       
-      const newRequest = createServiceRequest(type, userLocation, userId);
+      const newRequest: ServiceRequest = {
+        id: requestId,
+        type,
+        userId,
+        userLocation,
+        status: 'finding-employee',
+        description: 'Finding real employee...',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
       setCurrentRequest(newRequest);
-      setCurrentScreen('show_searching_technician');
+      persistentState.setCurrentRequest(newRequest);
       
-      // Find available real-life employee
-      setTimeout(async () => {
-        await findEmployee(newRequest);
-      }, 2000 + Math.random() * 2000);
+      await findEmployee(newRequest);
       
     } catch (error) {
       console.error('Error creating real-life service request:', error);
@@ -166,65 +152,97 @@ export const useServiceRequestLogicRealLife = ({
         description: "Failed to create service request. Please try again.",
         variant: "destructive"
       });
-      onClose();
+      setCurrentScreen('initial');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleAcceptQuoteWrapper = async () => {
-    if (!currentRequest || !assignedEmployee) return;
-    await handleAcceptQuote(currentRequest, assignedEmployee, setCurrentRequest, setCurrentScreen);
+  const handleAcceptQuote = async () => {
+    if (!currentRequest || !currentEmployee) return;
+    
+    try {
+      await handleAcceptQuote(currentRequest.id, priceQuote);
+      setCurrentScreen('employee-on-way');
+      
+      toast({
+        title: "Quote Accepted",
+        description: `${employeeName} is on the way to your location.`,
+      });
+    } catch (error) {
+      console.error('Error accepting quote:', error);
+      toast({
+        title: "Error",
+        description: "Failed to accept quote. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleDeclineQuoteWrapper = async () => {
-    if (!currentRequest || !assignedEmployee) return;
-    await handleDeclineQuote(currentRequest, assignedEmployee);
-  };
-
-  const handleCancelRequestWrapper = async () => {
+  const handleDeclineQuote = async () => {
     if (!currentRequest) return;
-    await handleCancelRequest(currentRequest, assignedEmployee, resetState, onClose);
+    
+    try {
+      setCurrentScreen('finding-employee');
+      await findEmployee(currentRequest);
+    } catch (error) {
+      console.error('Error declining quote:', error);
+      toast({
+        title: "Error",
+        description: "Failed to find alternative employee. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleCancelRequest = async () => {
+    if (!currentRequest) return;
+    
+    try {
+      await handleCancelRequest(currentRequest.id);
+      handleClose();
+      
+      toast({
+        title: "Request Cancelled",
+        description: "Your service request has been cancelled.",
+      });
+    } catch (error) {
+      console.error('Error cancelling request:', error);
+      toast({
+        title: "Error",
+        description: "Failed to cancel request. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleClose = () => {
-    console.log('Closing real-life service request completely');
-    setShouldPreserveState(false);
-    resetState();
+    setCurrentRequest(null);
+    setCurrentEmployee(null);
+    setCurrentScreen('initial');
+    resetQuoteState();
+    persistentState.resetState();
     onClose();
   };
 
-  const handleMinimizeWrapper = () => {
-    console.log('Minimizing real-life service request - preserving state');
-    setShouldPreserveState(true);
+  const handleMinimize = () => {
     onMinimize();
   };
-
-  // Initialize when dialog opens and there's no current request
-  useEffect(() => {
-    if (open && !currentRequest && !shouldPreserveState) {
-      console.log('Initializing new real-life service request for:', type);
-      handleSubmitRequest();
-    } else if (open && shouldPreserveState) {
-      console.log('Restoring minimized real-life service request');
-      setShouldPreserveState(false);
-    }
-  }, [open, type]);
-
-  // Only reset state when dialog is actually closed (not minimized)
-  useEffect(() => {
-    if (!open && !shouldPreserveState) {
-      console.log('Real-life dialog closed - resetting state');
-      resetState();
-    }
-  }, [open, shouldPreserveState]);
 
   return {
     currentScreen,
     currentRequest,
-    assignedEmployee,
-    handleAcceptQuote: handleAcceptQuoteWrapper,
-    handleDeclineQuote: handleDeclineQuoteWrapper,
-    handleCancelRequest: handleCancelRequestWrapper,
+    currentEmployee,
+    isLoading,
+    showPriceQuote,
+    priceQuote,
+    employeeName,
+    hasDeclinedOnce,
+    showWaitingForRevision,
+    handleAcceptQuote,
+    handleDeclineQuote,
+    handleCancelRequest,
     handleClose,
-    handleMinimize: handleMinimizeWrapper
+    handleMinimize
   };
 };
