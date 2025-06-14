@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { ServiceRequest } from '@/types/newServiceRequest';
 import { toast } from '@/components/ui/use-toast';
@@ -6,6 +5,7 @@ import { useRealLifeEmployeeManagement } from '@/hooks/useRealLifeEmployeeManage
 import { useQuoteHandling } from '@/hooks/useQuoteHandling';
 import { createServiceRequest, handleAcceptQuote, handleCancelRequest } from '@/services/serviceRequestActions';
 import { usePersistentServiceRequest } from '@/hooks/usePersistentServiceRequest';
+import { ServiceType } from '@/components/service/types/serviceRequestState';
 
 interface UseServiceRequestLogicRealLifeProps {
   type: ServiceRequest['type'];
@@ -64,6 +64,25 @@ export const useServiceRequestLogicRealLife = ({
     findEmployee: async () => {} // Will be set below
   });
 
+  // Helper function to convert service type to proper ServiceType enum
+  const getServiceTypeEnum = (serviceType: string): ServiceType => {
+    const serviceTypeMap: Record<string, ServiceType> = {
+      'Flat Tyre': 'flat-tyre',
+      'Out of Fuel': 'out-of-fuel',
+      'Car Battery': 'car-battery',
+      'Other Car Problems': 'other-car-problems',
+      'Tow Truck': 'tow-truck'
+    };
+    
+    // If it's already in the correct format, return as is
+    if (Object.values(serviceTypeMap).includes(serviceType as ServiceType)) {
+      return serviceType as ServiceType;
+    }
+    
+    // Otherwise, map it from display name to enum value
+    return serviceTypeMap[serviceType] || 'other-car-problems';
+  };
+
   const findEmployee = async (request: ServiceRequest) => {
     console.log('Finding real-life employee for request:', request.id);
     
@@ -86,7 +105,7 @@ export const useServiceRequestLogicRealLife = ({
           lat: userLocation.lat + (Math.random() - 0.5) * 0.01,
           lng: userLocation.lng + (Math.random() - 0.5) * 0.01
         },
-        specialties: [request.type], // request.type is already a ServiceType
+        specialties: [getServiceTypeEnum(request.type)], // Convert to proper ServiceType enum
         rating: 4.5 + Math.random() * 0.5, // Random rating between 4.5-5.0
         vehicleInfo: {
           type: 'Service Van',
