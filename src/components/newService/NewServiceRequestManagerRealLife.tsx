@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ServiceRequest } from '@/types/newServiceRequest';
 import { usePersistentServiceRequest } from '@/hooks/usePersistentServiceRequest';
@@ -6,7 +7,7 @@ import NewUIEventHandler from './NewUIEventHandler';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Minimize, X, Activity } from 'lucide-react';
-import Map from "@/components/Map";
+import GoogleMap from "@/components/GoogleMap";
 
 interface NewServiceRequestManagerRealLifeProps {
   type: ServiceRequest['type'];
@@ -148,9 +149,14 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
           </div>
         </div>
 
-        {/* Google/Mapbox Map with real data */}
+        {/* Google Maps map instead of Mapbox */}
         <div className="w-full bg-background/70 h-40 flex items-center justify-center">
-          {location && <Map lat={location.lat} lng={location.lng} />}
+          {location && (
+            <GoogleMap
+              userLocation={location}
+              height="160px"
+            />
+          )}
         </div>
 
         <div className="flex-1 px-6 pb-4 overflow-y-auto">
