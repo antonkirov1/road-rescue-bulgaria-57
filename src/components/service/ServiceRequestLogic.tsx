@@ -24,12 +24,7 @@ export const useServiceRequestLogic = ({ type, userLocation, onClose }: ServiceR
     priceQuote: null,
     assignedEmployeeName: '',
     employeeLocation: undefined,
-    etaSeconds: 0,
-    message: '',
-    isSubmitting: false,
-    showRealTimeUpdate: false,
-    showPriceQuote: false,
-    declineReason: ''
+    etaSeconds: 0
   });
 
   const [showSearching, setShowSearching] = useState(false);
@@ -51,7 +46,7 @@ export const useServiceRequestLogic = ({ type, userLocation, onClose }: ServiceR
     setTimeout(() => {
       setShowSearching(true);
       
-      // Call simulation with correct number of arguments (12)
+      // Call simulation with correct number of arguments (11)
       simulateEmployeeResponse(
         requestId,
         new Date().toISOString(),
