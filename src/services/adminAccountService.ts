@@ -7,7 +7,7 @@ export interface AdminAccount {
   password_hash?: string;
   email?: string;
   real_name?: string;
-  status?: 'active' | 'inactive' | 'suspended';
+  status?: string; // Changed from union type to string to match database
   is_builtin?: boolean;
   created_at: string;
 }

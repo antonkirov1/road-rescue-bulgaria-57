@@ -34,10 +34,11 @@ export const useRequestSimulation = () => {
       
       console.log('Finding employee with blacklist:', allBlacklistedEmployees);
       
+      // Get employee from employee_simulation table only
       const employee = getRandomEmployee(allBlacklistedEmployees);
       
       if (!employee) {
-        console.log('No available employees found');
+        console.log('No available employees found in employee_simulation table');
         setStatus('declined');
         setDeclineReason('No available employees. Please try again later.');
         setShowRealTimeUpdate(false);
@@ -45,9 +46,9 @@ export const useRequestSimulation = () => {
         return;
       }
 
-      console.log('Selected employee:', employee.full_name);
+      console.log('Selected employee from simulation:', employee.full_name);
       
-      // Immediately set the employee name to avoid "Unknown" display
+      // Set the employee name from the employee_simulation table
       setCurrentEmployeeName(employee.full_name);
 
       // Simulate employee response delay (2-5 seconds)
@@ -66,7 +67,7 @@ export const useRequestSimulation = () => {
         const randomPrice = basePrice + Math.floor(Math.random() * 20) - 10;
         const finalPrice = Math.max(20, randomPrice);
         
-        console.log('Sending quote from employee:', employee.full_name, 'Amount:', finalPrice);
+        console.log('Sending quote from simulated employee:', employee.full_name, 'Amount:', finalPrice);
         onQuoteReceived(finalPrice);
         
         // Set employee location near user
@@ -99,6 +100,8 @@ export const useRequestSimulation = () => {
     onCompletion: () => void
   ) => {
     if (!user) return;
+    
+    console.log('Accepting service from simulated employee:', employeeName);
     
     // Start ETA countdown
     let remainingTime = etaSeconds;
@@ -146,9 +149,10 @@ export const useRequestSimulation = () => {
     userId: string
   ) => {
     try {
+      console.log('Adding simulated employee to blacklist:', employeeName);
       await SimulatedEmployeeBlacklistService.addToBlacklist(requestId, employeeName, userId);
     } catch (error) {
-      console.error('Error adding employee to blacklist:', error);
+      console.error('Error adding simulated employee to blacklist:', error);
       throw error;
     }
   }, []);

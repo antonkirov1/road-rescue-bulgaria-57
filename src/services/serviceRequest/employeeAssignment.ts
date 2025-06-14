@@ -27,21 +27,24 @@ export class EmployeeAssignmentService {
       const dbBlacklisted = await SimulatedEmployeeBlacklistService.getBlacklistedEmployees(request.id);
       const allBlacklisted = [...request.blacklistedEmployees, ...dbBlacklisted];
       
-      console.log('Finding employee, blacklisted:', allBlacklisted);
+      console.log('Finding employee from employee_simulation, blacklisted:', allBlacklisted);
       
+      // Only use employees from employee_simulation table
       const employee = getRandomEmployee(allBlacklisted);
       
       if (!employee) {
         toast({
           title: "No employees available",
-          description: "All employees are currently busy. Please try again later.",
+          description: "All simulated employees are currently busy. Please try again later.",
           variant: "destructive"
         });
         return null;
       }
       
+      console.log('Found simulated employee:', employee.full_name);
+      
       return {
-        name: employee.full_name,
+        name: employee.full_name, // Use the full_name from employee_simulation
         id: employee.id.toString(),
         location: {
           lat: request.userLocation.lat + (Math.random() - 0.5) * 0.02,
@@ -50,7 +53,7 @@ export class EmployeeAssignmentService {
       };
       
     } catch (error) {
-      console.error('Error finding employee:', error);
+      console.error('Error finding simulated employee:', error);
       throw error;
     }
   }
@@ -62,9 +65,9 @@ export class EmployeeAssignmentService {
         employeeName,
         'current_user' // This should be actual user ID
       );
-      console.log('Employee blacklisted:', employeeName);
+      console.log('Simulated employee blacklisted:', employeeName);
     } catch (error) {
-      console.error('Error blacklisting employee:', error);
+      console.error('Error blacklisting simulated employee:', error);
       throw error;
     }
   }

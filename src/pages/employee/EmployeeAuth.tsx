@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -9,7 +8,7 @@ import { toast } from '@/components/ui/use-toast';
 import { useApp } from '@/contexts/AppContext';
 import { useTranslation } from '@/utils/translations';
 import ThemeToggle from '@/components/ui/theme-toggle';
-import { EmployeeAccountService } from '@/services/employeeAccountService';
+import { supabase } from '@/integrations/supabase/client';
 
 const EmployeeAuth: React.FC = () => {
   const navigate = useNavigate();

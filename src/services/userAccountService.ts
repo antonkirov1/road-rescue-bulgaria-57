@@ -12,7 +12,7 @@ export interface UserAccount {
   auth_user_id?: string;
   created_at: string;
   created_by_admin?: boolean;
-  status?: 'active' | 'banned';
+  status?: string; // Changed from union type to string to match database
   secret_question_1?: string;
   secret_answer_1?: string;
   secret_question_2?: string;
