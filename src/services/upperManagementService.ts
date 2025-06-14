@@ -37,7 +37,10 @@ export class UpperManagementService {
         throw error;
       }
 
-      return data;
+      return {
+        ...data,
+        management_role: data.management_role as UpperManagementRole
+      };
     } else {
       // Create new record
       const { data, error } = await supabase
@@ -54,7 +57,10 @@ export class UpperManagementService {
         throw error;
       }
 
-      return data;
+      return {
+        ...data,
+        management_role: data.management_role as UpperManagementRole
+      };
     }
   }
 
@@ -89,7 +95,10 @@ export class UpperManagementService {
       throw error;
     }
 
-    return data || [];
+    return (data || []).map(item => ({
+      ...item,
+      management_role: item.management_role as UpperManagementRole
+    }));
   }
 
   static async getUpperManagementByRole(role: UpperManagementRole): Promise<UpperManagementAccount[]> {
@@ -112,7 +121,10 @@ export class UpperManagementService {
       throw error;
     }
 
-    return data || [];
+    return (data || []).map(item => ({
+      ...item,
+      management_role: item.management_role as UpperManagementRole
+    }));
   }
 
   static async isUpperManagement(employeeId: string): Promise<boolean> {
