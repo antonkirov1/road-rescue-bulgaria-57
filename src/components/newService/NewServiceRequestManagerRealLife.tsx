@@ -1,10 +1,11 @@
-
 import React from 'react';
 import { ServiceRequest } from '@/types/newServiceRequest';
 import { usePersistentServiceRequest } from '@/hooks/usePersistentServiceRequest';
 import { useServiceRequestLogicRealLife } from './NewServiceRequestLogicRealLife';
 import NewUIEventHandler from './NewUIEventHandler';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Minimize, X, Activity } from 'lucide-react';
 
 interface NewServiceRequestManagerRealLifeProps {
   type: ServiceRequest['type'];
@@ -39,6 +40,23 @@ const mapToServiceRequestStatus = (status: string): ServiceRequest['status'] => 
   return mapping[status] || 'pending';
 };
 
+/**
+ * Optional: Active Request Button for real-life UI exact-matching simulation
+ */
+function ActiveRequestButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      className="fixed z-30 bottom-7 right-7 bg-red-600 hover:bg-red-700 text-white rounded-full px-4 py-3 flex items-center shadow-lg transition-all animate-fade-in"
+      style={{ animationDelay: '200ms' }}
+      aria-label="Open active service request"
+      onClick={onClick}
+    >
+      <Activity className="w-6 h-6 mr-2 animate-pulse" />
+      <span>Active Request</span>
+    </button>
+  );
+}
+
 const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLifeProps> = ({
   type,
   open,
@@ -69,6 +87,10 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
     persistentState
   });
 
+  /**
+   * Exact minimize/close handling as simulation:
+   * - clicking outside OR pressing escape => minimize if not finished, else close
+   */
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
       if (currentRequest && !['completed', 'cancelled'].includes(currentRequest.status)) {
@@ -78,7 +100,6 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
       }
     }
   };
-
   const handleInteractOutside = (e: Event) => {
     e.preventDefault();
     if (currentRequest && !['completed', 'cancelled'].includes(currentRequest.status)) {
@@ -90,7 +111,6 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
 
   if (!open) return null;
 
-  // Compose request object for UI
   const compatibleRequest = currentRequest ? {
     ...currentRequest,
     userId,
@@ -106,55 +126,57 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent 
-        className="max-w-md max-h-[90vh] overflow-hidden flex flex-col"
+      <DialogContent
+        className="max-w-md max-h-[90vh] overflow-hidden flex flex-col px-0 pt-0"
         onInteractOutside={handleInteractOutside}
       >
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <span className="text-red-600">🚨</span>
-            RoadSaver
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="flex justify-end gap-2 mb-4">
-          <button
-            onClick={handleMinimize}
-            className="text-gray-500 hover:text-gray-700 text-sm"
-          >
-            Minimize
-          </button>
-          <button
-            onClick={handleClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            ✕
-          </button>
-        </div>
-        
-        <div className="mb-4">
-          <div className="bg-red-50 dark:bg-red-900 p-3 rounded border-l-4 border-red-400">
-            <p className="text-sm text-red-800 dark:text-red-200">
-              🚨 Real-Life Mode: This request will create actual service tickets and contact real employees
-            </p>
+        <div className="flex items-center border-b justify-between px-6 py-5">
+          {/* Mini icon/logo to match simulation style, adjust if needed */}
+          <span className="text-red-600 text-2xl" aria-label="app icon">🚨</span>
+          <DialogHeader className="flex flex-1 items-center justify-center">
+            <DialogTitle className="!mb-0 flex items-center gap-1 text-xl font-extrabold font-clash tracking-tight">
+              RoadSaver
+            </DialogTitle>
+          </DialogHeader>
+          {/* Minimize and Close on right */}
+          <div className="flex gap-2">
+            <Button
+              size="icon"
+              variant="ghost"
+              className="text-gray-500 hover:text-red-700"
+              aria-label="Minimize"
+              onClick={handleMinimize}
+            >
+              <Minimize className="w-4 h-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="text-gray-500 hover:text-red-700"
+              aria-label="Close"
+              onClick={handleClose}
+            >
+              <X className="w-5 h-5" />
+            </Button>
           </div>
         </div>
-        
-        {/* Insert Google Map integration or real world map with user/employee marker */}
-        {/* TODO: Replace this with a real Google Maps component, using userLocation and assigned employee location if any */}
-        <div className="mb-4">
-          {/* <GoogleMap userLocation={location} employeeLocation={currentRequest?.employeeLocation} /> */}
-          {/* Placeholder for real map */}
+
+        {/* Map placeholder (replace with Google Maps as soon as component is ready) */}
+        <div className="w-full bg-background/70 h-40 flex items-center justify-center">
+          {/* Future: <GoogleMap ... /> */}
+          <span className="text-sm text-muted-foreground">Location map goes here</span>
         </div>
-        
-        <NewUIEventHandler
-          currentScreen={currentScreen}
-          request={compatibleRequest}
-          onAcceptQuote={handleAcceptQuote}
-          onDeclineQuote={handleDeclineQuote}
-          onCancelRequest={handleCancelRequest}
-          onClose={handleClose}
-        />
+
+        <div className="flex-1 px-6 pb-4 overflow-y-auto">
+          <NewUIEventHandler
+            currentScreen={currentScreen}
+            request={compatibleRequest}
+            onAcceptQuote={handleAcceptQuote}
+            onDeclineQuote={handleDeclineQuote}
+            onCancelRequest={handleCancelRequest}
+            onClose={handleClose}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );
