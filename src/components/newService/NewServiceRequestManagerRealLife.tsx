@@ -58,6 +58,18 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
 
   if (!open) return null;
 
+  // Create a compatible request object for the UI handler
+  const compatibleRequest = currentRequest ? {
+    ...currentRequest,
+    userId: userId, // Add the missing userId property
+    type: currentRequest.type,
+    message: currentRequest.message || `Service request for ${type}`,
+    location: { lat: location.lat, lng: location.lng },
+    status: currentRequest.status as 'pending' | 'accepted' | 'declined',
+    timestamp: currentRequest.timestamp || new Date().toISOString(),
+    username: userId
+  } : null;
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
       <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
@@ -92,7 +104,7 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
 
         <NewUIEventHandler
           currentScreen={currentScreen}
-          request={currentRequest}
+          request={compatibleRequest}
           onAcceptQuote={handleAcceptQuote}
           onDeclineQuote={handleDeclineQuote}
           onCancelRequest={handleCancelRequest}
