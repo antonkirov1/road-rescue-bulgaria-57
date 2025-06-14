@@ -119,12 +119,16 @@ const SimulationAuth: React.FC = () => {
       <div className="w-full max-w-md mb-4">
         <div className="mb-6 text-center">
           <div className="flex items-center justify-center gap-3 mb-2">
-            <img 
-              src="/lovable-uploads/metaverse-virtual-world-icon.svg" 
-              alt="Metaverse VR Icon" 
-              className="w-8 h-8"
-            />
-            <h1 className="text-3xl sm:text-4xl font-bold">RoadSaver</h1>
+            {/* "RoadSaver" word first, icon after "r" */}
+            <h1 className="text-3xl sm:text-4xl font-bold flex items-center gap-3">
+              RoadSaver
+              <img 
+                src="/lovable-uploads/metaverse-virtual-world-icon.svg"
+                alt="Metaverse VR Icon"
+                className="w-10 h-10 inline-block align-middle ml-2"
+                style={{ verticalAlign: 'middle' }}
+              />
+            </h1>
           </div>
           <p className="text-muted-foreground">{t('auth-subtitle')}</p>
         </div>
@@ -139,3 +143,4 @@ const SimulationAuth: React.FC = () => {
 };
 
 export default SimulationAuth;
+
