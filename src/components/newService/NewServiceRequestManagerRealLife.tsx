@@ -4,6 +4,7 @@ import { ServiceRequest } from '@/types/newServiceRequest';
 import { usePersistentServiceRequest } from '@/hooks/usePersistentServiceRequest';
 import { useServiceRequestLogicRealLife } from './NewServiceRequestLogicRealLife';
 import NewUIEventHandler from './NewUIEventHandler';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 interface NewServiceRequestManagerRealLifeProps {
   type: ServiceRequest['type'];
@@ -68,6 +69,17 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
     persistentState
   });
 
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      if (currentRequest && !['completed', 'cancelled'].includes(currentRequest.status)) {
+        console.log('Minimizing real-life request due to dialog close');
+        handleMinimize();
+      } else {
+        handleClose();
+      }
+    }
+  };
+
   const handleInteractOutside = (e: Event) => {
     e.preventDefault();
     
@@ -96,8 +108,11 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
   } : null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent 
+        className="max-w-md max-h-[90vh] overflow-hidden flex flex-col"
+        onInteractOutside={handleInteractOutside}
+      >
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold flex items-center gap-2">
             <span className="text-red-600">🚨</span>
@@ -135,8 +150,8 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
           onCancelRequest={handleCancelRequest}
           onClose={handleClose}
         />
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
