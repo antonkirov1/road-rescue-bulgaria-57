@@ -1,18 +1,13 @@
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useApp } from '@/contexts/AppContext';
-import { useTranslation } from '@/utils/translations';
-import { ServiceRequest } from '@/types/newServiceRequest';
-import { useNewServiceRequest } from '@/hooks/useNewServiceRequest';
+import React from 'react';
+import { ServiceRequest, Employee } from '@/types/newServiceRequest';
 import { usePersistentServiceRequest } from '@/hooks/usePersistentServiceRequest';
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import DashboardServices from '@/components/dashboard/DashboardServices';
-import ExitConfirmDialog from '@/components/dashboard/ExitConfirmDialog';
-import SettingsMenu from '@/components/settings/SettingsMenu';
-
-// Define the service types that can be handled by the dashboard
-type DashboardServiceType = ServiceRequest['type'] | 'emergency' | 'support';
+import { useServiceRequestLogic } from './NewServiceRequestLogic';
+import NewUIEventHandler from './NewUIEventHandler';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Minimize, X } from 'lucide-react';
+import GoogleMap from "@/components/GoogleMap";
 
 interface NewServiceRequestManagerProps {
   type: ServiceRequest['type'];
@@ -21,8 +16,7 @@ interface NewServiceRequestManagerProps {
   onMinimize: () => void;
   userLocation?: { lat: number; lng: number } | null;
   userId: string;
-  persistentState: any;
-  isRealLife?: boolean; // Flag to distinguish between simulation and real-life
+  persistentState: ReturnType<typeof usePersistentServiceRequest>;
 }
 
 const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
@@ -32,120 +26,105 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
   onMinimize,
   userLocation,
   userId,
-  persistentState,
-  isRealLife = false
+  persistentState
 }) => {
-  const { language } = useApp();
-  const t = useTranslation(language);
+  const defaultLocation = { lat: 42.6977, lng: 23.3219 }; // Sofia, Bulgaria
+  const location = userLocation || defaultLocation;
 
-  // This is a placeholder component that would contain the actual service request logic
-  // In a real implementation, this would render different components based on the service type
-  // and handle the service request flow
-  
+  // Use simulation service request logic
+  const {
+    currentScreen,
+    currentRequest,
+    assignedEmployee,
+    handleAcceptQuote,
+    handleDeclineQuote,
+    handleCancelRequest,
+    handleClose,
+    handleMinimize,
+  } = useServiceRequestLogic({
+    type,
+    open,
+    userLocation: location,
+    userId,
+    onClose,
+    onMinimize,
+    persistentState,
+  });
+
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      handleClose();
+    }
+  };
+
+  const handleInteractOutside = (e: Event) => {
+    e.preventDefault();
+    handleMinimize();
+  };
+
+  if (!open) return null;
+
+  const requestWithEmployeeInfo = currentRequest ? {
+      ...currentRequest,
+      assignedEmployeeName: assignedEmployee?.name,
+    } : null;
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">
-            {isRealLife ? 'Real-Life' : 'Simulation'} Service Request: {type}
-          </h2>
-          <div className="flex gap-2">
-            <button
-              onClick={onMinimize}
-              className="text-gray-500 hover:text-gray-700 text-sm"
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent
+        className="max-w-md max-h-[90vh] overflow-hidden flex flex-col px-0 pt-0"
+        onInteractOutside={handleInteractOutside}
+      >
+        <div className="flex items-center border-b justify-between px-6 py-5">
+          <DialogHeader className="flex flex-1 items-center justify-center">
+            <DialogTitle className="!mb-0 flex items-center gap-1 text-xl font-extrabold font-clash tracking-tight">
+              RoadSaver (Sim)
+            </DialogTitle>
+          </DialogHeader>
+          <div>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="text-gray-500 hover:text-gray-400"
+              aria-label="Minimize"
+              onClick={handleMinimize}
             >
-              Minimize
-            </button>
-            <button
-              onClick={onClose}
-              className="text-gray-500 hover:text-gray-700"
+              <Minimize className="w-5 h-5" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="text-gray-500 hover:text-red-700"
+              aria-label="Close"
+              onClick={handleClose}
             >
-              ✕
-            </button>
+              <X className="w-5 h-5" />
+            </Button>
           </div>
         </div>
-        
-        <div className="mb-4">
-          <p className="text-gray-600 dark:text-gray-300">
-            {isRealLife 
-              ? 'This is a real-life service request. All actions will have actual consequences.'
-              : 'This is a simulated service request for training purposes.'
-            }
-          </p>
-        </div>
 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Service Type</label>
-            <input 
-              type="text" 
-              value={type} 
-              readOnly 
-              className="w-full p-2 border rounded bg-gray-100 dark:bg-gray-700" 
+        <div className="w-full bg-background/70 h-40 flex items-center justify-center">
+          {location && (
+            <GoogleMap
+              userLocation={location}
+              employeeLocation={assignedEmployee?.location}
+              height="160px"
             />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-2">User Location</label>
-            <input 
-              type="text" 
-              value={userLocation ? `${userLocation.lat}, ${userLocation.lng}` : 'Not available'} 
-              readOnly 
-              className="w-full p-2 border rounded bg-gray-100 dark:bg-gray-700" 
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">User ID</label>
-            <input 
-              type="text" 
-              value={userId} 
-              readOnly 
-              className="w-full p-2 border rounded bg-gray-100 dark:bg-gray-700" 
-            />
-          </div>
-
-          {!isRealLife && (
-            <div className="bg-blue-50 dark:bg-blue-900 p-3 rounded border-l-4 border-blue-400">
-              <p className="text-sm text-blue-800 dark:text-blue-200">
-                🎮 Simulation Mode: This request is for training purposes only
-              </p>
-            </div>
-          )}
-
-          {isRealLife && (
-            <div className="bg-red-50 dark:bg-red-900 p-3 rounded border-l-4 border-red-400">
-              <p className="text-sm text-red-800 dark:text-red-200">
-                🚨 Real-Life Mode: This request will create actual service tickets
-              </p>
-            </div>
           )}
         </div>
 
-        <div className="mt-6 flex justify-end space-x-2">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => {
-              // Handle submission logic here
-              console.log(`Submitting ${isRealLife ? 'real-life' : 'simulation'} service request:`, type);
-              onClose();
-            }}
-            className={`px-4 py-2 text-white rounded ${
-              isRealLife 
-                ? 'bg-red-600 hover:bg-red-700' 
-                : 'bg-blue-600 hover:bg-blue-700'
-            }`}
-          >
-            Submit Request
-          </button>
+        <div className="flex-1 px-6 pb-4 overflow-y-auto">
+          <NewUIEventHandler
+            currentScreen={currentScreen}
+            request={requestWithEmployeeInfo}
+            onAcceptQuote={handleAcceptQuote}
+            onDeclineQuote={handleDeclineQuote}
+            onCancelRequest={handleCancelRequest}
+            onClose={handleClose}
+          />
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
