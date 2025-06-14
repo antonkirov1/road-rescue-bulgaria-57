@@ -30,9 +30,9 @@ export const useServiceRequestLogic = ({ type, userLocation, onClose }: ServiceR
   isSubmitting: false,
   showRealTimeUpdate: false,
   showPriceQuote: false,
-  declineReason: '',
-  serviceFee: undefined,
-  hasDeclinedOnce: undefined,
+  declineReason: ''
+});
+
   isWaitingForRevision: undefined,
   currentEmployeeName: undefined,
   declinedEmployees: undefined
