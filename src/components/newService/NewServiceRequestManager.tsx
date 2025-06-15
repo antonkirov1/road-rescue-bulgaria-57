@@ -71,6 +71,15 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
       assignedEmployeeName: assignedEmployee?.name,
     } : null;
 
+  // Ensure employeeLocation is properly formatted for GoogleMap
+  const employeeLocation = assignedEmployee?.location && 
+    typeof assignedEmployee.location.lat === 'number' && 
+    typeof assignedEmployee.location.lng === 'number' 
+    ? assignedEmployee.location 
+    : undefined;
+
+  console.log('GoogleMap props - userLocation:', location, 'employeeLocation:', employeeLocation);
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-md mx-auto my-8 max-h-[90vh] p-0 gap-0">
@@ -106,7 +115,7 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
           <div className="w-full bg-background/70 h-48 flex items-center justify-center shrink-0">
             <GoogleMap
               userLocation={location}
-              employeeLocation={assignedEmployee?.location}
+              employeeLocation={employeeLocation}
               height="100%"
             />
           </div>
