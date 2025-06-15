@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
@@ -11,6 +10,7 @@ import DashboardServices from '@/components/dashboard/DashboardServices';
 import NewServiceRequestManagerRealLife from '@/components/newService/NewServiceRequestManagerRealLife';
 import ExitConfirmDialog from '@/components/dashboard/ExitConfirmDialog';
 import SettingsMenu from '@/components/settings/SettingsMenu';
+import RequestSystemDialog from '@/components/newService/RequestSystemDialog';
 
 // Define the service types that can be handled by the dashboard (without simulation elements)
 type DashboardServiceType = ServiceRequest['type'] | 'emergency' | 'support';
@@ -30,6 +30,10 @@ const RealLifeDashboard: React.FC = () => {
   const [showOngoingRequests, setShowOngoingRequests] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [isServiceRequestMinimized, setIsServiceRequestMinimized] = useState(false);
+  
+  // Add state to toggle request dialog
+  const [serviceDialogOpen, setServiceDialogOpen] = useState(false);
+  const [serviceDialogType, setServiceDialogType] = useState<ServiceRequest['type'] | null>(null);
   
   // Redirect to auth if not authenticated
   useEffect(() => {
@@ -84,7 +88,8 @@ const RealLifeDashboard: React.FC = () => {
     } else {
       // Service is already in the correct format for the new system
       setIsServiceRequestMinimized(false);
-      openServiceRequest(service);
+      setServiceDialogType(service as ServiceRequest['type']);
+      setServiceDialogOpen(true);
     }
   };
 
@@ -138,6 +143,15 @@ const RealLifeDashboard: React.FC = () => {
           userLocation={userLocation}
           userId={user?.username || 'anonymous'}
           persistentState={persistentServiceState}
+        />
+      )}
+
+      {serviceDialogOpen && serviceDialogType && (
+        <RequestSystemDialog
+          open={serviceDialogOpen}
+          type={serviceDialogType}
+          onClose={() => setServiceDialogOpen(false)}
+          userId={user?.username || "anonymous"}
         />
       )}
 

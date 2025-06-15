@@ -7,9 +7,9 @@ import { useNewServiceRequest } from '@/hooks/useNewServiceRequest';
 import { usePersistentServiceRequest } from '@/hooks/usePersistentServiceRequest';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DashboardServices from '@/components/dashboard/DashboardServices';
-import NewServiceRequestManager from '@/components/newService/NewServiceRequestManager';
 import ExitConfirmDialog from '@/components/dashboard/ExitConfirmDialog';
 import SettingsMenu from '@/components/settings/SettingsMenu';
+import RequestSystemDialog from '@/components/newService/RequestSystemDialog';
 
 // Define the service types that can be handled by the dashboard
 type DashboardServiceType = ServiceRequest['type'] | 'emergency' | 'support';
@@ -30,6 +30,10 @@ const SimulationDashboard: React.FC = () => {
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [isServiceRequestMinimized, setIsServiceRequestMinimized] = useState(false);
   
+  // Add state to toggle request dialog
+  const [serviceDialogOpen, setServiceDialogOpen] = useState(false);
+  const [serviceDialogType, setServiceDialogType] = useState<ServiceRequest['type'] | null>(null);
+
   // Redirect to auth if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
@@ -81,9 +85,9 @@ const SimulationDashboard: React.FC = () => {
       // Handle support differently - could show a contact dialog
       return;
     } else {
-      // Service is already in the correct format for the new system
       setIsServiceRequestMinimized(false);
-      openServiceRequest(service);
+      setServiceDialogType(service as ServiceRequest['type']);
+      setServiceDialogOpen(true);
     }
   };
 
@@ -134,16 +138,12 @@ const SimulationDashboard: React.FC = () => {
       
       <DashboardServices onServiceSelect={handleServiceSelect} />
       
-      {/* New Service Request Manager - only show if not minimized */}
-      {isOpen && selectedService && !isServiceRequestMinimized && (
-        <NewServiceRequestManager
-          type={selectedService}
-          open={true}
-          onClose={handleServiceRequestClose}
-          onMinimize={handleServiceRequestMinimize}
-          userLocation={userLocation}
-          userId={user?.username || 'anonymous'}
-          persistentState={persistentServiceState}
+      {serviceDialogOpen && serviceDialogType && (
+        <RequestSystemDialog
+          open={serviceDialogOpen}
+          type={serviceDialogType}
+          onClose={() => setServiceDialogOpen(false)}
+          userId={user?.username || "anonymous"}
         />
       )}
 
