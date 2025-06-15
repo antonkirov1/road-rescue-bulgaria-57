@@ -74,46 +74,46 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
-        className="w-full h-full max-w-none max-h-none sm:w-auto sm:h-auto sm:max-w-md sm:max-h-[90vh] overflow-hidden flex flex-col p-0 m-0 sm:m-6 rounded-none sm:rounded-lg"
+        className="fixed inset-0 z-50 w-screen h-screen max-w-none max-h-none p-0 m-0 bg-white overflow-hidden flex flex-col sm:inset-auto sm:w-auto sm:h-auto sm:max-w-md sm:max-h-[90vh] sm:m-6 sm:rounded-lg"
         onInteractOutside={handleInteractOutside}
       >
-        <div className="flex items-center border-b justify-between px-6 py-5">
+        <div className="flex items-center border-b justify-between px-4 py-3 min-h-[60px]">
           <DialogHeader className="flex flex-1 items-center justify-center">
-            <DialogTitle className="!mb-0 flex items-center gap-1 text-xl font-extrabold font-clash tracking-tight">
+            <DialogTitle className="!mb-0 flex items-center gap-1 text-lg font-extrabold font-clash tracking-tight">
               RoadSaver (Sim)
             </DialogTitle>
           </DialogHeader>
-          <div>
+          <div className="flex gap-1">
             <Button
               size="icon"
               variant="ghost"
-              className="text-gray-500 hover:text-gray-400"
+              className="text-gray-500 hover:text-gray-400 h-8 w-8"
               aria-label="Minimize"
               onClick={handleMinimize}
             >
-              <Minimize className="w-5 h-5" />
+              <Minimize className="w-4 h-4" />
             </Button>
             <Button
               size="icon"
               variant="ghost"
-              className="text-gray-500 hover:text-red-700"
+              className="text-gray-500 hover:text-red-700 h-8 w-8"
               aria-label="Close"
               onClick={handleClose}
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </Button>
           </div>
         </div>
 
-        <div className="w-full bg-background/70 h-40 flex items-center justify-center">
+        <div className="w-full bg-background/70 h-32 sm:h-40 flex items-center justify-center">
           <GoogleMap
             userLocation={location}
             employeeLocation={assignedEmployee?.location}
-            height="160px"
+            height="100%"
           />
         </div>
 
-        <div className="flex-1 px-6 pb-4 overflow-y-auto">
+        <div className="flex-1 px-4 py-4 overflow-y-auto">
           <NewUIEventHandler
             currentScreen={currentScreen}
             request={requestWithEmployeeInfo}
