@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckCheck, MapPin, Phone, XCircle } from 'lucide-react';
@@ -5,6 +6,7 @@ import { ServiceRequest } from '@/types/newServiceRequest';
 import { useApp } from '@/contexts/AppContext';
 import { useTranslation } from '@/utils/translations';
 import { Card, CardContent } from '@/components/ui/card';
+import SearchingTechnicianScreen from './screens/SearchingTechnicianScreen';
 
 interface NewUIEventHandlerProps {
   currentScreen: string;
@@ -13,7 +15,7 @@ interface NewUIEventHandlerProps {
   onDeclineQuote: () => void;
   onCancelRequest: () => void;
   onClose: () => void;
-  onLiveTracking?: () => void; // OPTIONAL: allow simulation system to open modal
+  onLiveTracking?: () => void;
 }
 
 const NewUIEventHandler: React.FC<NewUIEventHandlerProps> = ({
@@ -23,13 +25,23 @@ const NewUIEventHandler: React.FC<NewUIEventHandlerProps> = ({
   onDeclineQuote,
   onCancelRequest,
   onClose,
-  onLiveTracking, // <- receive prop
+  onLiveTracking,
 }) => {
   const { language } = useApp();
   const t = useTranslation(language);
 
   if (!request) {
     return <div>{t('no-request-available')}</div>;
+  }
+
+  if (currentScreen === 'show_searching_technician') {
+    // Simulation: Searching for technician state (pending match)
+    return (
+      <SearchingTechnicianScreen
+        request={request}
+        onCancel={onCancelRequest}
+      />
+    );
   }
 
   if (currentScreen === 'request_received') {
