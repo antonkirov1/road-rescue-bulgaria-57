@@ -7,7 +7,6 @@ import { useNewServiceRequest } from '@/hooks/useNewServiceRequest';
 import { usePersistentServiceRequest } from '@/hooks/usePersistentServiceRequest';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DashboardServices from '@/components/dashboard/DashboardServices';
-import NewServiceRequestManagerRealLife from '@/components/newService/NewServiceRequestManagerRealLife';
 import ExitConfirmDialog from '@/components/dashboard/ExitConfirmDialog';
 import SettingsMenu from '@/components/settings/SettingsMenu';
 import RequestSystemDialog from '@/components/newService/RequestSystemDialog';
@@ -136,18 +135,6 @@ const RealLifeDashboard: React.FC = () => {
         <DashboardServices onServiceSelect={handleServiceSelect} />
         
         {/* Real-Life Service Request Manager - only show if not minimized */}
-        {isOpen && selectedService && !isServiceRequestMinimized && (
-          <NewServiceRequestManagerRealLife
-            type={selectedService}
-            open={true}
-            onClose={handleServiceRequestClose}
-            onMinimize={handleServiceRequestMinimize}
-            userLocation={userLocation}
-            userId={user?.username || 'anonymous'}
-            persistentState={persistentServiceState}
-          />
-        )}
-
         {serviceDialogOpen && serviceDialogType && (
           <RequestSystemDialog
             open={serviceDialogOpen}
