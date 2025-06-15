@@ -7,12 +7,14 @@ import RequestSystemDialog from "@/components/newService/RequestSystemDialog";
 import { ServiceRequest } from "@/types/newServiceRequest";
 import DashboardServices from "@/components/dashboard/DashboardServices";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import SettingsMenu from "@/components/settings/SettingsMenu";
 
 export default function SimulationDashboard() {
   const { language, setLanguage } = useApp();
   const t = useTranslation(language);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [selectedServiceType, setSelectedServiceType] = React.useState<ServiceRequest['type'] | null>(null);
+  const [showSettings, setShowSettings] = React.useState(false);
 
   const handleServiceSelect = (serviceType: ServiceRequest['type'] | 'emergency' | 'support') => {
     if (serviceType === 'support' || serviceType === 'emergency') {
@@ -36,7 +38,7 @@ export default function SimulationDashboard() {
   };
 
   const handleSettingsClick = () => {
-    console.log('Settings clicked');
+    setShowSettings(true);
   };
 
   const handleLanguageToggle = () => {
@@ -45,6 +47,14 @@ export default function SimulationDashboard() {
 
   const handleOngoingRequestsClick = () => {
     console.log('Ongoing requests clicked');
+  };
+
+  const handleSettingsClose = () => {
+    setShowSettings(false);
+  };
+
+  const handleLanguageChange = (newLanguage: 'en' | 'bg') => {
+    setLanguage(newLanguage);
   };
 
   return (
@@ -71,6 +81,15 @@ export default function SimulationDashboard() {
             type={selectedServiceType}
             onClose={closeDialog}
             userId={"simulation-user"}
+          />
+        )}
+
+        {showSettings && (
+          <SettingsMenu
+            open={showSettings}
+            onClose={handleSettingsClose}
+            onLanguageChange={handleLanguageChange}
+            currentLanguage={language}
           />
         )}
       </div>
