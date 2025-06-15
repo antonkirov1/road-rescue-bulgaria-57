@@ -9,11 +9,13 @@ interface NewServiceRequestDialogProps {
   onOpenChange: (isOpen: boolean) => void;
   currentScreen: string | null;
   request: ServiceRequest | null;
+  assignedEmployee?: any; // Added for compatibility
   onAcceptQuote: () => void;
   onDeclineQuote: () => void;
   onCancelRequest: () => void;
   onClose: () => void;
   onMinimize: () => void;
+  onLiveTracking?: () => void; // Added for compatibility
 }
 
 const NewServiceRequestDialog: React.FC<NewServiceRequestDialogProps> = ({
@@ -21,11 +23,13 @@ const NewServiceRequestDialog: React.FC<NewServiceRequestDialogProps> = ({
   onOpenChange,
   currentScreen,
   request,
+  assignedEmployee,
   onAcceptQuote,
   onDeclineQuote,
   onCancelRequest,
   onClose,
-  onMinimize
+  onMinimize,
+  onLiveTracking
 }) => {
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
@@ -67,10 +71,12 @@ const NewServiceRequestDialog: React.FC<NewServiceRequestDialogProps> = ({
         <NewUIEventHandler
           currentScreen={currentScreen}
           request={request}
+          assignedEmployee={assignedEmployee}
           onAcceptQuote={onAcceptQuote}
           onDeclineQuote={onDeclineQuote}
           onCancelRequest={onCancelRequest}
           onClose={onClose}
+          onLiveTracking={onLiveTracking}
         />
       </DialogContent>
     </Dialog>
