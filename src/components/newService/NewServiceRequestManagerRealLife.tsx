@@ -131,7 +131,7 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
             </div>
           </div>
 
-          <div className="w-full bg-background/70 h-32 flex items-center justify-center shrink-0">
+          <div className="w-full bg-background/70 h-48 flex items-center justify-center shrink-0">
             <GoogleMap
               userLocation={location}
               height="100%"
