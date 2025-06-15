@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
@@ -89,10 +88,12 @@ const SimulationDashboard: React.FC = () => {
   };
 
   const handleActiveRequestClick = () => {
+    // If there's a minimized request, restore it
     if (isOpen && isServiceRequestMinimized) {
       console.log('Restoring minimized service request');
       setIsServiceRequestMinimized(false);
     } else {
+      // Otherwise show ongoing requests (if any)
       setShowOngoingRequests(true);
     }
   };
@@ -113,6 +114,9 @@ const SimulationDashboard: React.FC = () => {
     logout();
     navigate('/user/simulation-auth');
   };
+
+  // Check if there's an active (minimized) request
+  const hasActiveRequest = isOpen && isServiceRequestMinimized;
   
   return (
     <div className="min-h-screen bg-background pb-16 font-clash">
@@ -124,6 +128,8 @@ const SimulationDashboard: React.FC = () => {
         onSettingsClick={() => setShowSettings(true)}
         onLanguageToggle={() => setLanguage(language === 'en' ? 'bg' : 'en')}
         onOngoingRequestsClick={handleActiveRequestClick}
+        hasActiveRequest={hasActiveRequest}
+        activeRequestType={hasActiveRequest ? selectedService : undefined}
       />
       
       <DashboardServices onServiceSelect={handleServiceSelect} />
