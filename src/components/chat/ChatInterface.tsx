@@ -37,7 +37,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ employeeId, isOpen, onClo
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-4xl h-[80vh] p-0 gap-0">
+      <DialogContent className="w-full h-full sm:max-w-4xl sm:h-[80vh] p-0 gap-0">
         <div className="flex h-full">
           <ChatSidebar
             rooms={rooms}
