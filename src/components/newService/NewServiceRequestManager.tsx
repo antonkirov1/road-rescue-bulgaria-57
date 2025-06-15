@@ -72,7 +72,7 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
-        className="w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col p-0"
+        className="w-full h-full max-w-none max-h-none sm:w-auto sm:h-auto sm:max-w-md sm:max-h-[90vh] overflow-hidden flex flex-col p-0 m-0 sm:m-6 rounded-none sm:rounded-lg"
         onInteractOutside={handleInteractOutside}
       >
         <div className="flex items-center border-b justify-between px-6 py-5">
