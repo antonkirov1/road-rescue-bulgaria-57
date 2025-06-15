@@ -1,3 +1,4 @@
+
 import React, { useCallback, useState, useEffect, memo } from 'react';
 import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 
@@ -43,14 +44,17 @@ const MapComponent: React.FC<MapProps> = memo(({
 
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: apiKey
+    googleMapsApiKey: apiKey,
+    libraries: ['places']
   });
 
   const onLoad = useCallback((map: google.maps.Map) => {
+    console.log('Google Map loaded successfully');
     setMap(map);
   }, []);
 
   const onUnmount = useCallback(() => {
+    console.log('Google Map unmounted');
     setMap(null);
   }, []);
 
@@ -88,6 +92,7 @@ const MapComponent: React.FC<MapProps> = memo(({
 
   // Show error message if there's a load error
   if (loadError) {
+    console.error('Google Maps load error:', loadError);
     return (
       <div 
         style={{ height }} 
@@ -102,6 +107,7 @@ const MapComponent: React.FC<MapProps> = memo(({
   }
 
   if (!isLoaded) {
+    console.log('Google Maps is loading...');
     return (
       <div 
         style={{ height }} 
@@ -111,6 +117,8 @@ const MapComponent: React.FC<MapProps> = memo(({
       </div>
     );
   }
+
+  console.log('Rendering Google Map with userLocation:', userLocation, 'employeeLocation:', employeeLocation);
 
   return (
     <div style={{ height }}>
@@ -124,9 +132,9 @@ const MapComponent: React.FC<MapProps> = memo(({
         options={{
           disableDefaultUI: false,
           zoomControl: true,
-          streetViewControl: true,
-          mapTypeControl: true,
-          fullscreenControl: true,
+          streetViewControl: false,
+          mapTypeControl: false,
+          fullscreenControl: false,
         }}
       >
         {/* User location marker */}

@@ -31,6 +31,8 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
   const defaultLocation = { lat: 42.6977, lng: 23.3219 }; // Sofia, Bulgaria
   const location = userLocation || defaultLocation;
 
+  console.log('NewServiceRequestManager - userLocation:', userLocation, 'location:', location);
+
   // Use simulation service request logic
   const {
     currentScreen,
@@ -104,13 +106,11 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
         </div>
 
         <div className="w-full bg-background/70 h-40 flex items-center justify-center">
-          {location && (
-            <GoogleMap
-              userLocation={location}
-              employeeLocation={assignedEmployee?.location}
-              height="160px"
-            />
-          )}
+          <GoogleMap
+            userLocation={location}
+            employeeLocation={assignedEmployee?.location}
+            height="160px"
+          />
         </div>
 
         <div className="flex-1 px-6 pb-4 overflow-y-auto">

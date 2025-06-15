@@ -6,7 +6,7 @@ import { useServiceRequestLogicRealLife } from './NewServiceRequestLogicRealLife
 import NewUIEventHandler from './NewUIEventHandler';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Minimize, X, Activity } from 'lucide-react';
+import { X, Activity } from 'lucide-react';
 import GoogleMap from "@/components/GoogleMap";
 
 interface NewServiceRequestManagerRealLifeProps {
@@ -70,6 +70,8 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
 }) => {
   const defaultLocation = { lat: 42.6977, lng: 23.3219 }; // Sofia, Bulgaria
   const location = userLocation || defaultLocation;
+
+  console.log('NewServiceRequestManagerRealLife - userLocation:', userLocation, 'location:', location);
 
   // Use your hook to get actual real request state from backend (no simulation):
   const {
@@ -151,12 +153,10 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
 
         {/* Google Maps map instead of Mapbox */}
         <div className="w-full bg-background/70 h-40 flex items-center justify-center">
-          {location && (
-            <GoogleMap
-              userLocation={location}
-              height="160px"
-            />
-          )}
+          <GoogleMap
+            userLocation={location}
+            height="160px"
+          />
         </div>
 
         <div className="flex-1 px-6 pb-4 overflow-y-auto">
