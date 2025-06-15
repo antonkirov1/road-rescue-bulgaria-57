@@ -6,9 +6,10 @@ import { ServiceRequestProvider } from "@/components/newService/ServiceRequestPr
 import RequestSystemDialog from "@/components/newService/RequestSystemDialog";
 import { ServiceRequest } from "@/types/newServiceRequest";
 import DashboardServices from "@/components/dashboard/DashboardServices";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
 
 export default function SimulationDashboard() {
-  const { language } = useApp();
+  const { language, setLanguage } = useApp();
   const t = useTranslation(language);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [selectedServiceType, setSelectedServiceType] = React.useState<ServiceRequest['type'] | null>(null);
@@ -26,22 +27,41 @@ export default function SimulationDashboard() {
     setSelectedServiceType(null);
   };
 
+  const handleEmergencyClick = () => {
+    console.log('Emergency clicked');
+  };
+
+  const handleLocationClick = () => {
+    console.log('Location clicked');
+  };
+
+  const handleSettingsClick = () => {
+    console.log('Settings clicked');
+  };
+
+  const handleLanguageToggle = () => {
+    setLanguage(language === 'en' ? 'bg' : 'en');
+  };
+
+  const handleOngoingRequestsClick = () => {
+    console.log('Ongoing requests clicked');
+  };
+
   return (
     <ServiceRequestProvider>
       <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <div className="bg-green-600 text-white p-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl font-semibold">RoadSaver</h1>
-            <div className="flex items-center gap-4">
-              <span className="text-sm">Active Request</span>
-            </div>
-          </div>
-        </div>
+        <DashboardHeader
+          language={language}
+          t={t}
+          onEmergencyClick={handleEmergencyClick}
+          onLocationClick={handleLocationClick}
+          onSettingsClick={handleSettingsClick}
+          onLanguageToggle={handleLanguageToggle}
+          onOngoingRequestsClick={handleOngoingRequestsClick}
+          hasActiveRequest={false}
+        />
 
-        {/* Services Section */}
-        <div className="p-4">
-          <h2 className="text-lg font-semibold mb-4">Services</h2>
+        <div className="container max-w-md mx-auto px-4 py-4 sm:py-6">
           <DashboardServices onServiceSelect={handleServiceSelect} />
         </div>
 
