@@ -110,45 +110,44 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent
-        className="fixed inset-0 z-50 w-full h-full max-w-none max-h-none p-0 m-0 bg-white overflow-hidden flex flex-col"
-        onInteractOutside={handleInteractOutside}
-      >
-        <div className="flex items-center border-b justify-between px-4 py-3 min-h-[60px] bg-white shrink-0">
-          <DialogHeader className="flex flex-1 items-center justify-center">
-            <DialogTitle className="!mb-0 flex items-center gap-1 text-lg font-extrabold font-clash tracking-tight">
-              RoadSaver (Live)
-            </DialogTitle>
-          </DialogHeader>
-          <div>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="text-gray-500 hover:text-red-700 h-8 w-8"
-              aria-label="Close"
-              onClick={handleClose}
-            >
-              <X className="w-4 h-4" />
-            </Button>
+      <DialogContent className="p-0 m-0 border-0 bg-white max-w-none max-h-none w-screen h-screen">
+        <div className="flex flex-col h-full">
+          <div className="flex items-center border-b justify-between px-4 py-3 bg-white shrink-0">
+            <DialogHeader className="flex flex-1 items-center justify-center">
+              <DialogTitle className="!mb-0 flex items-center gap-1 text-lg font-extrabold font-clash tracking-tight">
+                RoadSaver (Live)
+              </DialogTitle>
+            </DialogHeader>
+            <div>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="text-gray-500 hover:text-red-700 h-8 w-8"
+                aria-label="Close"
+                onClick={handleClose}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
-        </div>
 
-        <div className="w-full bg-background/70 h-32 flex items-center justify-center shrink-0">
-          <GoogleMap
-            userLocation={location}
-            height="100%"
-          />
-        </div>
+          <div className="w-full bg-background/70 h-32 flex items-center justify-center shrink-0">
+            <GoogleMap
+              userLocation={location}
+              height="100%"
+            />
+          </div>
 
-        <div className="flex-1 px-4 py-4 overflow-y-auto bg-white min-h-0">
-          <NewUIEventHandler
-            currentScreen={currentScreen}
-            request={compatibleRequest}
-            onAcceptQuote={handleAcceptQuote}
-            onDeclineQuote={handleDeclineQuote}
-            onCancelRequest={handleCancelRequest}
-            onClose={handleClose}
-          />
+          <div className="flex-1 px-4 py-4 overflow-y-auto bg-white">
+            <NewUIEventHandler
+              currentScreen={currentScreen}
+              request={compatibleRequest}
+              onAcceptQuote={handleAcceptQuote}
+              onDeclineQuote={handleDeclineQuote}
+              onCancelRequest={handleCancelRequest}
+              onClose={handleClose}
+            />
+          </div>
         </div>
       </DialogContent>
     </Dialog>
