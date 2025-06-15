@@ -62,7 +62,7 @@ const RequestSystemDialog: React.FC<Props> = ({ open, type, onClose, userId }) =
     onClose();
   };
 
-  const handleNoTechnicianOk = () => {
+  const handleNoTechnicianOkAndClose = () => {
     handleNoTechnicianOk();
     onClose();
   };
@@ -79,7 +79,7 @@ const RequestSystemDialog: React.FC<Props> = ({ open, type, onClose, userId }) =
       case "searching":
         return <SearchingScreen onCancel={handleCancelRequest} />;
       case "no_technician":
-        return <NoTechnicianScreen onOk={handleNoTechnicianOk} />;
+        return <NoTechnicianScreen onOk={handleNoTechnicianOkAndClose} />;
       case "quote_received":
         return <QuoteScreen request={request!} onAccept={acceptQuote} onDecline={declineQuote} onCancel={handleCancelRequest} />;
       case "revised_quote":
