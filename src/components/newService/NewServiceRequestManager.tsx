@@ -73,7 +73,7 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="p-0 m-0 border-0 bg-white max-w-none max-h-none w-screen h-screen">
+      <DialogContent className="max-w-md mx-auto my-8 max-h-[90vh] p-0 gap-0">
         <div className="flex flex-col h-full">
           <div className="flex items-center border-b justify-between px-4 py-3 bg-white shrink-0">
             <DialogHeader className="flex flex-1 items-center justify-center">
@@ -111,7 +111,7 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
             />
           </div>
 
-          <div className="flex-1 px-4 py-4 overflow-y-auto bg-white">
+          <div className="flex-1 px-4 py-4 overflow-y-auto bg-white min-h-0">
             <NewUIEventHandler
               currentScreen={currentScreen}
               request={requestWithEmployeeInfo}
