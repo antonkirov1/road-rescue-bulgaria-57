@@ -36,7 +36,7 @@ const NewUIEventHandler: React.FC<NewUIEventHandlerProps> = ({
     return (
       <div className="space-y-4">
         <h2 className="text-lg font-semibold">{t('request-received')}</h2>
-        <p>{t('request-description')}: {request.message}</p>
+        <p>{t('request-description')}: {request.description}</p>
         <p>{t('service-type')}: {request.type}</p>
         <Button onClick={onCancelRequest} variant="destructive" className="w-full">
           <XCircle className="w-4 h-4 mr-2" />
@@ -50,7 +50,7 @@ const NewUIEventHandler: React.FC<NewUIEventHandlerProps> = ({
     return (
       <div className="space-y-4">
         <h2 className="text-lg font-semibold">{t('quote-received')}</h2>
-        <p>{t('price-quote')}: ${request.price_quote}</p>
+        <p>{t('price-quote')}: ${request.priceQuote}</p>
         <div className="flex gap-2">
           <Button onClick={onAcceptQuote} className="w-full">
             <CheckCheck className="w-4 h-4 mr-2" />
@@ -68,7 +68,7 @@ const NewUIEventHandler: React.FC<NewUIEventHandlerProps> = ({
     return (
       <div className="space-y-4">
         <h2 className="text-lg font-semibold">{t('quote-revised')}</h2>
-        <p>{t('revised-price-quote')}: ${request.revised_price_quote}</p>
+        <p>{t('revised-price-quote')}: ${request.revisedPriceQuote}</p>
         <div className="flex gap-2">
           <Button onClick={onAcceptQuote} className="w-full">
             <CheckCheck className="w-4 h-4 mr-2" />
