@@ -74,10 +74,10 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
-        className="fixed inset-0 z-50 w-screen h-screen max-w-none max-h-none p-0 m-0 bg-white overflow-hidden flex flex-col sm:inset-auto sm:w-auto sm:h-auto sm:max-w-md sm:max-h-[90vh] sm:m-6 sm:rounded-lg"
+        className="fixed inset-0 z-50 w-screen h-screen max-w-none max-h-none p-0 m-0 bg-white overflow-hidden flex flex-col border-0 rounded-none"
         onInteractOutside={handleInteractOutside}
       >
-        <div className="flex items-center border-b justify-between px-4 py-3 min-h-[60px]">
+        <div className="flex items-center border-b justify-between px-4 py-3 min-h-[60px] bg-white">
           <DialogHeader className="flex flex-1 items-center justify-center">
             <DialogTitle className="!mb-0 flex items-center gap-1 text-lg font-extrabold font-clash tracking-tight">
               RoadSaver (Sim)
@@ -105,7 +105,7 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
           </div>
         </div>
 
-        <div className="w-full bg-background/70 h-32 sm:h-40 flex items-center justify-center">
+        <div className="w-full bg-background/70 h-32 flex items-center justify-center">
           <GoogleMap
             userLocation={location}
             employeeLocation={assignedEmployee?.location}
@@ -113,7 +113,7 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
           />
         </div>
 
-        <div className="flex-1 px-4 py-4 overflow-y-auto">
+        <div className="flex-1 px-4 py-4 overflow-y-auto bg-white">
           <NewUIEventHandler
             currentScreen={currentScreen}
             request={requestWithEmployeeInfo}

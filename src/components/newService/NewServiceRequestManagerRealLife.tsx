@@ -6,7 +6,7 @@ import { useServiceRequestLogicRealLife } from './NewServiceRequestLogicRealLife
 import NewUIEventHandler from './NewUIEventHandler';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { X, Activity } from 'lucide-react';
+import { X } from 'lucide-react';
 import GoogleMap from "@/components/GoogleMap";
 
 interface NewServiceRequestManagerRealLifeProps {
@@ -41,23 +41,6 @@ const mapToServiceRequestStatus = (status: string): ServiceRequest['status'] => 
   };
   return mapping[status] || 'pending';
 };
-
-/**
- * Optional: Active Request Button for real-life UI exact-matching simulation
- */
-function ActiveRequestButton({ onClick }: { onClick: () => void }) {
-  return (
-    <button
-      className="fixed z-30 bottom-7 right-7 bg-red-600 hover:bg-red-700 text-white rounded-full px-4 py-3 flex items-center shadow-lg transition-all animate-fade-in"
-      style={{ animationDelay: '200ms' }}
-      aria-label="Open active service request"
-      onClick={onClick}
-    >
-      <Activity className="w-6 h-6 mr-2 animate-pulse" />
-      <span>Active Request</span>
-    </button>
-  );
-}
 
 const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLifeProps> = ({
   type,
@@ -128,11 +111,10 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
-        className="fixed inset-0 z-50 w-screen h-screen max-w-none max-h-none p-0 m-0 bg-white overflow-hidden flex flex-col sm:inset-auto sm:w-auto sm:h-auto sm:max-w-md sm:max-h-[90vh] sm:m-6 sm:rounded-lg"
+        className="fixed inset-0 z-50 w-screen h-screen max-w-none max-h-none p-0 m-0 bg-white overflow-hidden flex flex-col border-0 rounded-none"
         onInteractOutside={handleInteractOutside}
       >
-        <div className="flex items-center border-b justify-between px-4 py-3 min-h-[60px]">
-          {/* Remove left icon and minimize. Only title + close */}
+        <div className="flex items-center border-b justify-between px-4 py-3 min-h-[60px] bg-white">
           <DialogHeader className="flex flex-1 items-center justify-center">
             <DialogTitle className="!mb-0 flex items-center gap-1 text-lg font-extrabold font-clash tracking-tight">
               RoadSaver (Live)
@@ -151,15 +133,14 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
           </div>
         </div>
 
-        {/* Google Maps map instead of Mapbox */}
-        <div className="w-full bg-background/70 h-32 sm:h-40 flex items-center justify-center">
+        <div className="w-full bg-background/70 h-32 flex items-center justify-center">
           <GoogleMap
             userLocation={location}
             height="100%"
           />
         </div>
 
-        <div className="flex-1 px-4 py-4 overflow-y-auto">
+        <div className="flex-1 px-4 py-4 overflow-y-auto bg-white">
           <NewUIEventHandler
             currentScreen={currentScreen}
             request={compatibleRequest}
