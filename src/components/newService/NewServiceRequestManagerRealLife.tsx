@@ -37,9 +37,53 @@ const mapToServiceRequestStatus = (status: string): ServiceRequest['status'] => 
     'declined': 'quote_declined',
     'in_progress': 'in_progress',
     'completed': 'completed',
-    'cancelled': 'cancelled'
+    'cancelled': 'cancelled',
+    'quote_sent': 'quote_sent',
+    'quote_revised': 'quote_revised',
+    'request_created': 'pending',
+    'request_accepted': 'accepted',
+    'employee_assigned': 'accepted',
+    'quote_accepted': 'accepted',
+    // ... extend as needed
   };
   return mapping[status] || 'pending';
+};
+
+const mapBackendRequestToUI = (
+  backendRequest: any,
+  userId: string,
+  serviceTypeUi: ServiceRequest['type'],
+  location: { lat: number; lng: number }
+): ServiceRequest => {
+  // Defensive: Wherever the backend could have a quote, assign to priceQuote, if revised, assign to revisedPriceQuote, etc.
+  // Some fields may be missing, so provide fallbacks/defaults.
+  return {
+    id: backendRequest.id,
+    type: getDisplayName(backendRequest.type ?? serviceTypeUi),
+    status: mapToServiceRequestStatus(backendRequest.status),
+    userLocation: backendRequest.userLocation ?? location,
+    userId,
+    description: backendRequest.message || backendRequest.description || `Service request for ${serviceTypeUi}`,
+    priceQuote:
+      typeof backendRequest.priceQuote === 'number'
+        ? backendRequest.priceQuote
+        : backendRequest.currentQuote?.amount ?? null,
+    revisedPriceQuote:
+      typeof backendRequest.revisedPriceQuote === 'number'
+        ? backendRequest.revisedPriceQuote
+        : backendRequest.currentQuote?.isRevised
+          ? backendRequest.currentQuote.amount
+          : undefined,
+    assignedEmployeeId: backendRequest.assignedEmployeeId,
+    assignedEmployeeName: backendRequest.assignedEmployeeName || backendRequest.currentEmployeeName,
+    declineCount: backendRequest.declineCount ?? 0,
+    createdAt: backendRequest.createdAt
+      ? new Date(backendRequest.createdAt)
+      : new Date(),
+    updatedAt: backendRequest.updatedAt
+      ? new Date(backendRequest.updatedAt)
+      : new Date(),
+  };
 };
 
 const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLifeProps> = ({
@@ -53,8 +97,6 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
 }) => {
   const defaultLocation = { lat: 42.6977, lng: 23.3219 }; // Sofia, Bulgaria
   const location = userLocation || defaultLocation;
-
-  console.log('NewServiceRequestManagerRealLife - userLocation:', userLocation, 'location:', location);
 
   // Use your hook to get actual real request state from backend (no simulation):
   const {
@@ -82,31 +124,12 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
     }
   };
 
-  const handleInteractOutside = (e: Event) => {
-    e.preventDefault();
-    handleClose();
-  };
+  // Defensive: If backendRequest changes structure, map every time
+  const compatibleRequest = currentRequest
+    ? mapBackendRequestToUI(currentRequest, userId, type, location)
+    : null;
 
   if (!open) return null;
-
-  const compatibleRequest = currentRequest
-    ? {
-        ...currentRequest,
-        userId,
-        type: getDisplayName(currentRequest.type),
-        message: currentRequest.message || `Service request for ${type}`,
-        location: { lat: location.lat, lng: location.lng },
-        status: mapToServiceRequestStatus(currentRequest.status),
-        timestamp: currentRequest.timestamp || new Date().toISOString(),
-        username: userId,
-        createdAt: currentRequest.timestamp
-          ? new Date(currentRequest.timestamp)
-          : new Date(),
-        updatedAt: currentRequest.timestamp
-          ? new Date(currentRequest.timestamp)
-          : new Date(),
-      }
-    : null;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -155,3 +178,4 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
 };
 
 export default NewServiceRequestManagerRealLife;
+
