@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Settings, MapPin, Globe, Siren, Clock } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import ThemeToggle from '@/components/ui/theme-toggle';
+import { ServiceRequest } from '@/types/newServiceRequest';
 
 interface DashboardHeaderProps {
   language: 'en' | 'bg';
@@ -14,6 +15,8 @@ interface DashboardHeaderProps {
   onSettingsClick: () => void;
   onLanguageToggle: () => void;
   onOngoingRequestsClick: () => void;
+  hasActiveRequest?: boolean;
+  activeRequestType?: ServiceRequest['type'];
 }
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
@@ -23,7 +26,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   onLocationClick,
   onSettingsClick,
   onLanguageToggle,
-  onOngoingRequestsClick
+  onOngoingRequestsClick,
+  hasActiveRequest,
+  activeRequestType
 }) => {
   const { ongoingRequest } = useApp();
 
@@ -68,13 +73,13 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               size="sm" 
               onClick={onOngoingRequestsClick} 
               className={`text-xs font-normal sm:text-base ${
-                ongoingRequest ? 'border-green-500 text-green-600 bg-green-50' : ''
+                hasActiveRequest || ongoingRequest ? 'border-green-500 text-green-600 bg-green-50' : ''
               }`}
             >
               <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-              {t('active-request')}
+              {hasActiveRequest && activeRequestType ? activeRequestType : t('active-request')}
             </Button>
-            {ongoingRequest && (
+            {(hasActiveRequest || ongoingRequest) && (
               <Badge className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-1.5 py-0.5 animate-pulse">
                 1
               </Badge>
