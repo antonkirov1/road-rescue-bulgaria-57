@@ -1,29 +1,29 @@
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useCallback } from "react";
 import { ServiceRequest, ServiceRequestStatus } from "@/types/newServiceRequest";
 
-interface ServiceRequestContextValue {
-  currentRequest: ServiceRequest | null;
-  setCurrentRequest: (req: ServiceRequest | null) => void;
-  status: ServiceRequestStatus | null;
-  setStatus: (status: ServiceRequestStatus | null) => void;
-}
+type ServiceRequestContextValue = {
+  request: ServiceRequest | null;
+  setRequest: (r: ServiceRequest | null) => void;
+  step: ServiceRequestStatus | null;
+  setStep: (s: ServiceRequestStatus | null) => void;
+};
 
 const ServiceRequestContext = createContext<ServiceRequestContextValue | undefined>(undefined);
 
 export const ServiceRequestProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentRequest, setCurrentRequest] = useState<ServiceRequest | null>(null);
-  const [status, setStatus] = useState<ServiceRequestStatus | null>(null);
+  const [request, setRequest] = useState<ServiceRequest | null>(null);
+  const [step, setStep] = useState<ServiceRequestStatus | null>(null);
 
   return (
-    <ServiceRequestContext.Provider value={{ currentRequest, setCurrentRequest, status, setStatus }}>
+    <ServiceRequestContext.Provider value={{ request, setRequest, step, setStep }}>
       {children}
     </ServiceRequestContext.Provider>
   );
 };
 
-export function useServiceRequest() {
+export const useServiceRequest = () => {
   const ctx = useContext(ServiceRequestContext);
-  if (!ctx) throw new Error("useServiceRequest must be used within ServiceRequestProvider");
+  if (!ctx) throw new Error("useServiceRequest must be used within a ServiceRequestProvider");
   return ctx;
-}
+};

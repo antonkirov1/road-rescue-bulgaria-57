@@ -1,20 +1,26 @@
 
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ServiceRequest, ServiceRequestStatus } from "@/types/newServiceRequest";
 
 export function useServiceRequestFlow() {
   const [step, setStep] = useState<ServiceRequestStatus | null>(null);
   const [request, setRequest] = useState<ServiceRequest | null>(null);
+  const timers = useRef<number[]>([]);
 
-  // Simulate request step transitions after timeouts etc.
-  // For full implementation, adapt from repo logic:
-  function createRequest(type: ServiceRequest["type"], description: string) {
+  // Clean up timers on unmount/close
+  useEffect(() => {
+    return () => {
+      timers.current.forEach(clearTimeout);
+    };
+  }, []);
+
+  function createRequest(type: ServiceRequest["type"], description: string, userId: string) {
     const req: ServiceRequest = {
-      id: String(Date.now()),
+      id: String(Date.now()) + Math.random().toString(16),
       type,
-      status: "pending",
+      status: "searching",
       userLocation: { lat: 0, lng: 0 },
-      userId: "user",
+      userId,
       declineCount: 0,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -22,25 +28,48 @@ export function useServiceRequestFlow() {
     };
     setRequest(req);
     setStep("searching");
-    setTimeout(() => {
-      setStep("quote_received");
-      setRequest({ ...req, priceQuote: 100, assignedEmployeeName: "Ivan Petrov" });
-    }, 1200);
+    // Simulate search, then show quote, or "no technician" after a delay
+    timers.current.push(window.setTimeout(() => {
+      if (req.type === "Other Car Problems" && Math.random() < 0.5) {
+        setStep("no_technician");
+      } else {
+        setStep("quote_received");
+        setRequest(r => r && { ...r, priceQuote: 120, assignedEmployeeName: "Ivan Petrov" });
+      }
+    }, 1200));
   }
 
   function acceptQuote() {
-    if (!request) return;
     setStep("live_tracking");
-    setTimeout(() => setStep("completed"), 3000);
+    timers.current.push(window.setTimeout(() => setStep("completed"), 2000));
+  }
+
+  function acceptRevisedQuote() {
+    setStep("live_tracking");
+    timers.current.push(window.setTimeout(() => setStep("completed"), 1500));
   }
 
   function declineQuote() {
-    setStep("searching");
-    setTimeout(() => setStep("quote_received"), 1000);
+    setStep("revised_quote");
+    setRequest(r => r && { ...r, revisedPriceQuote: 130, previousEmployeeName: r.assignedEmployeeName, assignedEmployeeName: "Another Tech" });
+  }
+
+  function handleNoTechnicianOk() {
+    setStep("cancelled");
+    setRequest(null);
   }
 
   function cancelRequest() {
     setStep("cancelled");
+    setRequest(null);
+  }
+
+  function completeRequest() {
+    setStep("rate_employee");
+  }
+
+  function rateEmployee(rating: number) {
+    setStep(null);
     setRequest(null);
   }
 
@@ -54,8 +83,12 @@ export function useServiceRequestFlow() {
     request,
     createRequest,
     acceptQuote,
+    acceptRevisedQuote,
     declineQuote,
     cancelRequest,
     closeAll,
+    handleNoTechnicianOk,
+    completeRequest,
+    rateEmployee,
   };
 }

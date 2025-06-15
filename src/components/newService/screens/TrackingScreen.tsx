@@ -1,12 +1,13 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { ServiceRequest } from "@/types/newServiceRequest";
 
 const TrackingScreen = ({
   request,
   onComplete,
 }: {
-  request: any;
+  request: ServiceRequest;
   onComplete: () => void;
 }) => (
   <div className="flex flex-col gap-6 items-center justify-center p-8">

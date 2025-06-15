@@ -1,12 +1,13 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { ServiceRequest } from "@/types/newServiceRequest";
 
 const CompletedScreen = ({
   request,
   onClose
 }: {
-  request: any;
+  request: ServiceRequest;
   onClose: () => void;
 }) => (
   <div className="flex flex-col items-center gap-4 p-8 justify-center">

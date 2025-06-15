@@ -30,7 +30,7 @@ const SimulationDashboard: React.FC = () => {
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [isServiceRequestMinimized, setIsServiceRequestMinimized] = useState(false);
   
-  // Add state to toggle request dialog
+  // Add state to toggle new request dialog system
   const [serviceDialogOpen, setServiceDialogOpen] = useState(false);
   const [serviceDialogType, setServiceDialogType] = useState<ServiceRequest['type'] | null>(null);
 
