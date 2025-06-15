@@ -1,89 +1,90 @@
 
 import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useNavigate } from 'react-router-dom';
-import LoginForm from '@/components/auth/LoginForm';
-import { useApp } from '@/contexts/AppContext';
-import { toast } from '@/components/ui/use-toast';
-import { useTranslation } from '@/utils/translations';
-import { Button } from "@/components/ui/button";
-import { Globe } from 'lucide-react';
-import ThemeToggle from '@/components/ui/theme-toggle';
+import { ArrowLeft, Headphones, LogIn } from 'lucide-react';
 
 const SupportAuth: React.FC = () => {
   const navigate = useNavigate();
-  const { login, language, setLanguage } = useApp();
-  const t = useTranslation(language);
-  
-  const handleLogin = (credentials: { username: string; password: string }) => {
-    console.log('Support login attempt:', { username: credentials.username });
-    
-    // Check for Support credentials - you can customize these
-    if (credentials.username.trim() === 'support_admin' && credentials.password === 'SupportAcc93') {
-      console.log('Support credentials valid, logging in...');
-      login({ username: credentials.username });
-      navigate('/support/dashboard');
-      toast({
-        title: "Support Login Successful",
-        description: "Welcome to RoadSaver Support Portal"
-      });
-    } else {
-      console.log('Invalid support credentials provided');
-      toast({
-        title: t("auth-error"),
-        description: "Invalid support credentials. Use username: support_admin and password: SupportAcc93",
-        variant: "destructive",
-      });
-    }
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+
+  const handleLogin = () => {
+    // Add authentication logic here
+    navigate('/support/dashboard');
   };
-  
+
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-b from-green-600/10 to-background p-4 font-clash relative">
-      
-      {/* Top right controls */}
-      <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
-        <ThemeToggle showLabels={false} size="sm" />
-        <div className="relative">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => setLanguage(language === 'en' ? 'bg' : 'en')}
-            className="h-10 w-10 bg-green-600 text-white hover:bg-green-700"
-            title={t('change-language')}
-          >
-            <Globe className="h-4 w-4" />
-          </Button>
-          <span className="absolute -bottom-1 -right-1 text-xs bg-white text-green-600 px-1 rounded">
-            {language.toUpperCase()}
-          </span>
-        </div>
-      </div>
-
-      {/* Back button */}
-      <div className="absolute top-4 left-4">
-        <Button 
-          variant="outline" 
-          onClick={() => navigate('/admin-selection')}
-          className="bg-white/90 backdrop-blur-sm text-gray-800 hover:bg-white"
-        >
-          ← Back to Selection
-        </Button>
-      </div>
-
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2">RoadSaver</h1>
-          <p className="text-muted-foreground">Support Portal</p>
-          <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">
-            <p className="font-medium">Support Credentials:</p>
-            <p>Username: support_admin</p>
-            <p>Password: SupportAcc93</p>
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-yellow-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => navigate('/')}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h1 className="text-2xl font-bold text-orange-600">RoadSaver</h1>
           </div>
         </div>
-        
-        <LoginForm 
-          onLogin={handleLogin}
-          isAdmin={false}
-        />
+      </header>
+
+      <div className="container mx-auto px-4 py-12">
+        <div className="max-w-md mx-auto">
+          <Card>
+            <CardHeader className="text-center">
+              <Headphones className="h-16 w-16 text-orange-600 mx-auto mb-4" />
+              <CardTitle className="text-2xl">Support Login</CardTitle>
+              <CardDescription>
+                Access your support dashboard to assist customers
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+              
+              <Button 
+                onClick={handleLogin}
+                className="w-full"
+                size="lg"
+              >
+                <LogIn className="mr-2 h-5 w-5" />
+                Sign In
+              </Button>
+              
+              <div className="text-center">
+                <Button variant="link" size="sm">
+                  Forgot your password?
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

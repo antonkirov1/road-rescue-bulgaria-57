@@ -1,89 +1,96 @@
 
 import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useNavigate } from 'react-router-dom';
-import LoginForm from '@/components/auth/LoginForm';
-import { useApp } from '@/contexts/AppContext';
-import { toast } from '@/components/ui/use-toast';
-import { useTranslation } from '@/utils/translations';
-import { Button } from "@/components/ui/button";
-import { Globe } from 'lucide-react';
-import ThemeToggle from '@/components/ui/theme-toggle';
-import { AdminAccountService } from '@/services/adminAccountService';
+import { ArrowLeft, Shield, LogIn } from 'lucide-react';
 
 const AdminAuth: React.FC = () => {
   const navigate = useNavigate();
-  const { login, language, setLanguage } = useApp();
-  const t = useTranslation(language);
-  
-  const handleLogin = async (credentials: { username: string; password: string }) => {
-    console.log('Admin login attempt:', { username: credentials.username });
-    
-    try {
-      const admin = await AdminAccountService.authenticateAdmin(credentials.username, credentials.password);
-      
-      if (admin) {
-        console.log('Admin credentials valid, logging in...');
-        login({ username: admin.username, email: admin.email });
-        navigate('/admin/dashboard');
-        toast({
-          title: "Admin Login Successful",
-          description: "Welcome to RoadSaver Account Manager"
-        });
-      } else {
-        console.log('Invalid admin credentials provided');
-        toast({
-          title: t("auth-error"),
-          description: "Invalid admin credentials. Use username: account_admin and password: AdminAcc93",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('Admin authentication error:', error);
-      toast({
-        title: t("auth-error"),
-        description: "Authentication failed. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-  
-  return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-b from-purple-600/10 to-background p-4 font-clash relative">
-      
-      {/* Top right controls with theme toggle and language switcher */}
-      <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
-        <ThemeToggle showLabels={false} size="sm" />
-        <div className="relative">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => setLanguage(language === 'en' ? 'bg' : 'en')}
-            aria-label={t(language === 'en' ? 'switch-to-bulgarian' : 'switch-to-english')}
-            className="h-10 w-10 bg-purple-600 text-white hover:bg-purple-700"
-          >
-            <Globe className="h-4 w-4" />
-          </Button>
-          <span className="absolute -bottom-1 -right-1 text-xs bg-white text-purple-600 px-1 rounded">
-            {language.toUpperCase()}
-          </span>
-        </div>
-      </div>
+  const [username, setUsername] = React.useState('');
+  const [password, setPassword] = React.useState('');
 
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2">RoadSaver</h1>
-          <p className="text-muted-foreground">Account Manager Panel</p>
-          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
-            <p className="font-medium">Admin Credentials:</p>
-            <p>Username: account_admin</p>
-            <p>Password: AdminAcc93</p>
+  const handleLogin = () => {
+    // Add authentication logic here
+    navigate('/admin/dashboard');
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => navigate('/admin-selection')}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h1 className="text-2xl font-bold text-purple-600">RoadSaver</h1>
           </div>
+          <Button 
+            variant="outline"
+            onClick={() => navigate('/')}
+          >
+            Home
+          </Button>
         </div>
-        
-        <LoginForm 
-          onLogin={handleLogin}
-          isAdmin={true}
-        />
+      </header>
+
+      <div className="container mx-auto px-4 py-12">
+        <div className="max-w-md mx-auto">
+          <Card>
+            <CardHeader className="text-center">
+              <Shield className="h-16 w-16 text-purple-600 mx-auto mb-4" />
+              <CardTitle className="text-2xl">Admin Login</CardTitle>
+              <CardDescription>
+                Secure access to administrative functions
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  type="text"
+                  placeholder="Enter your username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+              
+              <Button 
+                onClick={handleLogin}
+                className="w-full"
+                size="lg"
+              >
+                <LogIn className="mr-2 h-5 w-5" />
+                Sign In
+              </Button>
+              
+              <div className="text-center">
+                <Button variant="link" size="sm">
+                  Need access? Contact IT support
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

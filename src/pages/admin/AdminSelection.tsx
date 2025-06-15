@@ -1,107 +1,69 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, Headphones, Globe } from 'lucide-react';
-import { useApp } from '@/contexts/AppContext';
-import { useTranslation } from '@/utils/translations';
-import ThemeToggle from '@/components/ui/theme-toggle';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Shield, Database } from 'lucide-react';
 
 const AdminSelection: React.FC = () => {
   const navigate = useNavigate();
-  const { language, setLanguage } = useApp();
-  const t = useTranslation(language);
-
-  const handleBackToHome = () => {
-    navigate('/');
-  };
-
-  const handleAdminLogin = () => {
-    navigate('/admin');
-  };
-
-  const handleSupportLogin = () => {
-    navigate('/support');
-  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
-      
-      {/* Top right controls */}
-      <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
-        <ThemeToggle showLabels={false} size="sm" />
-        <div className="relative">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => setLanguage(language === 'en' ? 'bg' : 'en')}
-            className="h-10 w-10 bg-purple-600 text-white hover:bg-purple-700"
-            title={t('change-language')}
-          >
-            <Globe className="h-4 w-4" />
-          </Button>
-          <span className="absolute -bottom-1 -right-1 text-xs bg-white text-purple-600 px-1 rounded">
-            {language.toUpperCase()}
-          </span>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => navigate('/')}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h1 className="text-2xl font-bold text-purple-600">RoadSaver</h1>
+          </div>
         </div>
-      </div>
+      </header>
 
-      {/* Back button */}
-      <div className="absolute top-4 left-4">
-        <Button 
-          variant="outline" 
-          onClick={handleBackToHome}
-          className="bg-white/90 backdrop-blur-sm text-gray-800 hover:bg-white"
-        >
-          ← Back to Home
-        </Button>
-      </div>
+      <div className="container mx-auto px-4 py-12">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">Admin Portal Selection</h1>
+            <p className="text-gray-600">Choose your administrative access level</p>
+          </div>
 
-      <div className="max-w-md w-full">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2">RoadSaver</h1>
-          <p className="text-muted-foreground">Administration Portal Selection</p>
-        </div>
+          <div className="grid md:grid-cols-2 gap-8">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/admin')}>
+              <CardHeader className="text-center">
+                <Shield className="h-16 w-16 text-purple-600 mx-auto mb-4" />
+                <CardTitle className="text-xl">System Admin</CardTitle>
+                <CardDescription>
+                  Full system administration with complete access to all features and settings
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button className="w-full" onClick={() => navigate('/admin')}>
+                  Admin Login
+                </Button>
+              </CardContent>
+            </Card>
 
-        <div className="space-y-4">
-          {/* Support Button */}
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <CardHeader className="text-center">
-              <div className="mx-auto w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mb-4">
-                <Headphones className="h-6 w-6 text-green-600 dark:text-green-400" />
-              </div>
-              <CardTitle>Support</CardTitle>
-              <p className="text-sm text-muted-foreground">Access support management portal</p>
-            </CardHeader>
-            <CardContent>
-              <Button 
-                onClick={handleSupportLogin}
-                className="w-full bg-green-600 hover:bg-green-700"
-              >
-                Support Login
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Admin Button */}
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <CardHeader className="text-center">
-              <div className="mx-auto w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center mb-4">
-                <Shield className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-              </div>
-              <CardTitle>Admin</CardTitle>
-              <p className="text-sm text-muted-foreground">System management and oversight</p>
-            </CardHeader>
-            <CardContent>
-              <Button 
-                onClick={handleAdminLogin}
-                className="w-full bg-purple-600 hover:bg-purple-700"
-              >
-                Admin Login
-              </Button>
-            </CardContent>
-          </Card>
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardHeader className="text-center">
+                <Database className="h-16 w-16 text-blue-600 mx-auto mb-4" />
+                <CardTitle className="text-xl">Data Manager</CardTitle>
+                <CardDescription>
+                  Specialized access for data management and reporting functions
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button className="w-full" variant="outline">
+                  Coming Soon
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>

@@ -1,47 +1,62 @@
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from "react";
 import { Button } from '@/components/ui/button';
-import MigrationPanel from '@/components/admin/MigrationPanel';
-import ChatIcon from '@/components/chat/ChatIcon';
-import ChatInterface from '@/components/chat/ChatInterface';
-import { useApp } from '@/contexts/AppContext';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, LogOut, Settings, Bell } from 'lucide-react';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { language } = useApp();
-  const [showChat, setShowChat] = useState(false);
 
-  const handleBackToHome = () => {
-    navigate('/');
+  const handleLogout = () => {
+    navigate('/admin');
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-gray-800 text-white p-4 flex justify-between items-center">
+      {/* Header */}
+      <header className="bg-purple-600 text-white p-4 flex justify-between items-center">
         <div className="flex items-center gap-4">
           <Button 
-            variant="outline" 
-            onClick={handleBackToHome}
-            className="bg-white/90 backdrop-blur-sm text-gray-800 hover:bg-white"
+            variant="ghost" 
+            size="icon"
+            onClick={() => navigate('/')}
+            className="text-white hover:bg-white/20"
           >
-            ← Back to Home
+            <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-xl font-semibold">Admin Dashboard</h1>
+          <h1 className="text-xl font-semibold">RoadSaver Admin</h1>
         </div>
-        <ChatIcon 
-          onClick={() => setShowChat(true)}
-          className="ml-2"
-        />
-      </div>
-      
-      <MigrationPanel />
+        <div className="flex gap-2">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            className="text-white hover:bg-white/20"
+          >
+            <Bell className="h-5 w-5" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            className="text-white hover:bg-white/20"
+          >
+            <Settings className="h-5 w-5" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={handleLogout}
+            className="text-white hover:bg-white/20"
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Logout
+          </Button>
+        </div>
+      </header>
 
-      <ChatInterface
-        language={language}
-        isOpen={showChat}
-        onClose={() => setShowChat(false)}
-      />
+      <div className="container mx-auto p-4">
+        <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
+        <p>This admin dashboard is under construction. Please check back soon.</p>
+      </div>
     </div>
   );
 };

@@ -1,146 +1,90 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, ArrowLeft, Globe } from 'lucide-react';
-import { toast } from '@/components/ui/use-toast';
-import { useApp } from '@/contexts/AppContext';
-import { useTranslation } from '@/utils/translations';
-import ThemeToggle from '@/components/ui/theme-toggle';
-import { supabase } from '@/integrations/supabase/client';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Users, LogIn } from 'lucide-react';
 
 const EmployeeAuth: React.FC = () => {
   const navigate = useNavigate();
-  const { language, setLanguage } = useApp();
-  const t = useTranslation(language);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [employeeId, setEmployeeId] = React.useState('');
+  const [password, setPassword] = React.useState('');
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!username || !password) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setLoading(true);
-    
-    try {
-      // Check against employee accounts with updated credentials
-      const { data: employees, error } = await supabase
-        .from('employee_accounts')
-        .select('*')
-        .eq('username', username)
-        .eq('status', 'active')
-        .single();
-
-      if (error || !employees || employees.password_hash !== password) {
-        toast({
-          title: "Error",
-          description: "Invalid username or password. Try username: employee, password: employee123",
-          variant: "destructive"
-        });
-        setLoading(false);
-        return;
-      }
-
-      toast({
-        title: "Login Successful",
-        description: "Welcome to the Employee Portal"
-      });
-      navigate('/employee/dashboard');
-    } catch (error) {
-      console.error('Employee authentication error:', error);
-      toast({
-        title: "Error",
-        description: "Authentication failed. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
+  const handleLogin = () => {
+    // Add authentication logic here
+    navigate('/employee/dashboard');
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">
-      <div className="absolute top-4 right-4 flex items-center gap-2">
-        <ThemeToggle showLabels={false} size="sm" />
-        <div className="relative">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => setLanguage(language === 'en' ? 'bg' : 'en')}
-            className="h-10 w-10 bg-blue-600 text-white hover:bg-blue-700"
-            title={t('change-language')}
-          >
-            <Globe className="h-4 w-4" />
-          </Button>
-          <span className="absolute -bottom-1 -right-1 text-xs bg-white text-blue-600 px-1 rounded">
-            {language.toUpperCase()}
-          </span>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => navigate('/')}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h1 className="text-2xl font-bold text-blue-600">RoadSaver</h1>
+          </div>
         </div>
-      </div>
+      </header>
 
-      <div className="w-full max-w-md">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate('/')}
-          className="mb-6"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Home
-        </Button>
-        
-        <Card>
-          <CardHeader className="text-center">
-            <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-              <Users className="h-8 w-8 text-blue-600" />
-            </div>
-            <CardTitle className="text-2xl">Employee Login</CardTitle>
-            <CardDescription>
-              Access the employee portal to manage service requests
-              <div className="mt-2 text-xs text-muted-foreground">
-                Demo: employee / employee123
-              </div>
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
+      <div className="container mx-auto px-4 py-12">
+        <div className="max-w-md mx-auto">
+          <Card>
+            <CardHeader className="text-center">
+              <Users className="h-16 w-16 text-blue-600 mx-auto mb-4" />
+              <CardTitle className="text-2xl">Employee Login</CardTitle>
+              <CardDescription>
+                Access your employee dashboard to manage service requests
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="employeeId">Employee ID</Label>
                 <Input
+                  id="employeeId"
                   type="text"
-                  placeholder="Username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  disabled={loading}
+                  placeholder="Enter your employee ID"
+                  value={employeeId}
+                  onChange={(e) => setEmployeeId(e.target.value)}
                 />
               </div>
-              <div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
                 <Input
+                  id="password"
                   type="password"
-                  placeholder="Password"
+                  placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  disabled={loading}
                 />
               </div>
+              
               <Button 
-                type="submit" 
-                className="w-full bg-blue-600 hover:bg-blue-700" 
-                disabled={loading}
+                onClick={handleLogin}
+                className="w-full"
+                size="lg"
               >
-                {loading ? 'Signing in...' : 'Sign In'}
+                <LogIn className="mr-2 h-5 w-5" />
+                Sign In
               </Button>
-            </form>
-          </CardContent>
-        </Card>
+              
+              <div className="text-center">
+                <Button variant="link" size="sm">
+                  Forgot your password?
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
