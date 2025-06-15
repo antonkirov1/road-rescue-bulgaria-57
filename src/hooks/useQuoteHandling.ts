@@ -32,18 +32,16 @@ export const useQuoteHandling = ({
   const generateQuote = (request: ServiceRequest, employee: EmployeeResponse, isRevised: boolean = false) => {
     const quote = employeeIntegrationService.generateQuote(request.type, isRevised);
     
-    const updatedRequest = {
+    // NOTE: status must match "quote_received" or "revised_quote" from union
+    const updatedRequest: ServiceRequest = {
       ...request,
-      status: isRevised ? 'quote_revised' as const : 'quote_sent' as const,
-      priceQuote: quote.amount,
+      status: isRevised ? "revised_quote" : "quote_received",
+      priceQuote: isRevised ? undefined : quote.amount,
+      revisedPriceQuote: isRevised ? quote.amount : undefined,
       assignedEmployeeId: employee.id,
-      assignedEmployeeName: employee.name
+      assignedEmployeeName: employee.name,
     };
 
-    if (isRevised) {
-      updatedRequest.revisedPriceQuote = quote.amount;
-    }
-    
     setCurrentRequest(updatedRequest);
     setCurrentScreen(isRevised ? 'show_revised_price_quote' : 'show_price_quote_received');
     
@@ -59,64 +57,56 @@ export const useQuoteHandling = ({
     try {
       const newDeclineCount = employeeDeclineCount + 1;
       setEmployeeDeclineCount(newDeclineCount);
-      
       console.log(`Decline #${newDeclineCount} for employee ${assignedEmployee.name}`);
-      
+
       if (newDeclineCount === 1 && !hasReceivedRevision) {
         // First decline - same employee sends revision
         console.log('First decline - generating revised quote with lower price');
-        
-        const updatedRequest = {
+        const updatedRequest: ServiceRequest = {
           ...currentRequest,
           declineCount: currentRequest.declineCount + 1,
-          status: 'quote_declined' as const
+          status: "quote_received", // stay on quote_received to maintain flow
         };
         setCurrentRequest(updatedRequest);
         setHasReceivedRevision(true);
-        
+
         toast({
           title: "Quote Declined",
           description: `${assignedEmployee.name} will send you a revised quote with a lower price.`
         });
-        
+
         // Generate revised quote after a short delay
         setTimeout(() => {
           generateQuote(updatedRequest, assignedEmployee, true);
         }, 1500);
-        
       } else {
         // Second decline OR decline after revision - blacklist employee and find new one
         console.log(`Second decline (total: ${newDeclineCount}) - blacklisting employee ${assignedEmployee.name} and finding new one`);
-        
-        // Add current employee to blacklist
         blacklistCurrentEmployee(assignedEmployee.name);
-        
-        // Notify current employee of decline
+
         await employeeIntegrationService.employeeDeclinedRequest(
           assignedEmployee.id, 
           currentRequest.id, 
           newDeclineCount === 1 ? 'Customer declined revised quote' : 'Customer declined quote twice'
         );
-        
-        // Reset employee assignment for new search
+
         setAssignedEmployee(null);
         resetEmployeeTracking();
         setCurrentScreen('show_searching_technician');
-        
+
         toast({
           title: "Quote Declined", 
           description: "Looking for another available employee..."
         });
-        
-        // Find new employee after delay
+
         setTimeout(() => {
-          const updatedRequest = {
+          const updatedRequest: ServiceRequest = {
             ...currentRequest,
             revisedPriceQuote: undefined,
             priceQuote: undefined,
             assignedEmployeeId: undefined,
             assignedEmployeeName: undefined,
-            status: 'pending' as const
+            status: "searching",
           };
           setCurrentRequest(updatedRequest);
           findEmployee(updatedRequest);

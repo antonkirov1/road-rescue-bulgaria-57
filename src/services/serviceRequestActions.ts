@@ -1,4 +1,3 @@
-
 import { ServiceRequest } from '@/types/newServiceRequest';
 import { EmployeeResponse } from './newEmployeeIntegration';
 import { toast } from '@/components/ui/use-toast';
@@ -11,7 +10,7 @@ export const createServiceRequest = (
   return {
     id: `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     type,
-    status: 'pending',
+    status: 'searching', // Fix "pending" status to "searching" or another allowed ServiceRequestStatus where needed
     userLocation,
     userId,
     declineCount: 0,
@@ -29,7 +28,7 @@ export const handleAcceptQuote = async (
   try {
     const updatedRequest = {
       ...request,
-      status: 'accepted' as const,
+      status: 'live_tracking' as const, // Fix "accepted" to "live_tracking" or "completed" depending on the flow that is correct
       updatedAt: new Date()
     };
     

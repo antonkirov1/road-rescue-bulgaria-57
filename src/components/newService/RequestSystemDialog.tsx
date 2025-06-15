@@ -12,7 +12,7 @@ import RateEmployeeScreen from "./screens/RateEmployeeScreen";
 
 interface Props {
   open: boolean;
-  type: string;
+  type: "Flat Tyre" | "Out of Fuel" | "Car Battery" | "Other Car Problems" | "Tow Truck";
   onClose: () => void;
   userId: string;
 }

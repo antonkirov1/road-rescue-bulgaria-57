@@ -11,6 +11,7 @@ import NewServiceRequestManagerRealLife from '@/components/newService/NewService
 import ExitConfirmDialog from '@/components/dashboard/ExitConfirmDialog';
 import SettingsMenu from '@/components/settings/SettingsMenu';
 import RequestSystemDialog from '@/components/newService/RequestSystemDialog';
+import { ServiceRequestProvider } from "@/components/newService/ServiceRequestProvider";
 
 // Define the service types that can be handled by the dashboard (without simulation elements)
 type DashboardServiceType = ServiceRequest['type'] | 'emergency' | 'support';
@@ -120,55 +121,57 @@ const RealLifeDashboard: React.FC = () => {
   };
   
   return (
-    <div className="min-h-screen bg-background pb-16 font-clash">
-      <DashboardHeader
-        language={language}
-        t={t}
-        onEmergencyClick={() => setShowEmergencyServices(true)}
-        onLocationClick={() => setShowLocationPicker(true)}
-        onSettingsClick={() => setShowSettings(true)}
-        onLanguageToggle={() => setLanguage(language === 'en' ? 'bg' : 'en')}
-        onOngoingRequestsClick={handleActiveRequestClick}
-      />
-      
-      <DashboardServices onServiceSelect={handleServiceSelect} />
-      
-      {/* Real-Life Service Request Manager - only show if not minimized */}
-      {isOpen && selectedService && !isServiceRequestMinimized && (
-        <NewServiceRequestManagerRealLife
-          type={selectedService}
-          open={true}
-          onClose={handleServiceRequestClose}
-          onMinimize={handleServiceRequestMinimize}
-          userLocation={userLocation}
-          userId={user?.username || 'anonymous'}
-          persistentState={persistentServiceState}
+    <ServiceRequestProvider>
+      <div className="min-h-screen bg-background pb-16 font-clash">
+        <DashboardHeader
+          language={language}
+          t={t}
+          onEmergencyClick={() => setShowEmergencyServices(true)}
+          onLocationClick={() => setShowLocationPicker(true)}
+          onSettingsClick={() => setShowSettings(true)}
+          onLanguageToggle={() => setLanguage(language === 'en' ? 'bg' : 'en')}
+          onOngoingRequestsClick={handleActiveRequestClick}
         />
-      )}
+        
+        <DashboardServices onServiceSelect={handleServiceSelect} />
+        
+        {/* Real-Life Service Request Manager - only show if not minimized */}
+        {isOpen && selectedService && !isServiceRequestMinimized && (
+          <NewServiceRequestManagerRealLife
+            type={selectedService}
+            open={true}
+            onClose={handleServiceRequestClose}
+            onMinimize={handleServiceRequestMinimize}
+            userLocation={userLocation}
+            userId={user?.username || 'anonymous'}
+            persistentState={persistentServiceState}
+          />
+        )}
 
-      {serviceDialogOpen && serviceDialogType && (
-        <RequestSystemDialog
-          open={serviceDialogOpen}
-          type={serviceDialogType}
-          onClose={() => setServiceDialogOpen(false)}
-          userId={user?.username || "anonymous"}
+        {serviceDialogOpen && serviceDialogType && (
+          <RequestSystemDialog
+            open={serviceDialogOpen}
+            type={serviceDialogType}
+            onClose={() => setServiceDialogOpen(false)}
+            userId={user?.username || "anonymous"}
+          />
+        )}
+
+        {/* Settings Menu */}
+        <SettingsMenu
+          open={showSettings}
+          onClose={() => setShowSettings(false)}
+          onLanguageChange={setLanguage}
+          currentLanguage={language}
         />
-      )}
 
-      {/* Settings Menu */}
-      <SettingsMenu
-        open={showSettings}
-        onClose={() => setShowSettings(false)}
-        onLanguageChange={setLanguage}
-        currentLanguage={language}
-      />
-
-      <ExitConfirmDialog
-        open={showExitConfirm}
-        onClose={() => setShowExitConfirm(false)}
-        onLogout={handleLogout}
-      />
-    </div>
+        <ExitConfirmDialog
+          open={showExitConfirm}
+          onClose={() => setShowExitConfirm(false)}
+          onLogout={handleLogout}
+        />
+      </div>
+    </ServiceRequestProvider>
   );
 };
 

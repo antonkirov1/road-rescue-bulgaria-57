@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
@@ -8,7 +7,6 @@ import { useNewServiceRequest } from '@/hooks/useNewServiceRequest';
 import { usePersistentServiceRequest } from '@/hooks/usePersistentServiceRequest';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DashboardServices from '@/components/dashboard/DashboardServices';
-import NewServiceRequestManager from '@/components/newService/NewServiceRequestManager';
 import ExitConfirmDialog from '@/components/dashboard/ExitConfirmDialog';
 import SettingsMenu from '@/components/settings/SettingsMenu';
 
@@ -128,19 +126,6 @@ const NewDashboard: React.FC = () => {
       
       <DashboardServices onServiceSelect={handleServiceSelect} />
       
-      {/* New Service Request Manager - only show if not minimized */}
-      {isOpen && selectedService && !isServiceRequestMinimized && (
-        <NewServiceRequestManager
-          type={selectedService}
-          open={true}
-          onClose={handleServiceRequestClose}
-          onMinimize={handleServiceRequestMinimize}
-          userLocation={userLocation}
-          userId={user?.username || 'anonymous'}
-          persistentState={persistentServiceState}
-        />
-      )}
-
       {/* Settings Menu */}
       <SettingsMenu
         open={showSettings}

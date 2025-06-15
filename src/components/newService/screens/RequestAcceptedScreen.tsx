@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -22,9 +21,9 @@ const RequestAcceptedScreen: React.FC<RequestAcceptedScreenProps> = ({
 
   const getStatusMessage = () => {
     switch (request.status) {
-      case 'accepted':
+      case 'live_tracking':
         return request.assignedEmployeeName ? t('employee-assigned') : t('finding-employee');
-      case 'in_progress':
+      case 'completed':
         return t('employee-on-way');
       default:
         return t('request-accepted');
