@@ -111,10 +111,10 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
-        className="fixed inset-0 z-50 w-screen h-screen max-w-none max-h-none p-0 m-0 bg-white overflow-hidden flex flex-col border-0 rounded-none"
+        className="fixed inset-0 z-50 w-full h-full max-w-none max-h-none p-0 m-0 bg-white overflow-hidden flex flex-col"
         onInteractOutside={handleInteractOutside}
       >
-        <div className="flex items-center border-b justify-between px-4 py-3 min-h-[60px] bg-white">
+        <div className="flex items-center border-b justify-between px-4 py-3 min-h-[60px] bg-white shrink-0">
           <DialogHeader className="flex flex-1 items-center justify-center">
             <DialogTitle className="!mb-0 flex items-center gap-1 text-lg font-extrabold font-clash tracking-tight">
               RoadSaver (Live)
@@ -133,14 +133,14 @@ const NewServiceRequestManagerRealLife: React.FC<NewServiceRequestManagerRealLif
           </div>
         </div>
 
-        <div className="w-full bg-background/70 h-32 flex items-center justify-center">
+        <div className="w-full bg-background/70 h-32 flex items-center justify-center shrink-0">
           <GoogleMap
             userLocation={location}
             height="100%"
           />
         </div>
 
-        <div className="flex-1 px-4 py-4 overflow-y-auto bg-white">
+        <div className="flex-1 px-4 py-4 overflow-y-auto bg-white min-h-0">
           <NewUIEventHandler
             currentScreen={currentScreen}
             request={compatibleRequest}
