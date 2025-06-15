@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ServiceRequest, Employee } from '@/types/newServiceRequest';
 import { usePersistentServiceRequest } from '@/hooks/usePersistentServiceRequest';
@@ -8,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Minimize, X } from 'lucide-react';
 import GoogleMap from "@/components/GoogleMap";
+import LiveTrackingScreen from '@/components/newService/screens/LiveTrackingScreen';
 
 interface NewServiceRequestManagerProps {
   type: ServiceRequest['type'];
@@ -71,6 +71,9 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
       assignedEmployeeName: assignedEmployee?.name,
     } : null;
 
+  // --- New: Local state for tracking modal ---
+  const [showLiveTracking, setShowLiveTracking] = React.useState(false);
+
   // Ensure employeeLocation is properly formatted for GoogleMap
   const employeeLocation = assignedEmployee?.location && 
     typeof assignedEmployee.location.lat === 'number' && 
@@ -80,6 +83,14 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
 
   console.log('GoogleMap props - userLocation:', location, 'employeeLocation:', employeeLocation);
 
+  // Find if current screen is "live_tracking"
+  const isTrackingScreen = currentScreen === 'live_tracking';
+
+  // Provide a handler to open live tracking modal
+  const handleLiveTrackingOpen = () => setShowLiveTracking(true);
+  const handleLiveTrackingClose = () => setShowLiveTracking(false);
+
+  // Pass a prop to UI handler so "Live Tracking" can trigger modal
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-md mx-auto my-8 max-h-[90vh] p-0 gap-0">
@@ -113,6 +124,7 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
           </div>
 
           <div className="w-full bg-background/70 h-48 flex items-center justify-center shrink-0">
+            {/* Show small map overview */}
             <GoogleMap
               userLocation={location}
               employeeLocation={employeeLocation}
@@ -128,8 +140,20 @@ const NewServiceRequestManager: React.FC<NewServiceRequestManagerProps> = ({
               onDeclineQuote={handleDeclineQuote}
               onCancelRequest={handleCancelRequest}
               onClose={handleClose}
+              onLiveTracking={handleLiveTrackingOpen} // new prop
             />
           </div>
+          {/* Live Tracking MODAL - appears when "Live Tracking" is clicked */}
+          {showLiveTracking && requestWithEmployeeInfo && (
+            <Dialog open={showLiveTracking} onOpenChange={handleLiveTrackingClose}>
+              <DialogContent className="max-w-md mx-auto my-8 p-0">
+                <LiveTrackingScreen
+                  request={requestWithEmployeeInfo}
+                  onClose={handleLiveTrackingClose}
+                />
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       </DialogContent>
     </Dialog>

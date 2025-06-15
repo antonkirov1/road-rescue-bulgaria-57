@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -21,11 +20,10 @@ const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({
   const { language, userLocation } = useApp();
   const t = useTranslation(language);
 
-  // Mock employee location for demonstration
-  const employeeLocation = {
-    lat: userLocation.lat + 0.01,
-    lng: userLocation.lng + 0.01
-  };
+  // Use technician location if present
+  const employeeLat = request?.assignedEmployeeLocation?.lat ?? (userLocation.lat + 0.01);
+  const employeeLng = request?.assignedEmployeeLocation?.lng ?? (userLocation.lng + 0.01);
+  const employeeLocation = { lat: employeeLat, lng: employeeLng };
 
   return (
     <>
