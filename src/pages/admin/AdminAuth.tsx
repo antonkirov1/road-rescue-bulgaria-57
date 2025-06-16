@@ -48,47 +48,55 @@ const AdminAuth: React.FC = () => {
   };
   
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-b from-purple-600/10 to-background px-4 py-8 font-clash relative">
+    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-b from-purple-600/10 to-background px-3 py-4 sm:px-4 sm:py-8 font-clash relative">
       
       {/* Back to Home button */}
-      <div className="absolute top-4 left-4">
+      <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-20">
         <Button 
           variant="ghost" 
           onClick={() => navigate('/')}
-          className="flex items-center gap-2"
+          className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm p-2 sm:p-3"
+          size="sm"
         >
-          <ArrowLeft className="h-4 w-4" />
-          <span className="hidden sm:inline">Back to Home</span>
+          <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+          <span className="hidden xs:inline">Back</span>
+          <span className="hidden sm:inline">to Home</span>
         </Button>
       </div>
 
       {/* Top right controls with theme toggle and language switcher */}
-      <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+      <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-20 flex items-center gap-1 sm:gap-2">
         <ThemeToggle showLabels={false} size="sm" />
         <div className="relative">
           <Button 
             variant="ghost" 
-            size="icon" 
+            size="sm"
             onClick={() => setLanguage(language === 'en' ? 'bg' : 'en')}
             aria-label={t(language === 'en' ? 'switch-to-bulgarian' : 'switch-to-english')}
-            className="h-10 w-10 bg-purple-600 text-white hover:bg-purple-700"
+            className="h-8 w-8 sm:h-10 sm:w-10 bg-purple-600 text-white hover:bg-purple-700 p-1 sm:p-2"
           >
-            <Globe className="h-4 w-4" />
+            <Globe className="h-3 w-3 sm:h-4 sm:w-4" />
           </Button>
-          <span className="absolute -bottom-1 -right-1 text-xs bg-white text-purple-600 px-1 rounded">
+          <span className="absolute -bottom-0.5 -right-0.5 sm:-bottom-1 sm:-right-1 text-[10px] sm:text-xs bg-white text-purple-600 px-0.5 sm:px-1 rounded leading-none">
             {language.toUpperCase()}
           </span>
         </div>
       </div>
 
-      <div className="w-full max-w-md">
-        <div className="mb-6 text-center">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">RoadSaver</h1>
-          <p className="text-muted-foreground text-sm sm:text-base">Account Manager Panel</p>
-          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs sm:text-sm text-blue-800">
-            <p className="font-medium">Admin Credentials:</p>
-            <p className="break-all">Username: account_admin</p>
-            <p className="break-all">Password: AdminAcc93</p>
+      <div className="w-full max-w-xs sm:max-w-md mt-16 sm:mt-0">
+        <div className="mb-4 sm:mb-6 text-center px-2">
+          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-1 sm:mb-2">RoadSaver</h1>
+          <p className="text-muted-foreground text-xs sm:text-sm md:text-base mb-3 sm:mb-4">Account Manager Panel</p>
+          <div className="mt-2 sm:mt-4 p-2 sm:p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-800">
+            <p className="font-medium text-xs sm:text-sm mb-1">Admin Credentials:</p>
+            <div className="space-y-0.5 sm:space-y-1">
+              <p className="text-[10px] sm:text-xs break-all leading-tight">
+                <span className="font-medium">Username:</span> account_admin
+              </p>
+              <p className="text-[10px] sm:text-xs break-all leading-tight">
+                <span className="font-medium">Password:</span> AdminAcc93
+              </p>
+            </div>
           </div>
         </div>
         
