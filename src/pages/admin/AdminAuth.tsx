@@ -48,62 +48,67 @@ const AdminAuth: React.FC = () => {
   };
   
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-b from-purple-600/10 to-background px-3 py-4 sm:px-4 sm:py-8 font-clash relative">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-purple-600/10 to-background px-3 py-4 sm:px-4 sm:py-8 font-clash relative">
       
-      {/* Back to Home button */}
-      <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-20">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate('/')}
-          className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm p-2 sm:p-3"
-          size="sm"
-        >
-          <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4" />
-          <span className="hidden xs:inline">Back</span>
-          <span className="hidden sm:inline">to Home</span>
-        </Button>
-      </div>
-
-      {/* Top right controls with theme toggle and language switcher */}
-      <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-20 flex items-center gap-1 sm:gap-2">
-        <ThemeToggle showLabels={false} size="sm" />
-        <div className="relative">
+      {/* Header with controls - fixed positioning to prevent overlap */}
+      <div className="fixed top-0 left-0 right-0 z-30 bg-gradient-to-b from-purple-600/10 to-transparent pb-2">
+        {/* Back to Home button */}
+        <div className="absolute top-2 left-2 sm:top-4 sm:left-4">
           <Button 
             variant="ghost" 
+            onClick={() => navigate('/')}
+            className="flex items-center gap-1 text-xs p-1.5 h-8 min-w-0"
             size="sm"
-            onClick={() => setLanguage(language === 'en' ? 'bg' : 'en')}
-            aria-label={t(language === 'en' ? 'switch-to-bulgarian' : 'switch-to-english')}
-            className="h-8 w-8 sm:h-10 sm:w-10 bg-purple-600 text-white hover:bg-purple-700 p-1 sm:p-2"
           >
-            <Globe className="h-3 w-3 sm:h-4 sm:w-4" />
+            <ArrowLeft className="h-3 w-3 flex-shrink-0" />
+            <span className="hidden xs:inline text-xs">Back</span>
           </Button>
-          <span className="absolute -bottom-0.5 -right-0.5 sm:-bottom-1 sm:-right-1 text-[10px] sm:text-xs bg-white text-purple-600 px-0.5 sm:px-1 rounded leading-none">
-            {language.toUpperCase()}
-          </span>
+        </div>
+
+        {/* Top right controls */}
+        <div className="absolute top-2 right-2 sm:top-4 sm:right-4 flex items-center gap-1">
+          <ThemeToggle showLabels={false} size="sm" />
+          <div className="relative">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setLanguage(language === 'en' ? 'bg' : 'en')}
+              aria-label={t(language === 'en' ? 'switch-to-bulgarian' : 'switch-to-english')}
+              className="h-8 w-8 bg-purple-600 text-white hover:bg-purple-700 p-1 min-w-0"
+            >
+              <Globe className="h-3 w-3" />
+            </Button>
+            <span className="absolute -bottom-0.5 -right-0.5 text-[9px] bg-white text-purple-600 px-0.5 rounded leading-none font-medium">
+              {language.toUpperCase()}
+            </span>
+          </div>
         </div>
       </div>
 
-      <div className="w-full max-w-xs sm:max-w-md mt-16 sm:mt-0">
-        <div className="mb-4 sm:mb-6 text-center px-2">
-          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-1 sm:mb-2">RoadSaver</h1>
-          <p className="text-muted-foreground text-xs sm:text-sm md:text-base mb-3 sm:mb-4">Account Manager Panel</p>
-          <div className="mt-2 sm:mt-4 p-2 sm:p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-800">
-            <p className="font-medium text-xs sm:text-sm mb-1">Admin Credentials:</p>
-            <div className="space-y-0.5 sm:space-y-1">
-              <p className="text-[10px] sm:text-xs break-all leading-tight">
-                <span className="font-medium">Username:</span> account_admin
-              </p>
-              <p className="text-[10px] sm:text-xs break-all leading-tight">
-                <span className="font-medium">Password:</span> AdminAcc93
-              </p>
+      {/* Main content with proper top margin to avoid header overlap */}
+      <div className="flex-1 flex flex-col justify-center items-center mt-16 sm:mt-0">
+        <div className="w-full max-w-xs sm:max-w-md">
+          <div className="mb-4 sm:mb-6 text-center px-2">
+            <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-1 sm:mb-2 leading-tight">RoadSaver</h1>
+            <p className="text-muted-foreground text-xs sm:text-sm md:text-base mb-3 sm:mb-4 leading-tight">Account Manager Panel</p>
+            <div className="mt-2 sm:mt-4 p-2 sm:p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-800">
+              <p className="font-medium text-xs sm:text-sm mb-1">Admin Credentials:</p>
+              <div className="space-y-1">
+                <p className="text-[10px] sm:text-xs leading-tight">
+                  <span className="font-medium">Username:</span> account_admin
+                </p>
+                <p className="text-[10px] sm:text-xs leading-tight">
+                  <span className="font-medium">Password:</span> AdminAcc93
+                </p>
+              </div>
             </div>
           </div>
+          
+          <LoginForm 
+            onLogin={handleLogin}
+            isAdmin={true}
+          />
         </div>
-        
-        <LoginForm 
-          onLogin={handleLogin}
-          isAdmin={true}
-        />
       </div>
     </div>
   );
