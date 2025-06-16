@@ -6,7 +6,7 @@ import { useApp } from '@/contexts/AppContext';
 import { toast } from '@/components/ui/use-toast';
 import { useTranslation } from '@/utils/translations';
 import { Button } from "@/components/ui/button";
-import { Globe } from 'lucide-react';
+import { Globe, ArrowLeft } from 'lucide-react';
 import ThemeToggle from '@/components/ui/theme-toggle';
 import { AdminAccountService } from '@/services/adminAccountService';
 
@@ -48,8 +48,20 @@ const AdminAuth: React.FC = () => {
   };
   
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-b from-purple-600/10 to-background p-4 font-clash relative">
+    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-b from-purple-600/10 to-background px-4 py-8 font-clash relative">
       
+      {/* Back to Home button */}
+      <div className="absolute top-4 left-4">
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate('/')}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span className="hidden sm:inline">Back to Home</span>
+        </Button>
+      </div>
+
       {/* Top right controls with theme toggle and language switcher */}
       <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
         <ThemeToggle showLabels={false} size="sm" />
@@ -70,13 +82,13 @@ const AdminAuth: React.FC = () => {
       </div>
 
       <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2">RoadSaver</h1>
-          <p className="text-muted-foreground">Account Manager Panel</p>
-          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+        <div className="mb-6 text-center">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">RoadSaver</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">Account Manager Panel</p>
+          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs sm:text-sm text-blue-800">
             <p className="font-medium">Admin Credentials:</p>
-            <p>Username: account_admin</p>
-            <p>Password: AdminAcc93</p>
+            <p className="break-all">Username: account_admin</p>
+            <p className="break-all">Password: AdminAcc93</p>
           </div>
         </div>
         
