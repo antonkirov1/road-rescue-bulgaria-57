@@ -8,11 +8,14 @@ import { useApp } from '@/contexts/AppContext';
 import { useTranslation } from '@/utils/translations';
 import { toast } from '@/components/ui/use-toast';
 import { getServiceIconAndTitle } from '@/components/service/serviceIcons';
+import RequestSystemDialog from '@/components/newService/RequestSystemDialog';
 
 const RealLifeDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout, language, setLanguage } = useApp();
   const t = useTranslation(language);
+  const [selectedService, setSelectedService] = useState<string | null>(null);
+  const [showRequestDialog, setShowRequestDialog] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -25,6 +28,37 @@ const RealLifeDashboard: React.FC = () => {
 
   const handleBackToHome = () => {
     navigate('/');
+  };
+
+  const handleServiceClick = (serviceType: string) => {
+    const serviceTypeMap: Record<string, string> = {
+      'flat-tyre': 'Flat Tyre',
+      'out-of-fuel': 'Out of Fuel',
+      'car-battery': 'Car Battery',
+      'other-car-problems': 'Other Car Problems',
+      'tow-truck': 'Tow Truck',
+      'support': 'Support'
+    };
+
+    if (serviceType === 'support') {
+      // Handle support differently - open contact dialog or direct contact
+      toast({
+        title: "Contact Support",
+        description: "Opening support contact options..."
+      });
+      return;
+    }
+
+    const mappedServiceType = serviceTypeMap[serviceType];
+    if (mappedServiceType) {
+      setSelectedService(mappedServiceType);
+      setShowRequestDialog(true);
+    }
+  };
+
+  const handleCloseDialog = () => {
+    setShowRequestDialog(false);
+    setSelectedService(null);
   };
 
   const services = [
@@ -79,7 +113,11 @@ const RealLifeDashboard: React.FC = () => {
             const serviceData = getServiceIconAndTitle(serviceType as any, t, null, 'w-8 h-8');
             
             return (
-              <Card key={index} className="border border-gray-200 hover:shadow-md transition-shadow cursor-pointer bg-white">
+              <Card 
+                key={index} 
+                className="border border-gray-200 hover:shadow-md transition-shadow cursor-pointer bg-white"
+                onClick={() => handleServiceClick(serviceType)}
+              >
                 <CardHeader className="text-center pb-2">
                   <div className="mx-auto w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-3">
                     {serviceData.icon}
@@ -96,6 +134,16 @@ const RealLifeDashboard: React.FC = () => {
           })}
         </div>
       </div>
+
+      {/* Request Dialog */}
+      {showRequestDialog && selectedService && (
+        <RequestSystemDialog
+          open={showRequestDialog}
+          type={selectedService as any}
+          onClose={handleCloseDialog}
+          userId={user?.username || 'real-life-user'}
+        />
+      )}
     </div>
   );
 };
