@@ -7,6 +7,7 @@ import { Settings, ArrowLeft, Globe, Bell, MapPin, Clock } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { useTranslation } from '@/utils/translations';
 import { toast } from '@/components/ui/use-toast';
+import { getServiceIconAndTitle } from '@/components/service/serviceIcons';
 
 const SimulationDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -27,36 +28,12 @@ const SimulationDashboard: React.FC = () => {
   };
 
   const services = [
-    {
-      title: 'Flat Tyre',
-      description: 'Flat Tyre Desc',
-      icon: '🛞'
-    },
-    {
-      title: 'Out of Fuel',
-      description: 'Out Of Fuel Desc',
-      icon: '⛽'
-    },
-    {
-      title: 'Car Battery',
-      description: 'Car Battery Desc',
-      icon: '🔋'
-    },
-    {
-      title: 'Other Car Problems',
-      description: 'Other Car Problems Desc',
-      icon: '🔧'
-    },
-    {
-      title: 'Tow Truck',
-      description: 'Tow Truck Desc',
-      icon: '🚛'
-    },
-    {
-      title: 'Support',
-      description: 'Support Desc',
-      icon: '📞'
-    }
+    'flat-tyre',
+    'out-of-fuel',
+    'car-battery',
+    'other-car-problems',
+    'tow-truck',
+    'support'
   ];
 
   return (
@@ -98,21 +75,25 @@ const SimulationDashboard: React.FC = () => {
         </div>
         
         <div className="grid grid-cols-2 gap-4 max-w-2xl mx-auto">
-          {services.map((service, index) => (
-            <Card key={index} className="border border-gray-200 hover:shadow-md transition-shadow cursor-pointer bg-white">
-              <CardHeader className="text-center pb-2">
-                <div className="mx-auto w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-3">
-                  <span className="text-2xl text-black">{service.icon}</span>
-                </div>
-                <CardTitle className="text-lg font-semibold text-gray-900">{service.title}</CardTitle>
-              </CardHeader>
-              <CardContent className="text-center pt-0">
-                <CardDescription className="text-sm text-gray-500">
-                  {service.description}
-                </CardDescription>
-              </CardContent>
-            </Card>
-          ))}
+          {services.map((serviceType, index) => {
+            const serviceData = getServiceIconAndTitle(serviceType as any, t, null, 'w-8 h-8');
+            
+            return (
+              <Card key={index} className="border border-gray-200 hover:shadow-md transition-shadow cursor-pointer bg-white">
+                <CardHeader className="text-center pb-2">
+                  <div className="mx-auto w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-3">
+                    {serviceData.icon}
+                  </div>
+                  <CardTitle className="text-lg font-semibold text-gray-900">{serviceData.title}</CardTitle>
+                </CardHeader>
+                <CardContent className="text-center pt-0">
+                  <CardDescription className="text-sm text-gray-500">
+                    {serviceData.description}
+                  </CardDescription>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </div>
     </div>
