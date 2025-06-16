@@ -3,11 +3,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Settings, ArrowLeft, Globe } from 'lucide-react';
+import { Settings, ArrowLeft, Globe, Bell, MapPin, Clock } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { useTranslation } from '@/utils/translations';
 import { toast } from '@/components/ui/use-toast';
-import ThemeToggle from '@/components/ui/theme-toggle';
 
 const RealLifeDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -30,91 +29,85 @@ const RealLifeDashboard: React.FC = () => {
   const services = [
     {
       title: 'Flat Tyre',
-      description: 'flat-tyre-desc',
+      description: 'Flat Tyre Desc',
       icon: '🛞'
     },
     {
       title: 'Out of Fuel',
-      description: 'out-of-fuel-desc',
+      description: 'Out Of Fuel Desc',
       icon: '⛽'
     },
     {
       title: 'Car Battery',
-      description: 'car-battery-desc',
+      description: 'Car Battery Desc',
       icon: '🔋'
     },
     {
       title: 'Other Car Problems',
-      description: 'other-car-problems-desc',
+      description: 'Other Car Problems Desc',
       icon: '🔧'
     },
     {
       title: 'Tow Truck',
-      description: 'tow-truck-desc',
+      description: 'Tow Truck Desc',
       icon: '🚛'
     },
     {
       title: 'Support',
-      description: 'support-desc',
+      description: 'Support Desc',
       icon: '📞'
     }
   ];
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-green-600 text-white p-4 flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <Button 
-            variant="outline" 
-            onClick={handleBackToHome}
-            className="bg-white/90 backdrop-blur-sm text-green-600 hover:bg-white flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Home
-          </Button>
-          <h1 className="text-xl font-semibold">RoadSaver</h1>
-        </div>
-        <div className="flex items-center gap-4">
-          <ThemeToggle showLabels={false} size="sm" />
+      {/* Green Header */}
+      <div className="bg-green-500 text-white px-4 py-3 flex items-center justify-between">
+        <h1 className="text-xl font-semibold">RoadSaver</h1>
+        <div className="flex items-center gap-3">
+          <Bell className="h-5 w-5" />
+          <MapPin className="h-5 w-5" />
+          <Settings className="h-5 w-5" />
           <div className="relative">
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={() => setLanguage(language === 'en' ? 'bg' : 'en')}
-              className="h-10 w-10 bg-white/10 text-white hover:bg-white/20"
+              className="h-8 w-8 bg-white/20 text-white hover:bg-white/30"
             >
               <Globe className="h-4 w-4" />
             </Button>
-            <span className="absolute -bottom-1 -right-1 text-xs bg-white text-green-600 px-1 rounded">
+            <span className="absolute -bottom-1 -right-1 text-xs bg-yellow-400 text-black px-1 rounded text-[10px] font-medium">
               {language.toUpperCase()}
             </span>
           </div>
-          <span className="text-sm">Welcome, {user?.username}</span>
-          <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
-            <Settings className="h-5 w-5" />
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={handleLogout}
-            className="bg-white/90 backdrop-blur-sm text-green-600 hover:bg-white"
-          >
-            Logout
-          </Button>
         </div>
       </div>
       
-      <div className="container mx-auto px-4 py-6">
+      {/* Services Section */}
+      <div className="px-4 py-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">Services</h2>
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2 text-gray-600 border-gray-300"
+          >
+            <Clock className="h-4 w-4" />
+            Active Request
+          </Button>
+        </div>
+        
         <div className="grid grid-cols-2 gap-4 max-w-2xl mx-auto">
           {services.map((service, index) => (
-            <Card key={index} className="hover:shadow-lg transition-shadow cursor-pointer">
+            <Card key={index} className="border border-gray-200 hover:shadow-md transition-shadow cursor-pointer bg-white">
               <CardHeader className="text-center pb-2">
-                <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-3">
-                  <span className="text-2xl">{service.icon}</span>
+                <div className="mx-auto w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-3">
+                  <span className="text-2xl text-black">{service.icon}</span>
                 </div>
-                <CardTitle className="text-lg">{service.title}</CardTitle>
+                <CardTitle className="text-lg font-semibold text-gray-900">{service.title}</CardTitle>
               </CardHeader>
               <CardContent className="text-center pt-0">
-                <CardDescription className="text-sm text-gray-600">
+                <CardDescription className="text-sm text-gray-500">
                   {service.description}
                 </CardDescription>
               </CardContent>
