@@ -9,6 +9,7 @@ import { useTranslation } from '@/utils/translations';
 import { toast } from '@/components/ui/use-toast';
 import { getServiceIconAndTitle } from '@/components/service/serviceIcons';
 import RequestSystemDialog from '@/components/newService/RequestSystemDialog';
+import SettingsMenu from '@/components/settings/SettingsMenu';
 
 const RealLifeDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ const RealLifeDashboard: React.FC = () => {
   const t = useTranslation(language);
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [showRequestDialog, setShowRequestDialog] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -41,7 +43,6 @@ const RealLifeDashboard: React.FC = () => {
     };
 
     if (serviceType === 'support') {
-      // Handle support differently - open contact dialog or direct contact
       toast({
         title: "Contact Support",
         description: "Opening support contact options..."
@@ -61,6 +62,14 @@ const RealLifeDashboard: React.FC = () => {
     setSelectedService(null);
   };
 
+  const handleSettingsClick = () => {
+    setShowSettings(true);
+  };
+
+  const handleCloseSettings = () => {
+    setShowSettings(false);
+  };
+
   const services = [
     'flat-tyre',
     'out-of-fuel',
@@ -76,9 +85,12 @@ const RealLifeDashboard: React.FC = () => {
       <div className="bg-green-500 text-white px-4 py-3 flex items-center justify-between">
         <h1 className="text-xl font-semibold">RoadSaver</h1>
         <div className="flex items-center gap-3">
-          <Bell className="h-5 w-5" />
-          <MapPin className="h-5 w-5" />
-          <Settings className="h-5 w-5" />
+          <Bell className="h-5 w-5 cursor-pointer hover:text-green-200" />
+          <MapPin className="h-5 w-5 cursor-pointer hover:text-green-200" />
+          <Settings 
+            className="h-5 w-5 cursor-pointer hover:text-green-200" 
+            onClick={handleSettingsClick}
+          />
           <div className="relative">
             <Button 
               variant="ghost" 
@@ -144,6 +156,14 @@ const RealLifeDashboard: React.FC = () => {
           userId={user?.username || 'real-life-user'}
         />
       )}
+
+      {/* Settings Menu */}
+      <SettingsMenu
+        open={showSettings}
+        onClose={handleCloseSettings}
+        onLanguageChange={setLanguage}
+        currentLanguage={language}
+      />
     </div>
   );
 };
