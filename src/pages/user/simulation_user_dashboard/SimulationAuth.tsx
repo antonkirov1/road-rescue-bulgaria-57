@@ -7,10 +7,9 @@ import { useApp } from '@/contexts/AppContext';
 import { useTranslation } from '@/utils/translations';
 import { toast } from '@/components/ui/use-toast';
 import { Button } from "@/components/ui/button";
-import { Globe } from 'lucide-react';
+import { Globe, ArrowLeft } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ThemeToggle from '@/components/ui/theme-toggle';
-import { UserAccountService } from '@/services/userAccountService';
 
 const SimulationAuth: React.FC = () => {
   const [showRegister, setShowRegister] = useState(false);
@@ -19,71 +18,32 @@ const SimulationAuth: React.FC = () => {
   const t = useTranslation(language);
   const isMobile = useIsMobile();
   
-  const handleLogin = async (credentials: { username: string; password: string }) => {
-    try {
-      // Check for demo credentials first
-      if (credentials.username === 'user' && credentials.password === 'user123') {
-        login({ username: 'user', email: 'user@demo.com' });
-        navigate('/user/simulation-dashboard');
-        toast({
-          title: t("login-successful"),
-          description: t("welcome-to-roadsaver")
-        });
-        return;
-      }
-
-      // Try database authentication
-      const user = await UserAccountService.authenticateUser(credentials.username, credentials.password);
-      
-      if (user) {
-        login({ username: user.username, email: user.email });
-        navigate('/user/simulation-dashboard');
-        toast({
-          title: t("login-successful"),
-          description: t("welcome-to-roadsaver")
-        });
-      } else {
-        toast({
-          title: t("auth-error"),
-          description: t("invalid-username-password"),
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('User authentication error:', error);
+  const handleLogin = (credentials: { username: string; password: string }) => {
+    // Demo credentials for simulation
+    if (credentials.username === 'demo' && credentials.password === 'demo123') {
+      login({ username: 'demo', email: 'demo@simulation.com' });
+      navigate('/user/simulation-dashboard');
+      toast({
+        title: t("login-successful"),
+        description: t("welcome-to-roadsaver")
+      });
+    } else {
       toast({
         title: t("auth-error"),
-        description: "Authentication failed. Please try again.",
+        description: t("invalid-username-password"),
         variant: "destructive",
       });
     }
   };
   
-  const handleRegister = async (userData: { username: string; email: string; password: string; gender?: string; phoneNumber?: string }) => {
-    try {
-      await UserAccountService.createUserAccount({
-        username: userData.username,
-        email: userData.email,
-        password_hash: userData.password,
-        phone_number: userData.phoneNumber,
-        gender: userData.gender,
-        full_name: userData.username
-      });
-
-      login({ username: userData.username, email: userData.email });
-      navigate('/user/simulation-dashboard');
-      toast({
-        title: t("registration-successful"),
-        description: t("account-created-welcome")
-      });
-    } catch (error) {
-      console.error('User registration error:', error);
-      toast({
-        title: t("auth-error"),
-        description: "Registration failed. Please try again.",
-        variant: "destructive",
-      });
-    }
+  const handleRegister = (userData: { username: string; email: string; password: string; gender?: string; phoneNumber?: string }) => {
+    // Simulate successful registration
+    login({ username: userData.username, email: userData.email });
+    navigate('/user/simulation-dashboard');
+    toast({
+      title: t("registration-successful"),
+      description: t("account-created-welcome")
+    });
   };
   
   if (showRegister) {
@@ -96,8 +56,20 @@ const SimulationAuth: React.FC = () => {
   }
   
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-b from-green-600/10 to-background px-4 py-8 font-clash relative">
+    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-b from-blue-600/10 to-background px-4 py-8 font-clash relative">
       
+      {/* Back to Home button */}
+      <div className="absolute top-4 left-4">
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate('/')}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Home
+        </Button>
+      </div>
+
       <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
         <ThemeToggle showLabels={false} size="sm" />
         <div className="relative">
@@ -106,11 +78,11 @@ const SimulationAuth: React.FC = () => {
             size="icon" 
             onClick={() => setLanguage(language === 'en' ? 'bg' : 'en')}
             aria-label={t(language === 'en' ? 'switch-to-bulgarian' : 'switch-to-english')}
-            className="h-10 w-10 bg-green-600 text-white hover:bg-green-700"
+            className="h-10 w-10 bg-blue-600 text-white hover:bg-blue-700"
           >
             <Globe className="h-4 w-4" />
           </Button>
-          <span className="absolute -bottom-1 -right-1 text-xs bg-white text-green-600 px-1 rounded">
+          <span className="absolute -bottom-1 -right-1 text-xs bg-white text-blue-600 px-1 rounded">
             {language.toUpperCase()}
           </span>
         </div>
@@ -118,19 +90,13 @@ const SimulationAuth: React.FC = () => {
 
       <div className="w-full max-w-md mb-4">
         <div className="mb-6 text-center">
-          <div className="flex items-center justify-center gap-3 mb-2">
-            {/* "RoadSaver" word first, icon after "r" */}
-            <h1 className="text-3xl sm:text-4xl font-bold flex items-center gap-3">
-              RoadSaver
-              <img 
-                src="/lovable-uploads/metaverse-virtual-world-icon.svg"
-                alt="Metaverse VR Icon"
-                className="w-10 h-10 inline-block align-middle ml-2"
-                style={{ verticalAlign: 'middle' }}
-              />
-            </h1>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2">RoadSaver</h1>
+          <p className="text-muted-foreground">{t('auth-subtitle')} - Simulation Mode</p>
+          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+            <p className="font-medium">Demo Credentials:</p>
+            <p>Username: demo</p>
+            <p>Password: demo123</p>
           </div>
-          <p className="text-muted-foreground">{t('auth-subtitle')}</p>
         </div>
         
         <LoginForm 
@@ -143,4 +109,3 @@ const SimulationAuth: React.FC = () => {
 };
 
 export default SimulationAuth;
-
