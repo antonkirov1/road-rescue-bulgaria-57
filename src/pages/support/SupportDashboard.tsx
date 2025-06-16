@@ -1,62 +1,67 @@
 
-import React from "react";
-import { Button } from '@/components/ui/button';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, LogOut, Settings, Bell } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import ChatIcon from '@/components/chat/ChatIcon';
+import ChatInterface from '@/components/chat/ChatInterface';
+import { useApp } from '@/contexts/AppContext';
 
 const SupportDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { language } = useApp();
+  const [showChat, setShowChat] = useState(false);
 
-  const handleLogout = () => {
-    navigate('/support');
+  const handleBackToHome = () => {
+    navigate('/');
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-orange-600 text-white p-4 flex justify-between items-center">
+      <div className="bg-green-600 text-white p-4 flex justify-between items-center">
         <div className="flex items-center gap-4">
           <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => navigate('/')}
-            className="text-white hover:bg-white/20"
+            variant="outline" 
+            onClick={handleBackToHome}
+            className="bg-white/90 backdrop-blur-sm text-green-600 hover:bg-white"
           >
-            <ArrowLeft className="h-5 w-5" />
+            ← Back to Home
           </Button>
-          <h1 className="text-xl font-semibold">RoadSaver Support</h1>
+          <h1 className="text-xl font-semibold">Support Dashboard</h1>
         </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="text-white hover:bg-white/20"
-          >
-            <Bell className="h-5 w-5" />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="text-white hover:bg-white/20"
-          >
-            <Settings className="h-5 w-5" />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={handleLogout}
-            className="text-white hover:bg-white/20"
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
-        </div>
-      </header>
-
-      <div className="container mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-4">Support Dashboard</h1>
-        <p>This support dashboard is under construction. Please check back soon.</p>
+        <ChatIcon 
+          onClick={() => setShowChat(true)}
+          className="ml-2"
+        />
       </div>
+      
+      <div className="container mx-auto px-4 py-6">
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-2xl font-semibold mb-4">Welcome to Support Portal</h2>
+          <p className="text-gray-600 mb-4">
+            This is the support management dashboard where you can handle customer support requests and communications.
+          </p>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h3 className="font-semibold text-blue-900">Active Tickets</h3>
+              <p className="text-2xl font-bold text-blue-600">24</p>
+            </div>
+            <div className="bg-green-50 p-4 rounded-lg">
+              <h3 className="font-semibold text-green-900">Resolved Today</h3>
+              <p className="text-2xl font-bold text-green-600">12</p>
+            </div>
+            <div className="bg-orange-50 p-4 rounded-lg">
+              <h3 className="font-semibold text-orange-900">Pending Review</h3>
+              <p className="text-2xl font-bold text-orange-600">6</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ChatInterface
+        language={language}
+        isOpen={showChat}
+        onClose={() => setShowChat(false)}
+      />
     </div>
   );
 };

@@ -1,103 +1,131 @@
 
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Smartphone, LogIn } from 'lucide-react';
+import LoginForm from '@/components/auth/LoginForm';
+import RegisterForm from '@/components/auth/RegisterForm';
+import { useApp } from '@/contexts/AppContext';
+import { useTranslation } from '@/utils/translations';
+import { toast } from '@/components/ui/use-toast';
+import { Button } from "@/components/ui/button";
+import { Globe } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import ThemeToggle from '@/components/ui/theme-toggle';
+import { UserAccountService } from '@/services/userAccountService';
 
 const RealLifeAuth: React.FC = () => {
+  const [showRegister, setShowRegister] = useState(false);
   const navigate = useNavigate();
-  const [email, setEmail] = React.useState('');
-  const [password, setPassword] = React.useState('');
+  const { login, language, setLanguage } = useApp();
+  const t = useTranslation(language);
+  const isMobile = useIsMobile();
+  
+  const handleLogin = async (credentials: { username: string; password: string }) => {
+    try {
+      // Check for demo credentials first
+      if (credentials.username === 'user' && credentials.password === 'user123') {
+        login({ username: 'user', email: 'user@demo.com' });
+        navigate('/user/real-life-dashboard');
+        toast({
+          title: t("login-successful"),
+          description: t("welcome-to-roadsaver")
+        });
+        return;
+      }
 
-  const handleLogin = () => {
-    // Add authentication logic here
-    navigate('/user/real-life-dashboard');
+      // Try database authentication
+      const user = await UserAccountService.authenticateUser(credentials.username, credentials.password);
+      
+      if (user) {
+        login({ username: user.username, email: user.email });
+        navigate('/user/real-life-dashboard');
+        toast({
+          title: t("login-successful"),
+          description: t("welcome-to-roadsaver")
+        });
+      } else {
+        toast({
+          title: t("auth-error"),
+          description: t("invalid-username-password"),
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('User authentication error:', error);
+      toast({
+        title: t("auth-error"),
+        description: "Authentication failed. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
+  
+  const handleRegister = async (userData: { username: string; email: string; password: string; gender?: string; phoneNumber?: string }) => {
+    try {
+      await UserAccountService.createUserAccount({
+        username: userData.username,
+        email: userData.email,
+        password_hash: userData.password,
+        phone_number: userData.phoneNumber,
+        gender: userData.gender,
+        full_name: userData.username
+      });
 
+      login({ username: userData.username, email: userData.email });
+      navigate('/user/real-life-dashboard');
+      toast({
+        title: t("registration-successful"),
+        description: t("account-created-welcome")
+      });
+    } catch (error) {
+      console.error('User registration error:', error);
+      toast({
+        title: t("auth-error"),
+        description: "Registration failed. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  if (showRegister) {
+    return (
+      <RegisterForm 
+        onRegister={handleRegister} 
+        onCancel={() => setShowRegister(false)} 
+      />
+    );
+  }
+  
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => navigate('/user/portal-selection')}
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <h1 className="text-2xl font-bold text-green-600">RoadSaver</h1>
-          </div>
+    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-b from-green-600/10 to-background px-4 py-8 font-clash relative">
+      
+      <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+        <ThemeToggle showLabels={false} size="sm" />
+        <div className="relative">
           <Button 
-            variant="outline"
-            onClick={() => navigate('/')}
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setLanguage(language === 'en' ? 'bg' : 'en')}
+            aria-label={t(language === 'en' ? 'switch-to-bulgarian' : 'switch-to-english')}
+            className="h-10 w-10 bg-green-600 text-white hover:bg-green-700"
           >
-            Home
+            <Globe className="h-4 w-4" />
           </Button>
+          <span className="absolute -bottom-1 -right-1 text-xs bg-white text-green-600 px-1 rounded">
+            {language.toUpperCase()}
+          </span>
         </div>
-      </header>
+      </div>
 
-      <div className="container mx-auto px-4 py-12">
-        <div className="max-w-md mx-auto">
-          <Card>
-            <CardHeader className="text-center">
-              <Smartphone className="h-16 w-16 text-green-600 mx-auto mb-4" />
-              <CardTitle className="text-2xl">Sign In</CardTitle>
-              <CardDescription>
-                Access your RoadSaver account for real assistance
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-              
-              <Button 
-                onClick={handleLogin}
-                className="w-full"
-                size="lg"
-              >
-                <LogIn className="mr-2 h-5 w-5" />
-                Sign In
-              </Button>
-              
-              <div className="text-center">
-                <Button variant="link" size="sm">
-                  Forgot your password?
-                </Button>
-              </div>
-              
-              <div className="text-center">
-                <span className="text-sm text-gray-600">Don't have an account? </span>
-                <Button variant="link" size="sm">
-                  Sign up here
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+      <div className="w-full max-w-md mb-4">
+        <div className="mb-6 text-center">
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2">RoadSaver</h1>
+          <p className="text-muted-foreground">{t('auth-subtitle')}</p>
         </div>
+        
+        <LoginForm 
+          onLogin={handleLogin} 
+          onCreateAccount={() => setShowRegister(true)} 
+        />
       </div>
     </div>
   );

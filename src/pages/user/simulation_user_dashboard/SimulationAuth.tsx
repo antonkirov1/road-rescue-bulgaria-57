@@ -1,76 +1,146 @@
 
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Monitor, Play } from 'lucide-react';
+import LoginForm from '@/components/auth/LoginForm';
+import RegisterForm from '@/components/auth/RegisterForm';
+import { useApp } from '@/contexts/AppContext';
+import { useTranslation } from '@/utils/translations';
+import { toast } from '@/components/ui/use-toast';
+import { Button } from "@/components/ui/button";
+import { Globe } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import ThemeToggle from '@/components/ui/theme-toggle';
+import { UserAccountService } from '@/services/userAccountService';
 
 const SimulationAuth: React.FC = () => {
+  const [showRegister, setShowRegister] = useState(false);
   const navigate = useNavigate();
+  const { login, language, setLanguage } = useApp();
+  const t = useTranslation(language);
+  const isMobile = useIsMobile();
+  
+  const handleLogin = async (credentials: { username: string; password: string }) => {
+    try {
+      // Check for demo credentials first
+      if (credentials.username === 'user' && credentials.password === 'user123') {
+        login({ username: 'user', email: 'user@demo.com' });
+        navigate('/user/simulation-dashboard');
+        toast({
+          title: t("login-successful"),
+          description: t("welcome-to-roadsaver")
+        });
+        return;
+      }
 
-  const handleEnterSimulation = () => {
-    navigate('/user/simulation-dashboard');
+      // Try database authentication
+      const user = await UserAccountService.authenticateUser(credentials.username, credentials.password);
+      
+      if (user) {
+        login({ username: user.username, email: user.email });
+        navigate('/user/simulation-dashboard');
+        toast({
+          title: t("login-successful"),
+          description: t("welcome-to-roadsaver")
+        });
+      } else {
+        toast({
+          title: t("auth-error"),
+          description: t("invalid-username-password"),
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('User authentication error:', error);
+      toast({
+        title: t("auth-error"),
+        description: "Authentication failed. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
+  
+  const handleRegister = async (userData: { username: string; email: string; password: string; gender?: string; phoneNumber?: string }) => {
+    try {
+      await UserAccountService.createUserAccount({
+        username: userData.username,
+        email: userData.email,
+        password_hash: userData.password,
+        phone_number: userData.phoneNumber,
+        gender: userData.gender,
+        full_name: userData.username
+      });
 
+      login({ username: userData.username, email: userData.email });
+      navigate('/user/simulation-dashboard');
+      toast({
+        title: t("registration-successful"),
+        description: t("account-created-welcome")
+      });
+    } catch (error) {
+      console.error('User registration error:', error);
+      toast({
+        title: t("auth-error"),
+        description: "Registration failed. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  if (showRegister) {
+    return (
+      <RegisterForm 
+        onRegister={handleRegister} 
+        onCancel={() => setShowRegister(false)} 
+      />
+    );
+  }
+  
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => navigate('/user/portal-selection')}
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <h1 className="text-2xl font-bold text-green-600">RoadSaver</h1>
-          </div>
+    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-b from-green-600/10 to-background px-4 py-8 font-clash relative">
+      
+      <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+        <ThemeToggle showLabels={false} size="sm" />
+        <div className="relative">
           <Button 
-            variant="outline"
-            onClick={() => navigate('/')}
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setLanguage(language === 'en' ? 'bg' : 'en')}
+            aria-label={t(language === 'en' ? 'switch-to-bulgarian' : 'switch-to-english')}
+            className="h-10 w-10 bg-green-600 text-white hover:bg-green-700"
           >
-            Home
+            <Globe className="h-4 w-4" />
           </Button>
+          <span className="absolute -bottom-1 -right-1 text-xs bg-white text-green-600 px-1 rounded">
+            {language.toUpperCase()}
+          </span>
         </div>
-      </header>
+      </div>
 
-      <div className="container mx-auto px-4 py-12">
-        <div className="max-w-md mx-auto">
-          <Card>
-            <CardHeader className="text-center">
-              <Monitor className="h-16 w-16 text-blue-600 mx-auto mb-4" />
-              <CardTitle className="text-2xl">Simulation Mode</CardTitle>
-              <CardDescription>
-                Experience our roadside assistance service in a simulated environment
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-blue-900 mb-2">What you can do:</h3>
-                <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• Request different types of roadside assistance</li>
-                  <li>• Experience the full service flow</li>
-                  <li>• See how technician matching works</li>
-                  <li>• Test the tracking and communication features</li>
-                </ul>
-              </div>
-              
-              <Button 
-                onClick={handleEnterSimulation}
-                className="w-full"
-                size="lg"
-              >
-                <Play className="mr-2 h-5 w-5" />
-                Start Simulation
-              </Button>
-            </CardContent>
-          </Card>
+      <div className="w-full max-w-md mb-4">
+        <div className="mb-6 text-center">
+          <div className="flex items-center justify-center gap-3 mb-2">
+            {/* "RoadSaver" word first, icon after "r" */}
+            <h1 className="text-3xl sm:text-4xl font-bold flex items-center gap-3">
+              RoadSaver
+              <img 
+                src="/lovable-uploads/metaverse-virtual-world-icon.svg"
+                alt="Metaverse VR Icon"
+                className="w-10 h-10 inline-block align-middle ml-2"
+                style={{ verticalAlign: 'middle' }}
+              />
+            </h1>
+          </div>
+          <p className="text-muted-foreground">{t('auth-subtitle')}</p>
         </div>
+        
+        <LoginForm 
+          onLogin={handleLogin} 
+          onCreateAccount={() => setShowRegister(true)} 
+        />
       </div>
     </div>
   );
 };
 
 export default SimulationAuth;
+
