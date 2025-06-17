@@ -21,6 +21,7 @@ interface Props {
   isRealLife?: boolean;
   initialRequest?: any;
   initialStep?: any;
+  onRequestChange?: (request: any, step: any) => void;
 }
 
 const RequestSystemDialog: React.FC<Props> = ({ 
@@ -32,7 +33,8 @@ const RequestSystemDialog: React.FC<Props> = ({
   maxDeclines = 2,
   isRealLife = false,
   initialRequest,
-  initialStep
+  initialStep,
+  onRequestChange
 }) => {
   const {
     step,
@@ -52,6 +54,13 @@ const RequestSystemDialog: React.FC<Props> = ({
   // Use initial state if provided (for restored requests)
   const currentStep = initialStep || step;
   const currentRequest = initialRequest || request;
+
+  // Notify parent about request changes
+  React.useEffect(() => {
+    if (onRequestChange && (request || initialRequest) && (step || initialStep)) {
+      onRequestChange(currentRequest, currentStep);
+    }
+  }, [request, step, initialRequest, initialStep, onRequestChange, currentRequest, currentStep]);
 
   React.useEffect(() => {
     if (open && !currentRequest && !initialRequest) {

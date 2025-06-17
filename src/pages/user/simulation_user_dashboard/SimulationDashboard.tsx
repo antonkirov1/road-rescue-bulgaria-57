@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -24,6 +23,7 @@ const SimulationDashboard: React.FC = () => {
   const {
     request: activeRequest,
     step: activeStep,
+    serviceType: activeServiceType,
     hasActiveRequest,
     setActiveRequest,
     minimizeRequest,
@@ -82,8 +82,15 @@ const SimulationDashboard: React.FC = () => {
 
   const handleActiveRequestClick = () => {
     if (hasActiveRequest) {
+      setSelectedService(activeServiceType);
       restoreRequest();
       setShowRequestDialog(true);
+    }
+  };
+
+  const handleRequestChange = (request: any, step: any) => {
+    if (request && step) {
+      setActiveRequest(request, step, selectedService);
     }
   };
 
@@ -193,6 +200,7 @@ const SimulationDashboard: React.FC = () => {
           isRealLife={false}
           initialRequest={activeRequest}
           initialStep={activeStep}
+          onRequestChange={handleRequestChange}
         />
       )}
 

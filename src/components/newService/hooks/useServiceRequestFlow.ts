@@ -1,6 +1,8 @@
+
 import { useState, useEffect, useRef } from "react";
 import { ServiceRequest, ServiceRequestStatus } from "@/types/newServiceRequest";
 import { EmployeeAccountService } from "@/services/employeeAccountService";
+import { supabase } from "@/integrations/supabase/client";
 
 export function useServiceRequestFlow() {
   const [step, setStep] = useState<ServiceRequestStatus | null>(null);
@@ -14,26 +16,52 @@ export function useServiceRequestFlow() {
     };
   }, []);
 
+  // Helper to get random employee name from employee_simulation table
+  const getRandomSimulationEmployee = async (): Promise<string> => {
+    try {
+      const { data, error } = await supabase
+        .from('employee_simulation')
+        .select('full_name')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error("Error fetching simulation employees:", error);
+        return "Technician";
+      }
+
+      if (data && data.length > 0) {
+        const randomEmployee = data[Math.floor(Math.random() * data.length)];
+        return randomEmployee.full_name;
+      }
+      
+      return "Technician";
+    } catch (error) {
+      console.error("Error in getRandomSimulationEmployee:", error);
+      return "Technician";
+    }
+  };
+
+  // Helper to get random employee name from employee_accounts table
+  const getRandomRealLifeEmployee = async (): Promise<string> => {
+    try {
+      const availableEmployees = await EmployeeAccountService.getAvailableEmployees();
+      if (availableEmployees.length > 0) {
+        const randomEmployee = availableEmployees[Math.floor(Math.random() * availableEmployees.length)];
+        return randomEmployee.real_name || randomEmployee.username || "Technician";
+      }
+      return "Available Technician";
+    } catch (error) {
+      console.error("Error fetching real employees:", error);
+      return "Available Technician";
+    }
+  };
+
   // Helper to get random employee name
   const getRandomEmployeeName = async (isRealLife: boolean = false): Promise<string> => {
     if (isRealLife) {
-      try {
-        const availableEmployees = await EmployeeAccountService.getAvailableEmployees();
-        if (availableEmployees.length > 0) {
-          const randomEmployee = availableEmployees[Math.floor(Math.random() * availableEmployees.length)];
-          return randomEmployee.real_name || randomEmployee.username || "Technician";
-        }
-      } catch (error) {
-        console.error("Error fetching real employees:", error);
-      }
-      return "Available Technician";
+      return await getRandomRealLifeEmployee();
     } else {
-      // For simulation - use existing simulation names
-      const simulationNames = [
-        "Ivan Petrov", "Maria Georgieva", "Dimitar Stoev", "Elena Nikolova", 
-        "Georgi Popov", "Svetlana Dimitrova", "Petar Ivanov", "Anna Stoyanova"
-      ];
-      return simulationNames[Math.floor(Math.random() * simulationNames.length)];
+      return await getRandomSimulationEmployee();
     }
   };
 
@@ -80,7 +108,7 @@ export function useServiceRequestFlow() {
       ...r, 
       revisedPriceQuote: 130, 
       previousEmployeeName: r.assignedEmployeeName, 
-      assignedEmployeeName: "Another Technician" 
+      assignedEmployeeName: r.assignedEmployeeName // Keep the same employee for revised quote
     });
   }
 
@@ -90,6 +118,7 @@ export function useServiceRequestFlow() {
     setRequest(r => r && { 
       ...r, 
       declineCount: (r.declineCount || 0) + 1, 
+      previousEmployeeName: r.assignedEmployeeName,
       assignedEmployeeName: undefined, 
       priceQuote: undefined, 
       revisedPriceQuote: undefined 
