@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
@@ -13,7 +14,7 @@ import RequestSystemDialog from '@/components/newService/RequestSystemDialog';
 import { usePersistentRequest } from '@/hooks/usePersistentRequest';
 
 const SimulationDashboard: React.FC = () => {
-  const { user, logout, language } = useApp();
+  const { user, logout, language, setLanguage } = useApp();
   const t = useTranslation(language);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -108,7 +109,7 @@ const SimulationDashboard: React.FC = () => {
                 onClick={() => {
                   const newLanguage = language === 'en' ? 'bg' : 'en';
                   console.log(`Switching language to ${newLanguage}`);
-                  useApp.setState({ language: newLanguage });
+                  setLanguage(newLanguage);
                 }}
                 aria-label={t(language === 'en' ? 'switch-to-bulgarian' : 'switch-to-english')}
                 className="h-10 w-10 bg-blue-600 text-white hover:bg-blue-700"
