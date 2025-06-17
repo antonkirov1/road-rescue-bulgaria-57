@@ -10,6 +10,7 @@ import { toast } from '@/components/ui/use-toast';
 import { getServiceIconAndTitle } from '@/components/service/serviceIcons';
 import RequestSystemDialog from '@/components/newService/RequestSystemDialog';
 import SettingsMenu from '@/components/settings/SettingsMenu';
+import ThemeToggle from '@/components/ui/theme-toggle';
 
 const RealLifeDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -104,6 +105,9 @@ const RealLifeDashboard: React.FC = () => {
               {language.toUpperCase()}
             </span>
           </div>
+          <div className="h-8 w-8 flex items-center justify-center">
+            <ThemeToggle showLabels={false} size="sm" />
+          </div>
         </div>
       </div>
       
@@ -154,6 +158,7 @@ const RealLifeDashboard: React.FC = () => {
           type={selectedService as any}
           onClose={handleCloseDialog}
           userId={user?.username || 'real-life-user'}
+          maxDeclines={2}
         />
       )}
 
