@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { ServiceRequest, ServiceRequestStatus } from '@/types/newServiceRequest';
@@ -16,14 +17,15 @@ export const useServiceRequestFlow = () => {
     
     const newRequest: ServiceRequest = {
       id: `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      type,
-      message,
-      userId,
+      type: type as "Flat Tyre" | "Out of Fuel" | "Car Battery" | "Other Car Problems" | "Tow Truck",
       status: 'searching',
-      createdAt: new Date().toISOString(),
+      userLocation: { lat: 0, lng: 0 }, // Add required userLocation field
+      userId,
+      declineCount: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
       priceQuote: null,
       assignedEmployeeName: '',
-      isRealLife
     };
 
     setRequest(newRequest);
@@ -124,7 +126,7 @@ export const useServiceRequestFlow = () => {
 
   const acceptQuote = useCallback(() => {
     setStep('live_tracking');
-    setRequest(prev => prev ? { ...prev, status: 'accepted' } : null);
+    setRequest(prev => prev ? { ...prev, status: 'live_tracking' } : null);
     
     // Simulate service completion
     setTimeout(() => {
@@ -135,7 +137,7 @@ export const useServiceRequestFlow = () => {
 
   const acceptRevisedQuote = useCallback(() => {
     setStep('live_tracking');
-    setRequest(prev => prev ? { ...prev, status: 'accepted' } : null);
+    setRequest(prev => prev ? { ...prev, status: 'live_tracking' } : null);
     
     // Simulate service completion
     setTimeout(() => {
