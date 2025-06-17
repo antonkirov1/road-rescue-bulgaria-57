@@ -111,15 +111,43 @@ const RequestSystemDialog: React.FC<Props> = ({
   const renderScreen = () => {
     switch (currentStep) {
       case "searching":
-        return <SearchingScreen onCancel={handleCancelRequest} onMinimize={handleMinimize} />;
+        return (
+          <SearchingScreen 
+            onCancel={handleCancelRequest} 
+            onMinimize={handleMinimize} 
+          />
+        );
       case "no_technician":
         return <NoTechnicianScreen onOk={handleNoTechnicianOkAndClose} />;
       case "quote_received":
-        return <QuoteScreen request={currentRequest!} onAccept={acceptQuote} onDecline={declineQuote} onCancel={handleCancelRequest} onMinimize={handleMinimize} />;
+        return (
+          <QuoteScreen 
+            request={currentRequest!} 
+            onAccept={acceptQuote} 
+            onDecline={declineQuote} 
+            onCancel={handleCancelRequest} 
+            onMinimize={handleMinimize} 
+          />
+        );
       case "revised_quote":
-        return <RevisedPriceQuoteScreen request={currentRequest!} onAccept={acceptRevisedQuote} onDecline={declineQuote} onFinalDecline={handleFinalDecline} onCancel={handleCancelRequest} onMinimize={handleMinimize} />;
+        return (
+          <RevisedPriceQuoteScreen 
+            request={currentRequest!} 
+            onAccept={acceptRevisedQuote} 
+            onDecline={declineQuote} 
+            onFinalDecline={handleFinalDecline} 
+            onCancel={handleCancelRequest} 
+            onMinimize={handleMinimize} 
+          />
+        );
       case "live_tracking":
-        return <TrackingScreen request={currentRequest!} onComplete={handleCompleteRequest} onMinimize={handleMinimize} />;
+        return (
+          <TrackingScreen 
+            request={currentRequest!} 
+            onComplete={handleCompleteRequest} 
+            onMinimize={handleMinimize} 
+          />
+        );
       case "completed":
         return <CompletedScreen request={currentRequest!} onClose={handleCompleteRequest} />;
       case "rate_employee":
