@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useServiceRequestFlow } from "./hooks/useServiceRequestFlow";
@@ -64,14 +63,14 @@ const RequestSystemDialog: React.FC<Props> = ({
 
   React.useEffect(() => {
     if (open && !currentRequest && !initialRequest) {
-      console.log('Creating new request with isRealLife:', isRealLife);
+      console.log('Creating new request with isRealLife:', isRealLife, 'type:', type);
       createRequest(type, `Service for ${type}`, userId, isRealLife);
     }
     if (!open && !initialRequest) {
       closeAll();
     }
     // eslint-disable-next-line
-  }, [open, isRealLife]);
+  }, [open, isRealLife, type]);
 
   const handleClose = () => {
     if (!initialRequest) {

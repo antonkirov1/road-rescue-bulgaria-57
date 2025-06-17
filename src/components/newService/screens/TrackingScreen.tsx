@@ -19,11 +19,16 @@ const TrackingScreen: React.FC<TrackingScreenProps> = ({
 }) => {
   // Simulate completion after 3 seconds
   React.useEffect(() => {
+    console.log('TrackingScreen mounted, setting completion timer');
     const timer = setTimeout(() => {
+      console.log('TrackingScreen timer expired, calling onComplete');
       onComplete();
     }, 3000);
 
-    return () => clearTimeout(timer);
+    return () => {
+      console.log('TrackingScreen unmounted, clearing timer');
+      clearTimeout(timer);
+    };
   }, [onComplete]);
 
   return (
