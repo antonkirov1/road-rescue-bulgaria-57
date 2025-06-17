@@ -23,13 +23,42 @@ export const useEmployeeSimulation = () => {
 
       if (error) {
         console.error('Error loading simulated employees:', error);
+        // Set fallback employees if database fails
+        console.log('Setting fallback employees due to database error');
+        setEmployees([
+          { id: 1, employee_number: 1, full_name: 'John Smith', created_at: new Date().toISOString() },
+          { id: 2, employee_number: 2, full_name: 'Maria Garcia', created_at: new Date().toISOString() },
+          { id: 3, employee_number: 3, full_name: 'Alex Johnson', created_at: new Date().toISOString() },
+          { id: 4, employee_number: 4, full_name: 'Sarah Wilson', created_at: new Date().toISOString() },
+          { id: 5, employee_number: 5, full_name: 'Michael Brown', created_at: new Date().toISOString() }
+        ]);
         return;
       }
 
-      console.log('Loaded simulated employees:', data?.length || 0, data);
-      setEmployees(data || []);
+      if (!data || data.length === 0) {
+        console.log('No employees found in database, using fallback employees');
+        setEmployees([
+          { id: 1, employee_number: 1, full_name: 'John Smith', created_at: new Date().toISOString() },
+          { id: 2, employee_number: 2, full_name: 'Maria Garcia', created_at: new Date().toISOString() },
+          { id: 3, employee_number: 3, full_name: 'Alex Johnson', created_at: new Date().toISOString() },
+          { id: 4, employee_number: 4, full_name: 'Sarah Wilson', created_at: new Date().toISOString() },
+          { id: 5, employee_number: 5, full_name: 'Michael Brown', created_at: new Date().toISOString() }
+        ]);
+      } else {
+        console.log('Loaded simulated employees:', data?.length || 0, data);
+        setEmployees(data || []);
+      }
     } catch (error) {
       console.error('Error in loadEmployees:', error);
+      // Set fallback employees on any error
+      console.log('Setting fallback employees due to catch error');
+      setEmployees([
+        { id: 1, employee_number: 1, full_name: 'John Smith', created_at: new Date().toISOString() },
+        { id: 2, employee_number: 2, full_name: 'Maria Garcia', created_at: new Date().toISOString() },
+        { id: 3, employee_number: 3, full_name: 'Alex Johnson', created_at: new Date().toISOString() },
+        { id: 4, employee_number: 4, full_name: 'Sarah Wilson', created_at: new Date().toISOString() },
+        { id: 5, employee_number: 5, full_name: 'Michael Brown', created_at: new Date().toISOString() }
+      ]);
     } finally {
       setIsLoading(false);
     }
