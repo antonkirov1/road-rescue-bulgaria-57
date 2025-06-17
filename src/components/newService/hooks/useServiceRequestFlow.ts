@@ -1,233 +1,197 @@
-import { useState, useEffect, useRef } from "react";
-import { ServiceRequest, ServiceRequestStatus } from "@/types/newServiceRequest";
-import { EmployeeAccountService } from "@/services/employeeAccountService";
-import { supabase } from "@/integrations/supabase/client";
+import { useState, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { ServiceRequest, ServiceRequestStatus } from '@/types/newServiceRequest';
 
-export function useServiceRequestFlow() {
+export const useServiceRequestFlow = () => {
   const [step, setStep] = useState<ServiceRequestStatus | null>(null);
   const [request, setRequest] = useState<ServiceRequest | null>(null);
-  const timers = useRef<number[]>([]);
 
-  // Clean up timers on unmount/close
-  useEffect(() => {
-    return () => {
-      timers.current.forEach(clearTimeout);
+  const createRequest = useCallback(async (
+    type: string,
+    message: string,
+    userId: string,
+    isRealLife: boolean = false
+  ) => {
+    console.log('Creating request with isRealLife:', isRealLife);
+    
+    const newRequest: ServiceRequest = {
+      id: `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      type,
+      message,
+      userId,
+      status: 'searching',
+      createdAt: new Date().toISOString(),
+      priceQuote: null,
+      assignedEmployeeName: '',
+      isRealLife
     };
+
+    setRequest(newRequest);
+    setStep('searching');
+
+    if (isRealLife) {
+      // Real-life flow - use actual database queries
+      setTimeout(async () => {
+        try {
+          const { data: employees } = await supabase
+            .from('employee_accounts')
+            .select('id, real_name, username')
+            .eq('status', 'active')
+            .eq('is_available', true);
+
+          if (!employees || employees.length === 0) {
+            setStep('no_technician');
+            return;
+          }
+
+          const selectedEmployee = employees[Math.floor(Math.random() * employees.length)];
+          const priceQuote = Math.floor(Math.random() * 100) + 50;
+
+          setRequest(prev => prev ? {
+            ...prev,
+            assignedEmployeeName: selectedEmployee.real_name || selectedEmployee.username,
+            priceQuote,
+            status: 'quote_received'
+          } : null);
+          setStep('quote_received');
+        } catch (error) {
+          console.error('Error in real-life employee search:', error);
+          setStep('no_technician');
+        }
+      }, 2000);
+    } else {
+      // Simulation flow - use predictable simulation logic
+      console.log('Starting simulation flow');
+      setTimeout(async () => {
+        try {
+          // Try to get simulated employees first
+          const { data: simulatedEmployees } = await supabase
+            .from('employee_simulation')
+            .select('id, full_name, employee_number')
+            .order('employee_number', { ascending: true });
+
+          console.log('Simulated employees fetched:', simulatedEmployees);
+
+          let selectedEmployee;
+          if (simulatedEmployees && simulatedEmployees.length > 0) {
+            selectedEmployee = simulatedEmployees[Math.floor(Math.random() * simulatedEmployees.length)];
+            console.log('Selected simulated employee:', selectedEmployee);
+          } else {
+            // Fallback to a default simulated technician
+            console.log('No simulated employees found, using fallback');
+            selectedEmployee = {
+              id: 'sim_default',
+              full_name: 'Simulation Technician',
+              employee_number: 1
+            };
+          }
+
+          // Generate a price quote for simulation
+          const basePrice = type === 'Flat Tyre' ? 80 : 
+                           type === 'Car Battery' ? 120 :
+                           type === 'Out of Fuel' ? 60 :
+                           type === 'Tow Truck' ? 150 : 100;
+          
+          const priceQuote = basePrice + Math.floor(Math.random() * 50);
+
+          console.log('Setting simulation request with employee:', selectedEmployee.full_name);
+          
+          setRequest(prev => prev ? {
+            ...prev,
+            assignedEmployeeName: selectedEmployee.full_name,
+            priceQuote,
+            status: 'quote_received'
+          } : null);
+          setStep('quote_received');
+        } catch (error) {
+          console.error('Error in simulation employee search:', error);
+          // Even if database fails, provide a fallback for simulation
+          const fallbackEmployee = 'Simulation Technician';
+          const fallbackPrice = 100;
+          
+          console.log('Using fallback simulation data');
+          setRequest(prev => prev ? {
+            ...prev,
+            assignedEmployeeName: fallbackEmployee,
+            priceQuote: fallbackPrice,
+            status: 'quote_received'
+          } : null);
+          setStep('quote_received');
+        }
+      }, 1500); // Shorter timeout for simulation
+    }
   }, []);
 
-  // Helper to get random employee name from employee_simulation table
-  const getRandomSimulationEmployee = async (): Promise<string> => {
-    try {
-      console.log('Fetching simulation employees from employee_simulation table...');
-      const { data, error } = await supabase
-        .from('employee_simulation')
-        .select('*')
-        .order('created_at', { ascending: false });
+  const acceptQuote = useCallback(() => {
+    setStep('live_tracking');
+    setRequest(prev => prev ? { ...prev, status: 'accepted' } : null);
+    
+    // Simulate service completion
+    setTimeout(() => {
+      setStep('completed');
+      setRequest(prev => prev ? { ...prev, status: 'completed' } : null);
+    }, 3000);
+  }, []);
 
-      console.log('Supabase query result:', { data, error });
+  const acceptRevisedQuote = useCallback(() => {
+    setStep('live_tracking');
+    setRequest(prev => prev ? { ...prev, status: 'accepted' } : null);
+    
+    // Simulate service completion
+    setTimeout(() => {
+      setStep('completed');
+      setRequest(prev => prev ? { ...prev, status: 'completed' } : null);
+    }, 3000);
+  }, []);
 
-      if (error) {
-        console.error("Error fetching simulation employees:", error);
-        return "Simulation Technician";
-      }
+  const declineQuote = useCallback(() => {
+    // Simulate finding another technician with revised price
+    setStep('searching');
+    
+    setTimeout(() => {
+      const revisedPrice = request?.priceQuote ? request.priceQuote - 20 : 80;
+      setRequest(prev => prev ? {
+        ...prev,
+        priceQuote: revisedPrice,
+        status: 'revised_quote'
+      } : null);
+      setStep('revised_quote');
+    }, 2000);
+  }, [request]);
 
-      if (!data || data.length === 0) {
-        console.log('No simulation employees found in database, returning default name');
-        return "Simulation Technician";
-      }
-
-      console.log(`Found ${data.length} simulation employees:`, data);
-      const randomEmployee = data[Math.floor(Math.random() * data.length)];
-      console.log('Selected simulation employee:', randomEmployee);
-      return randomEmployee.full_name || "Simulation Technician";
-    } catch (error) {
-      console.error("Exception in getRandomSimulationEmployee:", error);
-      return "Simulation Technician";
-    }
-  };
-
-  // Helper to get random employee name from employee_accounts table
-  const getRandomRealLifeEmployee = async (): Promise<string> => {
-    try {
-      console.log('Fetching real life employees...');
-      const availableEmployees = await EmployeeAccountService.getAvailableEmployees();
-      console.log('Available real life employees:', availableEmployees);
-      
-      if (availableEmployees.length > 0) {
-        const randomEmployee = availableEmployees[Math.floor(Math.random() * availableEmployees.length)];
-        const employeeName = randomEmployee.real_name || randomEmployee.username || "Real Life Technician";
-        console.log('Selected real life employee:', employeeName);
-        return employeeName;
-      }
-      console.log('No real life employees found, returning default');
-      return "Real Life Technician";
-    } catch (error) {
-      console.error("Error fetching real employees:", error);
-      return "Real Life Technician";
-    }
-  };
-
-  // Helper to get random employee name
-  const getRandomEmployeeName = async (isRealLife: boolean = false): Promise<string> => {
-    console.log('Getting random employee name, isRealLife:', isRealLife);
+  const finalDeclineQuote = useCallback((isRealLife: boolean) => {
     if (isRealLife) {
-      return await getRandomRealLifeEmployee();
+      setStep('no_technician');
     } else {
-      return await getRandomSimulationEmployee();
+      // In simulation, just cancel the request
+      setStep('cancelled');
+      setRequest(prev => prev ? { ...prev, status: 'cancelled' } : null);
     }
-  };
+  }, []);
 
-  function createRequest(type: ServiceRequest["type"], description: string, userId: string, isRealLife: boolean = false) {
-    console.log('Creating request:', { type, description, userId, isRealLife });
-    
-    const req: ServiceRequest = {
-      id: String(Date.now()) + Math.random().toString(16),
-      type,
-      status: "searching",
-      userLocation: { lat: 0, lng: 0 },
-      userId,
-      declineCount: 0,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      description,
-    };
-    setRequest(req);
-    setStep("searching");
+  const cancelRequest = useCallback(() => {
+    setStep('cancelled');
+    setRequest(prev => prev ? { ...prev, status: 'cancelled' } : null);
+  }, []);
 
-    // Simulate search, then show quote, or "no technician" after a delay
-    timers.current.push(window.setTimeout(async () => {
-      console.log('Search timeout triggered, isRealLife:', isRealLife);
-      
-      try {
-        // For simulation dashboard, almost always find an employee
-        const noTechnicianChance = isRealLife ? 0.3 : 0.01; // 1% chance for simulation, 30% for real life
-        
-        if (Math.random() < noTechnicianChance) {
-          console.log('No technician found (rare case)');
-          setStep("no_technician");
-        } else {
-          console.log('Finding employee...');
-          const employeeName = await getRandomEmployeeName(isRealLife);
-          console.log('Employee found:', employeeName);
-          
-          // Generate a random price quote
-          const priceQuote = Math.floor(Math.random() * 50) + 100; // 100-150 BGN
-          console.log('Generated price quote:', priceQuote);
-          
-          setStep("quote_received");
-          setRequest(r => r && { 
-            ...r, 
-            priceQuote,
-            assignedEmployeeName: employeeName,
-            status: "quote_received"
-          });
-        }
-      } catch (error) {
-        console.error('Error in search timeout:', error);
-        // Fallback - always provide a technician for simulation
-        if (!isRealLife) {
-          console.log('Fallback: providing default simulation technician');
-          setStep("quote_received");
-          setRequest(r => r && { 
-            ...r, 
-            priceQuote: 120,
-            assignedEmployeeName: "Simulation Technician",
-            status: "quote_received"
-          });
-        } else {
-          setStep("no_technician");
-        }
-      }
-    }, 1500)); // Increased timeout slightly for better UX
-  }
+  const closeAll = useCallback(() => {
+    setStep(null);
+    setRequest(null);
+  }, []);
 
-  function acceptQuote() {
-    setStep("live_tracking");
-    setRequest(r => r && { ...r, status: "live_tracking" });
-    timers.current.push(window.setTimeout(() => {
-      setStep("completed");
-      setRequest(r => r && { ...r, status: "completed" });
-    }, 2000));
-  }
+  const handleNoTechnicianOk = useCallback(() => {
+    setStep(null);
+    setRequest(null);
+  }, []);
 
-  function acceptRevisedQuote() {
-    setStep("live_tracking");
-    setRequest(r => r && { ...r, status: "live_tracking" });
-    timers.current.push(window.setTimeout(() => {
-      setStep("completed");
-      setRequest(r => r && { ...r, status: "completed" });
-    }, 1500));
-  }
+  const completeRequest = useCallback(() => {
+    setStep('rate_employee');
+  }, []);
 
-  function declineQuote() {
-    setStep("revised_quote");
-    setRequest(r => r && { 
-      ...r, 
-      revisedPriceQuote: (r.priceQuote || 120) + 10, 
-      previousEmployeeName: r.assignedEmployeeName,
-      status: "revised_quote"
-    });
-  }
-
-  async function finalDeclineQuote(isRealLife: boolean = false) {
-    console.log('Final decline quote, searching for new employee...');
-    setStep("searching");
-    setRequest(r => r && { 
-      ...r, 
-      declineCount: (r.declineCount || 0) + 1, 
-      previousEmployeeName: r.assignedEmployeeName,
-      assignedEmployeeName: undefined, 
-      priceQuote: undefined, 
-      revisedPriceQuote: undefined,
-      status: "searching"
-    });
-    
-    timers.current.push(window.setTimeout(async () => {
-      const noTechnicianChance = isRealLife ? 0.3 : 0.01;
-      
-      if (Math.random() < noTechnicianChance) {
-        console.log('No technician found after final decline');
-        setStep("no_technician");
-      } else {
-        console.log('Finding new employee after final decline...');
-        const employeeName = await getRandomEmployeeName(isRealLife);
-        console.log('New employee found:', employeeName);
-        setStep("quote_received");
-        setRequest(r => r && { 
-          ...r, 
-          priceQuote: Math.floor(Math.random() * 50) + 100, 
-          assignedEmployeeName: employeeName,
-          status: "quote_received"
-        });
-      }
-    }, 1500));
-  }
-
-  function handleNoTechnicianOk() {
-    setStep("cancelled");
-    setRequest(r => r && { ...r, status: "cancelled" });
-  }
-
-  function cancelRequest() {
-    setStep("cancelled");
-    setRequest(r => r && { ...r, status: "cancelled" });
-  }
-
-  function completeRequest() {
-    setStep("rate_employee");
-    setRequest(r => r && { ...r, status: "rate_employee" });
-  }
-
-  function rateEmployee(rating: number) {
+  const rateEmployee = useCallback((rating: number) => {
     console.log('Employee rated:', rating);
-    setStep(null);
-    setRequest(null);
-  }
-
-  function closeAll() {
-    setStep(null);
-    setRequest(null);
-  }
+    closeAll();
+  }, [closeAll]);
 
   return {
     step,
@@ -243,4 +207,4 @@ export function useServiceRequestFlow() {
     completeRequest,
     rateEmployee,
   };
-}
+};
