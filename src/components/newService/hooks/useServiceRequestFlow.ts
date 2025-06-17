@@ -1,205 +1,197 @@
 
 import { useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { ServiceRequest, ServiceRequestStatus } from '@/types/newServiceRequest';
 
 export const useServiceRequestFlow = () => {
   const [step, setStep] = useState<ServiceRequestStatus | null>(null);
   const [request, setRequest] = useState<ServiceRequest | null>(null);
 
-  const createRequest = useCallback(async (
-    type: string,
-    message: string,
+  const createRequest = useCallback((
+    type: ServiceRequest['type'], 
+    description: string, 
     userId: string,
     isRealLife: boolean = false
   ) => {
-    console.log('Creating request with isRealLife:', isRealLife);
+    console.log('Creating request with type:', type, 'isRealLife:', isRealLife);
     
     const newRequest: ServiceRequest = {
       id: `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      type: type as "Flat Tyre" | "Out of Fuel" | "Car Battery" | "Other Car Problems" | "Tow Truck",
+      type,
       status: 'searching',
-      userLocation: { lat: 0, lng: 0 },
+      userLocation: { lat: 42.6977, lng: 23.3219 }, // Sofia coordinates
       userId,
+      description,
       declineCount: 0,
       createdAt: new Date(),
-      updatedAt: new Date(),
-      priceQuote: null,
-      assignedEmployeeName: '',
+      updatedAt: new Date()
     };
 
     setRequest(newRequest);
     setStep('searching');
 
-    if (isRealLife) {
-      // Real-life flow - use actual database queries
-      setTimeout(async () => {
-        try {
-          const { data: employees } = await supabase
-            .from('employee_accounts')
-            .select('id, real_name, username')
-            .eq('status', 'active')
-            .eq('is_available', true);
-
-          if (!employees || employees.length === 0) {
-            setStep('no_technician');
-            return;
-          }
-
-          const selectedEmployee = employees[Math.floor(Math.random() * employees.length)];
-          const priceQuote = Math.floor(Math.random() * 100) + 50;
-
-          setRequest(prev => prev ? {
-            ...prev,
-            assignedEmployeeName: selectedEmployee.real_name || selectedEmployee.username,
-            priceQuote,
-            status: 'quote_received'
-          } : null);
-          setStep('quote_received');
-        } catch (error) {
-          console.error('Error in real-life employee search:', error);
-          setStep('no_technician');
-        }
-      }, 2000);
-    } else {
-      // Simulation flow - guaranteed to work
-      console.log('Starting simulation flow');
-      setTimeout(async () => {
-        try {
-          console.log('Simulation timeout triggered');
-          
-          let selectedEmployeeName = 'Simulation Technician';
-          
-          // Try to get a simulated employee, but don't fail if it doesn't work
-          try {
-            const { data: simulatedEmployees } = await supabase
-              .from('employee_simulation')
-              .select('id, full_name, employee_number')
-              .order('employee_number', { ascending: true });
-
-            console.log('Simulated employees fetched:', simulatedEmployees);
-
-            if (simulatedEmployees && simulatedEmployees.length > 0) {
-              const randomEmployee = simulatedEmployees[Math.floor(Math.random() * simulatedEmployees.length)];
-              selectedEmployeeName = randomEmployee.full_name;
-              console.log('Selected simulated employee:', selectedEmployeeName);
-            } else {
-              console.log('No simulated employees found, using default');
-            }
-          } catch (dbError) {
-            console.log('Database error, using fallback employee:', dbError);
-            // Continue with default employee name
-          }
-
-          // Generate price quote based on service type
-          const basePrice = type === 'Flat Tyre' ? 80 : 
-                           type === 'Car Battery' ? 120 :
-                           type === 'Out of Fuel' ? 60 :
-                           type === 'Tow Truck' ? 150 : 100;
-          
-          const priceQuote = basePrice + Math.floor(Math.random() * 50);
-
-          console.log('Setting quote with employee:', selectedEmployeeName, 'price:', priceQuote);
-          
-          setRequest(prev => prev ? {
-            ...prev,
-            assignedEmployeeName: selectedEmployeeName,
-            priceQuote,
-            status: 'quote_received'
-          } : null);
-          setStep('quote_received');
-          
-          console.log('Simulation flow completed successfully');
-        } catch (error) {
-          console.error('Unexpected error in simulation flow:', error);
-          
-          // Even if everything fails, provide a working simulation
-          const fallbackPrice = 100;
-          const fallbackEmployee = 'Emergency Technician';
-          
-          console.log('Using emergency fallback');
-          setRequest(prev => prev ? {
-            ...prev,
-            assignedEmployeeName: fallbackEmployee,
-            priceQuote: fallbackPrice,
-            status: 'quote_received'
-          } : null);
-          setStep('quote_received');
-        }
-      }, 1500); // Shorter timeout for simulation
-    }
+    // Simulate finding a technician after 2-4 seconds
+    const searchTime = 2000 + Math.random() * 2000;
+    setTimeout(() => {
+      const updatedRequest = {
+        ...newRequest,
+        status: 'quote_received' as ServiceRequestStatus,
+        assignedEmployeeName: `Technician ${Math.floor(Math.random() * 100) + 1}`,
+        priceQuote: Math.floor(Math.random() * 50) + 80, // Random price between 80-130
+        technicianEta: Math.floor(Math.random() * 20) + 10, // 10-30 minutes
+        updatedAt: new Date()
+      };
+      setRequest(updatedRequest);
+      setStep('quote_received');
+    }, searchTime);
   }, []);
 
   const acceptQuote = useCallback(() => {
+    if (!request) return;
+    
+    console.log('Accepting quote for request:', request.id);
+    const updatedRequest = {
+      ...request,
+      status: 'live_tracking' as ServiceRequestStatus,
+      updatedAt: new Date()
+    };
+    setRequest(updatedRequest);
     setStep('live_tracking');
-    setRequest(prev => prev ? { ...prev, status: 'live_tracking' } : null);
-    
-    // Simulate service completion
-    setTimeout(() => {
-      setStep('completed');
-      setRequest(prev => prev ? { ...prev, status: 'completed' } : null);
-    }, 3000);
-  }, []);
-
-  const acceptRevisedQuote = useCallback(() => {
-    setStep('live_tracking');
-    setRequest(prev => prev ? { ...prev, status: 'live_tracking' } : null);
-    
-    // Simulate service completion
-    setTimeout(() => {
-      setStep('completed');
-      setRequest(prev => prev ? { ...prev, status: 'completed' } : null);
-    }, 3000);
-  }, []);
-
-  const declineQuote = useCallback(() => {
-    // Simulate finding another technician with revised price
-    setStep('searching');
-    
-    setTimeout(() => {
-      const revisedPrice = request?.priceQuote ? request.priceQuote - 20 : 80;
-      setRequest(prev => prev ? {
-        ...prev,
-        priceQuote: revisedPrice,
-        status: 'revised_quote'
-      } : null);
-      setStep('revised_quote');
-    }, 2000);
   }, [request]);
 
-  const finalDeclineQuote = useCallback((isRealLife: boolean) => {
+  const acceptRevisedQuote = useCallback(() => {
+    if (!request) return;
+    
+    console.log('Accepting revised quote for request:', request.id);
+    const updatedRequest = {
+      ...request,
+      status: 'live_tracking' as ServiceRequestStatus,
+      updatedAt: new Date()
+    };
+    setRequest(updatedRequest);
+    setStep('live_tracking');
+  }, [request]);
+
+  const declineQuote = useCallback(() => {
+    if (!request) return;
+    
+    console.log('Declining quote for request:', request.id);
+    const newDeclineCount = request.declineCount + 1;
+    
+    if (newDeclineCount >= 2) {
+      // After 2 declines, show revised quote
+      const updatedRequest = {
+        ...request,
+        status: 'revised_quote' as ServiceRequestStatus,
+        declineCount: newDeclineCount,
+        revisedPriceQuote: Math.floor(request.priceQuote! * 0.85), // 15% discount
+        previousEmployeeName: request.assignedEmployeeName,
+        assignedEmployeeName: `Technician ${Math.floor(Math.random() * 100) + 1}`,
+        updatedAt: new Date()
+      };
+      setRequest(updatedRequest);
+      setStep('revised_quote');
+    } else {
+      // Search for new technician
+      const updatedRequest = {
+        ...request,
+        status: 'searching' as ServiceRequestStatus,
+        declineCount: newDeclineCount,
+        previousEmployeeName: request.assignedEmployeeName,
+        assignedEmployeeName: undefined,
+        priceQuote: undefined,
+        updatedAt: new Date()
+      };
+      setRequest(updatedRequest);
+      setStep('searching');
+
+      // Simulate finding new technician
+      setTimeout(() => {
+        const newQuoteRequest = {
+          ...updatedRequest,
+          status: 'quote_received' as ServiceRequestStatus,
+          assignedEmployeeName: `Technician ${Math.floor(Math.random() * 100) + 1}`,
+          priceQuote: Math.floor(Math.random() * 50) + 80,
+          updatedAt: new Date()
+        };
+        setRequest(newQuoteRequest);
+        setStep('quote_received');
+      }, 3000);
+    }
+  }, [request]);
+
+  const finalDeclineQuote = useCallback((isRealLife: boolean = false) => {
+    if (!request) return;
+    
+    console.log('Final decline for request:', request.id);
+    
     if (isRealLife) {
+      // In real life mode, show no technician available
       setStep('no_technician');
     } else {
-      // In simulation, just cancel the request
+      // In simulation, cancel the request
+      const updatedRequest = {
+        ...request,
+        status: 'cancelled' as ServiceRequestStatus,
+        updatedAt: new Date()
+      };
+      setRequest(updatedRequest);
       setStep('cancelled');
-      setRequest(prev => prev ? { ...prev, status: 'cancelled' } : null);
     }
-  }, []);
+  }, [request]);
 
   const cancelRequest = useCallback(() => {
+    if (!request) return;
+    
+    console.log('Cancelling request:', request.id);
+    const updatedRequest = {
+      ...request,
+      status: 'cancelled' as ServiceRequestStatus,
+      updatedAt: new Date()
+    };
+    setRequest(updatedRequest);
     setStep('cancelled');
-    setRequest(prev => prev ? { ...prev, status: 'cancelled' } : null);
-  }, []);
+  }, [request]);
 
   const closeAll = useCallback(() => {
-    setStep(null);
+    console.log('Closing all dialogs');
     setRequest(null);
+    setStep(null);
   }, []);
 
   const handleNoTechnicianOk = useCallback(() => {
-    setStep(null);
-    setRequest(null);
+    console.log('No technician OK clicked');
+    setStep('cancelled');
   }, []);
 
   const completeRequest = useCallback(() => {
+    if (!request) return;
+    
+    console.log('Completing request:', request.id);
+    const updatedRequest = {
+      ...request,
+      status: 'completed' as ServiceRequestStatus,
+      updatedAt: new Date()
+    };
+    setRequest(updatedRequest);
     setStep('rate_employee');
-  }, []);
+  }, [request]);
 
   const rateEmployee = useCallback((rating: number) => {
-    console.log('Employee rated:', rating);
-    closeAll();
-  }, [closeAll]);
+    if (!request) return;
+    
+    console.log('Rating employee with:', rating);
+    const updatedRequest = {
+      ...request,
+      status: 'completed' as ServiceRequestStatus,
+      rating,
+      updatedAt: new Date()
+    };
+    setRequest(updatedRequest);
+    // Close after rating
+    setTimeout(() => {
+      closeAll();
+    }, 1000);
+  }, [request, closeAll]);
 
   return {
     step,

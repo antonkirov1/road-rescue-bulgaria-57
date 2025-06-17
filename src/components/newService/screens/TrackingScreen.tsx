@@ -5,8 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { MapPin, Phone, Clock, Car, Minimize2 } from 'lucide-react';
 import { ServiceRequest } from '@/types/newServiceRequest';
-import { useApp } from '@/contexts/AppContext';
-import { useTranslation } from '@/utils/translations';
 
 interface TrackingScreenProps {
   request: ServiceRequest;
@@ -19,9 +17,6 @@ const TrackingScreen: React.FC<TrackingScreenProps> = ({
   onComplete,
   onMinimize
 }) => {
-  const { language } = useApp();
-  const t = useTranslation(language);
-
   // Simulate completion after 3 seconds
   React.useEffect(() => {
     const timer = setTimeout(() => {
