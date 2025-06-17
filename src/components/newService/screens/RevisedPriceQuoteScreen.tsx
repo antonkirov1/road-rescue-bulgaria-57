@@ -14,6 +14,7 @@ interface RevisedPriceQuoteScreenProps {
   request: ServiceRequest;
   onAccept: () => void;
   onDecline: () => void;
+  onFinalDecline: () => void;
   onCancel: () => void;
 }
 
@@ -21,6 +22,7 @@ const RevisedPriceQuoteScreen: React.FC<RevisedPriceQuoteScreenProps> = ({
   request,
   onAccept,
   onDecline,
+  onFinalDecline,
   onCancel
 }) => {
   const { language } = useApp();
@@ -88,15 +90,15 @@ const RevisedPriceQuoteScreen: React.FC<RevisedPriceQuoteScreenProps> = ({
             onClick={onAccept}
             className="w-full bg-green-600 hover:bg-green-700"
           >
-            {t('confirm')} - {totalPrice.toFixed(2)} BGN
+            Accept Revised Quote - {totalPrice.toFixed(2)} BGN
           </Button>
           
           <Button 
             variant="outline" 
-            onClick={onDecline}
-            className="w-full"
+            onClick={onFinalDecline}
+            className="w-full border-red-500 text-red-600 hover:bg-red-50"
           >
-            {t('decline')}
+            Final decline
           </Button>
           
           <Button 

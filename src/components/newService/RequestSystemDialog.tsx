@@ -27,6 +27,7 @@ const RequestSystemDialog: React.FC<Props> = ({ open, type, onClose, userId, max
     acceptQuote,
     acceptRevisedQuote,
     declineQuote,
+    finalDeclineQuote,
     cancelRequest,
     closeAll,
     handleNoTechnicianOk,
@@ -73,6 +74,10 @@ const RequestSystemDialog: React.FC<Props> = ({ open, type, onClose, userId, max
     onClose();
   };
 
+  const handleFinalDecline = () => {
+    finalDeclineQuote();
+  };
+
   if (!open || !step) return null;
 
   const renderScreen = () => {
@@ -84,7 +89,7 @@ const RequestSystemDialog: React.FC<Props> = ({ open, type, onClose, userId, max
       case "quote_received":
         return <QuoteScreen request={request!} onAccept={acceptQuote} onDecline={declineQuote} onCancel={handleCancelRequest} />;
       case "revised_quote":
-        return <RevisedQuoteScreen request={request!} onAccept={acceptRevisedQuote} onCancel={handleCancelRequest} />;
+        return <RevisedQuoteScreen request={request!} onAccept={acceptRevisedQuote} onDecline={declineQuote} onFinalDecline={handleFinalDecline} onCancel={handleCancelRequest} />;
       case "live_tracking":
         return <TrackingScreen request={request!} onComplete={handleCompleteRequest} />;
       case "completed":
