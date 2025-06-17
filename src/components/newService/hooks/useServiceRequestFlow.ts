@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { ServiceRequest, ServiceRequestStatus } from "@/types/newServiceRequest";
+import { EmployeeAccountService } from "@/services/employeeAccountService";
 
 export function useServiceRequestFlow() {
   const [step, setStep] = useState<ServiceRequestStatus | null>(null);
@@ -13,7 +14,30 @@ export function useServiceRequestFlow() {
     };
   }, []);
 
-  function createRequest(type: ServiceRequest["type"], description: string, userId: string) {
+  // Helper to get random employee name
+  const getRandomEmployeeName = async (isRealLife: boolean = false): Promise<string> => {
+    if (isRealLife) {
+      try {
+        const availableEmployees = await EmployeeAccountService.getAvailableEmployees();
+        if (availableEmployees.length > 0) {
+          const randomEmployee = availableEmployees[Math.floor(Math.random() * availableEmployees.length)];
+          return randomEmployee.real_name || randomEmployee.username || "Technician";
+        }
+      } catch (error) {
+        console.error("Error fetching real employees:", error);
+      }
+      return "Available Technician";
+    } else {
+      // For simulation - use existing simulation names
+      const simulationNames = [
+        "Ivan Petrov", "Maria Georgieva", "Dimitar Stoev", "Elena Nikolova", 
+        "Georgi Popov", "Svetlana Dimitrova", "Petar Ivanov", "Anna Stoyanova"
+      ];
+      return simulationNames[Math.floor(Math.random() * simulationNames.length)];
+    }
+  };
+
+  function createRequest(type: ServiceRequest["type"], description: string, userId: string, isRealLife: boolean = false) {
     const req: ServiceRequest = {
       id: String(Date.now()) + Math.random().toString(16),
       type,
@@ -27,13 +51,15 @@ export function useServiceRequestFlow() {
     };
     setRequest(req);
     setStep("searching");
+
     // Simulate search, then show quote, or "no technician" after a delay
-    timers.current.push(window.setTimeout(() => {
+    timers.current.push(window.setTimeout(async () => {
       if (req.type === "Other Car Problems" && Math.random() < 0.5) {
         setStep("no_technician");
       } else {
+        const employeeName = await getRandomEmployeeName(isRealLife);
         setStep("quote_received");
-        setRequest(r => r && { ...r, priceQuote: 120, assignedEmployeeName: "Ivan Petrov" });
+        setRequest(r => r && { ...r, priceQuote: 120, assignedEmployeeName: employeeName });
       }
     }, 1200));
   }
@@ -50,21 +76,37 @@ export function useServiceRequestFlow() {
 
   function declineQuote() {
     setStep("revised_quote");
-    setRequest(r => r && { ...r, revisedPriceQuote: 130, previousEmployeeName: r.assignedEmployeeName, assignedEmployeeName: "Another Tech" });
+    setRequest(r => r && { 
+      ...r, 
+      revisedPriceQuote: 130, 
+      previousEmployeeName: r.assignedEmployeeName, 
+      assignedEmployeeName: "Another Technician" 
+    });
   }
 
-  function finalDeclineQuote() {
+  async function finalDeclineQuote(isRealLife: boolean = false) {
     // Keep request active and search for a new employee
     setStep("searching");
-    setRequest(r => r && { ...r, declineCount: (r.declineCount || 0) + 1, assignedEmployeeName: undefined, priceQuote: undefined, revisedPriceQuote: undefined });
+    setRequest(r => r && { 
+      ...r, 
+      declineCount: (r.declineCount || 0) + 1, 
+      assignedEmployeeName: undefined, 
+      priceQuote: undefined, 
+      revisedPriceQuote: undefined 
+    });
     
     // Simulate search for new employee
-    timers.current.push(window.setTimeout(() => {
+    timers.current.push(window.setTimeout(async () => {
       if (Math.random() < 0.3) {
         setStep("no_technician");
       } else {
+        const employeeName = await getRandomEmployeeName(isRealLife);
         setStep("quote_received");
-        setRequest(r => r && { ...r, priceQuote: Math.floor(Math.random() * 50) + 100, assignedEmployeeName: "New Technician" });
+        setRequest(r => r && { 
+          ...r, 
+          priceQuote: Math.floor(Math.random() * 50) + 100, 
+          assignedEmployeeName: employeeName 
+        });
       }
     }, 1500));
   }

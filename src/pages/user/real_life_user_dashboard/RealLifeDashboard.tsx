@@ -11,6 +11,7 @@ import { getServiceIconAndTitle } from '@/components/service/serviceIcons';
 import RequestSystemDialog from '@/components/newService/RequestSystemDialog';
 import SettingsMenu from '@/components/settings/SettingsMenu';
 import ThemeToggle from '@/components/ui/theme-toggle';
+import { usePersistentRequest } from '@/hooks/usePersistentRequest';
 
 const RealLifeDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -19,6 +20,16 @@ const RealLifeDashboard: React.FC = () => {
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [showRequestDialog, setShowRequestDialog] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  
+  const {
+    request: activeRequest,
+    step: activeStep,
+    hasActiveRequest,
+    setActiveRequest,
+    minimizeRequest,
+    restoreRequest,
+    clearRequest
+  } = usePersistentRequest();
 
   const handleLogout = () => {
     logout();
@@ -61,6 +72,19 @@ const RealLifeDashboard: React.FC = () => {
   const handleCloseDialog = () => {
     setShowRequestDialog(false);
     setSelectedService(null);
+    clearRequest();
+  };
+
+  const handleMinimizeDialog = () => {
+    setShowRequestDialog(false);
+    minimizeRequest();
+  };
+
+  const handleActiveRequestClick = () => {
+    if (hasActiveRequest) {
+      restoreRequest();
+      setShowRequestDialog(true);
+    }
   };
 
   const handleSettingsClick = () => {
@@ -117,7 +141,13 @@ const RealLifeDashboard: React.FC = () => {
           <h2 className="text-2xl font-bold text-gray-900">Services</h2>
           <Button 
             variant="outline" 
-            className="flex items-center gap-2 text-gray-600 border-gray-300"
+            className={`flex items-center gap-2 border-gray-300 ${
+              hasActiveRequest 
+                ? 'text-green-600 border-green-300 bg-green-50 hover:bg-green-100' 
+                : 'text-gray-600'
+            }`}
+            onClick={handleActiveRequestClick}
+            disabled={!hasActiveRequest}
           >
             <Clock className="h-4 w-4" />
             Active Request
@@ -152,13 +182,17 @@ const RealLifeDashboard: React.FC = () => {
       </div>
 
       {/* Request Dialog */}
-      {showRequestDialog && selectedService && (
+      {showRequestDialog && (
         <RequestSystemDialog
           open={showRequestDialog}
-          type={selectedService as any}
+          type={(selectedService || activeRequest?.type) as any}
           onClose={handleCloseDialog}
+          onMinimize={handleMinimizeDialog}
           userId={user?.username || 'real-life-user'}
           maxDeclines={2}
+          isRealLife={true}
+          initialRequest={activeRequest}
+          initialStep={activeStep}
         />
       )}
 

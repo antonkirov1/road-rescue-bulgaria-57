@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { User, RefreshCw } from 'lucide-react';
+import { User, RefreshCw, Minimize2 } from 'lucide-react';
 import { ServiceRequest } from '@/types/newServiceRequest';
 import { useApp } from '@/contexts/AppContext';
 import { useTranslation } from '@/utils/translations';
@@ -16,6 +16,7 @@ interface RevisedPriceQuoteScreenProps {
   onDecline: () => void;
   onFinalDecline: () => void;
   onCancel: () => void;
+  onMinimize?: () => void;
 }
 
 const RevisedPriceQuoteScreen: React.FC<RevisedPriceQuoteScreenProps> = ({
@@ -23,7 +24,8 @@ const RevisedPriceQuoteScreen: React.FC<RevisedPriceQuoteScreenProps> = ({
   onAccept,
   onDecline,
   onFinalDecline,
-  onCancel
+  onCancel,
+  onMinimize
 }) => {
   const { language } = useApp();
   const t = useTranslation(language);
@@ -51,10 +53,22 @@ const RevisedPriceQuoteScreen: React.FC<RevisedPriceQuoteScreenProps> = ({
   return (
     <>
       <DialogHeader>
-        <DialogTitle className="flex items-center gap-2">
-          <RefreshCw className="h-5 w-5 text-blue-600" />
-          {t('quote-received')} - {t('updated')}
-        </DialogTitle>
+        <div className="flex items-center justify-between">
+          <DialogTitle className="flex items-center gap-2">
+            <RefreshCw className="h-5 w-5 text-blue-600" />
+            {t('quote-received')} - {t('updated')}
+          </DialogTitle>
+          {onMinimize && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onMinimize}
+              className="h-8 w-8"
+            >
+              <Minimize2 className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </DialogHeader>
 
       <div className="space-y-4">

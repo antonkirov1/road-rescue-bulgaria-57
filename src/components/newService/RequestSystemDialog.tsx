@@ -15,11 +15,25 @@ interface Props {
   open: boolean;
   type: "Flat Tyre" | "Out of Fuel" | "Car Battery" | "Other Car Problems" | "Tow Truck";
   onClose: () => void;
+  onMinimize?: () => void;
   userId: string;
   maxDeclines?: number;
+  isRealLife?: boolean;
+  initialRequest?: any;
+  initialStep?: any;
 }
 
-const RequestSystemDialog: React.FC<Props> = ({ open, type, onClose, userId, maxDeclines = 2 }) => {
+const RequestSystemDialog: React.FC<Props> = ({ 
+  open, 
+  type, 
+  onClose, 
+  onMinimize,
+  userId, 
+  maxDeclines = 2,
+  isRealLife = false,
+  initialRequest,
+  initialStep
+}) => {
   const {
     step,
     request,
@@ -35,19 +49,33 @@ const RequestSystemDialog: React.FC<Props> = ({ open, type, onClose, userId, max
     rateEmployee,
   } = useServiceRequestFlow();
 
+  // Use initial state if provided (for restored requests)
+  const currentStep = initialStep || step;
+  const currentRequest = initialRequest || request;
+
   React.useEffect(() => {
-    if (open && !request) {
-      createRequest(type, `Service for ${type}`, userId);
+    if (open && !currentRequest && !initialRequest) {
+      createRequest(type, `Service for ${type}`, userId, isRealLife);
     }
-    if (!open) {
+    if (!open && !initialRequest) {
       closeAll();
     }
     // eslint-disable-next-line
   }, [open]);
 
   const handleClose = () => {
-    closeAll();
+    if (!initialRequest) {
+      closeAll();
+    }
     onClose();
+  };
+
+  const handleMinimize = () => {
+    if (onMinimize) {
+      onMinimize();
+    } else {
+      handleClose();
+    }
   };
 
   const handleCancelRequest = () => {
@@ -75,27 +103,27 @@ const RequestSystemDialog: React.FC<Props> = ({ open, type, onClose, userId, max
   };
 
   const handleFinalDecline = () => {
-    finalDeclineQuote();
+    finalDeclineQuote(isRealLife);
   };
 
-  if (!open || !step) return null;
+  if (!open || !currentStep) return null;
 
   const renderScreen = () => {
-    switch (step) {
+    switch (currentStep) {
       case "searching":
-        return <SearchingScreen onCancel={handleCancelRequest} />;
+        return <SearchingScreen onCancel={handleCancelRequest} onMinimize={handleMinimize} />;
       case "no_technician":
         return <NoTechnicianScreen onOk={handleNoTechnicianOkAndClose} />;
       case "quote_received":
-        return <QuoteScreen request={request!} onAccept={acceptQuote} onDecline={declineQuote} onCancel={handleCancelRequest} />;
+        return <QuoteScreen request={currentRequest!} onAccept={acceptQuote} onDecline={declineQuote} onCancel={handleCancelRequest} onMinimize={handleMinimize} />;
       case "revised_quote":
-        return <RevisedPriceQuoteScreen request={request!} onAccept={acceptRevisedQuote} onDecline={declineQuote} onFinalDecline={handleFinalDecline} onCancel={handleCancelRequest} />;
+        return <RevisedPriceQuoteScreen request={currentRequest!} onAccept={acceptRevisedQuote} onDecline={declineQuote} onFinalDecline={handleFinalDecline} onCancel={handleCancelRequest} onMinimize={handleMinimize} />;
       case "live_tracking":
-        return <TrackingScreen request={request!} onComplete={handleCompleteRequest} />;
+        return <TrackingScreen request={currentRequest!} onComplete={handleCompleteRequest} onMinimize={handleMinimize} />;
       case "completed":
-        return <CompletedScreen request={request!} onClose={handleCompleteRequest} />;
+        return <CompletedScreen request={currentRequest!} onClose={handleCompleteRequest} />;
       case "rate_employee":
-        return <RateEmployeeScreen request={request!} onRate={handleRateEmployee} />;
+        return <RateEmployeeScreen request={currentRequest!} onRate={handleRateEmployee} />;
       case "cancelled":
         return <CancelledScreen onClose={handleCloseAll} />;
       default:
