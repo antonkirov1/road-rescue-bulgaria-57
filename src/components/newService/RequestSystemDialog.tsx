@@ -64,13 +64,14 @@ const RequestSystemDialog: React.FC<Props> = ({
 
   React.useEffect(() => {
     if (open && !currentRequest && !initialRequest) {
+      console.log('Creating new request with isRealLife:', isRealLife);
       createRequest(type, `Service for ${type}`, userId, isRealLife);
     }
     if (!open && !initialRequest) {
       closeAll();
     }
     // eslint-disable-next-line
-  }, [open]);
+  }, [open, isRealLife]);
 
   const handleClose = () => {
     if (!initialRequest) {
