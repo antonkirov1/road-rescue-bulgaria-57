@@ -19,7 +19,12 @@ export const useServiceRequestFlow = () => {
     return {
       step: realLifeFlow.currentRequest?.status as any,
       request: realLifeFlow.currentRequest as any,
-      createRequest: realLifeFlow.createRequest,
+      createRequest: (
+        type: "Flat Tyre" | "Out of Fuel" | "Car Battery" | "Other Car Problems" | "Tow Truck",
+        description: string,
+        userId: string,
+        isRealLife: boolean = false
+      ) => realLifeFlow.createRequest(type, description, userId, isRealLife),
       acceptQuote: realLifeFlow.acceptQuote,
       acceptRevisedQuote: realLifeFlow.acceptQuote, // Map to same function
       declineQuote: realLifeFlow.declineQuote,
