@@ -89,7 +89,7 @@ const RequestSystemDialog: React.FC<Props> = ({ open, type, onClose, userId, max
       case "quote_received":
         return <QuoteScreen request={request!} onAccept={acceptQuote} onDecline={declineQuote} onCancel={handleCancelRequest} />;
       case "revised_quote":
-        return <RevisedPriceQuoteScreen request={request!} onAccept={acceptRevisedQuote} onFinalDecline={handleFinalDecline} onCancel={handleCancelRequest} />;
+        return <RevisedPriceQuoteScreen request={request!} onAccept={acceptRevisedQuote} onDecline={declineQuote} onFinalDecline={handleFinalDecline} onCancel={handleCancelRequest} />;
       case "live_tracking":
         return <TrackingScreen request={request!} onComplete={handleCompleteRequest} />;
       case "completed":
