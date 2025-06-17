@@ -5,7 +5,7 @@ import { useServiceRequestFlow } from "./hooks/useServiceRequestFlow";
 import SearchingScreen from "./screens/SearchingScreen";
 import NoTechnicianScreen from "./screens/NoTechnicianScreen";
 import QuoteScreen from "./screens/QuoteScreen";
-import RevisedQuoteScreen from "./screens/RevisedQuoteScreen";
+import RevisedPriceQuoteScreen from "./screens/RevisedPriceQuoteScreen";
 import TrackingScreen from "./screens/TrackingScreen";
 import CompletedScreen from "./screens/CompletedScreen";
 import CancelledScreen from "./screens/CancelledScreen";
@@ -89,7 +89,7 @@ const RequestSystemDialog: React.FC<Props> = ({ open, type, onClose, userId, max
       case "quote_received":
         return <QuoteScreen request={request!} onAccept={acceptQuote} onDecline={declineQuote} onCancel={handleCancelRequest} />;
       case "revised_quote":
-        return <RevisedQuoteScreen request={request!} onAccept={acceptRevisedQuote} onDecline={declineQuote} onFinalDecline={handleFinalDecline} onCancel={handleCancelRequest} />;
+        return <RevisedPriceQuoteScreen request={request!} onAccept={acceptRevisedQuote} onFinalDecline={handleFinalDecline} onCancel={handleCancelRequest} />;
       case "live_tracking":
         return <TrackingScreen request={request!} onComplete={handleCompleteRequest} />;
       case "completed":

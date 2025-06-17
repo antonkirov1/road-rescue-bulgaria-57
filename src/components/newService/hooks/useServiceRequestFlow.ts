@@ -54,6 +54,11 @@ export function useServiceRequestFlow() {
     setRequest(r => r && { ...r, revisedPriceQuote: 130, previousEmployeeName: r.assignedEmployeeName, assignedEmployeeName: "Another Tech" });
   }
 
+  function finalDeclineQuote() {
+    setStep("cancelled");
+    setRequest(null);
+  }
+
   function handleNoTechnicianOk() {
     setStep("cancelled");
     setRequest(null);
@@ -85,6 +90,7 @@ export function useServiceRequestFlow() {
     acceptQuote,
     acceptRevisedQuote,
     declineQuote,
+    finalDeclineQuote,
     cancelRequest,
     closeAll,
     handleNoTechnicianOk,
