@@ -64,14 +64,14 @@ const RequestSystemDialog: React.FC<Props> = ({
 
   React.useEffect(() => {
     if (open && !currentRequest && !initialRequest) {
-      console.log('Dialog opened - creating new request');
-      createRequest(type, `Service request for ${type}`, userId, isRealLife);
+      console.log('Creating new request with isRealLife:', isRealLife);
+      createRequest(type, `Service for ${type}`, userId, isRealLife);
     }
     if (!open && !initialRequest) {
-      console.log('Dialog closed - cleaning up');
       closeAll();
     }
-  }, [open, type, userId, isRealLife, currentRequest, initialRequest, createRequest, closeAll]);
+    // eslint-disable-next-line
+  }, [open, isRealLife]);
 
   const handleClose = () => {
     if (!initialRequest) {
@@ -116,7 +116,7 @@ const RequestSystemDialog: React.FC<Props> = ({
     finalDeclineQuote(isRealLife);
   };
 
-  if (!open) return null;
+  if (!open || !currentStep) return null;
 
   const renderScreen = () => {
     switch (currentStep) {
@@ -165,11 +165,7 @@ const RequestSystemDialog: React.FC<Props> = ({
       case "cancelled":
         return <CancelledScreen onClose={handleCloseAll} />;
       default:
-        return (
-          <div className="p-6 text-center">
-            <p>Loading...</p>
-          </div>
-        );
+        return null;
     }
   };
 
