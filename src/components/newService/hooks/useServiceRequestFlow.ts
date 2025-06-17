@@ -24,7 +24,7 @@ export const useServiceRequestFlow = () => {
         description: string,
         userId: string,
         isRealLife: boolean = false
-      ) => realLifeFlow.createRequest(type, description, userId, isRealLife),
+      ) => realLifeFlow.createRequest(type, description, userId),
       acceptQuote: realLifeFlow.acceptQuote,
       acceptRevisedQuote: realLifeFlow.acceptQuote, // Map to same function
       declineQuote: realLifeFlow.declineQuote,
