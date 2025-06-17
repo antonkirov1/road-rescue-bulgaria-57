@@ -19,7 +19,7 @@ export const useServiceRequestFlow = () => {
       id: `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       type: type as "Flat Tyre" | "Out of Fuel" | "Car Battery" | "Other Car Problems" | "Tow Truck",
       status: 'searching',
-      userLocation: { lat: 0, lng: 0 }, // Add required userLocation field
+      userLocation: { lat: 0, lng: 0 },
       userId,
       declineCount: 0,
       createdAt: new Date(),
@@ -62,33 +62,36 @@ export const useServiceRequestFlow = () => {
         }
       }, 2000);
     } else {
-      // Simulation flow - use predictable simulation logic
+      // Simulation flow - guaranteed to work
       console.log('Starting simulation flow');
       setTimeout(async () => {
         try {
-          // Try to get simulated employees first
-          const { data: simulatedEmployees } = await supabase
-            .from('employee_simulation')
-            .select('id, full_name, employee_number')
-            .order('employee_number', { ascending: true });
+          console.log('Simulation timeout triggered');
+          
+          let selectedEmployeeName = 'Simulation Technician';
+          
+          // Try to get a simulated employee, but don't fail if it doesn't work
+          try {
+            const { data: simulatedEmployees } = await supabase
+              .from('employee_simulation')
+              .select('id, full_name, employee_number')
+              .order('employee_number', { ascending: true });
 
-          console.log('Simulated employees fetched:', simulatedEmployees);
+            console.log('Simulated employees fetched:', simulatedEmployees);
 
-          let selectedEmployee;
-          if (simulatedEmployees && simulatedEmployees.length > 0) {
-            selectedEmployee = simulatedEmployees[Math.floor(Math.random() * simulatedEmployees.length)];
-            console.log('Selected simulated employee:', selectedEmployee);
-          } else {
-            // Fallback to a default simulated technician
-            console.log('No simulated employees found, using fallback');
-            selectedEmployee = {
-              id: 'sim_default',
-              full_name: 'Simulation Technician',
-              employee_number: 1
-            };
+            if (simulatedEmployees && simulatedEmployees.length > 0) {
+              const randomEmployee = simulatedEmployees[Math.floor(Math.random() * simulatedEmployees.length)];
+              selectedEmployeeName = randomEmployee.full_name;
+              console.log('Selected simulated employee:', selectedEmployeeName);
+            } else {
+              console.log('No simulated employees found, using default');
+            }
+          } catch (dbError) {
+            console.log('Database error, using fallback employee:', dbError);
+            // Continue with default employee name
           }
 
-          // Generate a price quote for simulation
+          // Generate price quote based on service type
           const basePrice = type === 'Flat Tyre' ? 80 : 
                            type === 'Car Battery' ? 120 :
                            type === 'Out of Fuel' ? 60 :
@@ -96,22 +99,25 @@ export const useServiceRequestFlow = () => {
           
           const priceQuote = basePrice + Math.floor(Math.random() * 50);
 
-          console.log('Setting simulation request with employee:', selectedEmployee.full_name);
+          console.log('Setting quote with employee:', selectedEmployeeName, 'price:', priceQuote);
           
           setRequest(prev => prev ? {
             ...prev,
-            assignedEmployeeName: selectedEmployee.full_name,
+            assignedEmployeeName: selectedEmployeeName,
             priceQuote,
             status: 'quote_received'
           } : null);
           setStep('quote_received');
-        } catch (error) {
-          console.error('Error in simulation employee search:', error);
-          // Even if database fails, provide a fallback for simulation
-          const fallbackEmployee = 'Simulation Technician';
-          const fallbackPrice = 100;
           
-          console.log('Using fallback simulation data');
+          console.log('Simulation flow completed successfully');
+        } catch (error) {
+          console.error('Unexpected error in simulation flow:', error);
+          
+          // Even if everything fails, provide a working simulation
+          const fallbackPrice = 100;
+          const fallbackEmployee = 'Emergency Technician';
+          
+          console.log('Using emergency fallback');
           setRequest(prev => prev ? {
             ...prev,
             assignedEmployeeName: fallbackEmployee,
