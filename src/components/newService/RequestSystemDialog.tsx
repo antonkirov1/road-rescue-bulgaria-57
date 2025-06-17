@@ -16,9 +16,10 @@ interface Props {
   type: "Flat Tyre" | "Out of Fuel" | "Car Battery" | "Other Car Problems" | "Tow Truck";
   onClose: () => void;
   userId: string;
+  maxDeclines?: number;
 }
 
-const RequestSystemDialog: React.FC<Props> = ({ open, type, onClose, userId }) => {
+const RequestSystemDialog: React.FC<Props> = ({ open, type, onClose, userId, maxDeclines = 2 }) => {
   const {
     step,
     request,
