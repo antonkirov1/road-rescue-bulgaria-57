@@ -1,29 +1,33 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Settings, ArrowLeft, Globe, Bell, MapPin, Clock } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { useTranslation } from '@/utils/translations';
-import { toast } from '@/components/ui/use-toast';
-import { getServiceIconAndTitle } from '@/components/service/serviceIcons';
-import RequestSystemDialog from '@/components/newService/RequestSystemDialog';
-import SettingsMenu from '@/components/settings/SettingsMenu';
+import { Button } from "@/components/ui/button";
+import { Avatar } from "@/components/ui/avatar"
+import { AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Card, CardContent } from "@/components/ui/card"
+import { Globe } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import ThemeToggle from '@/components/ui/theme-toggle';
+import RequestSystemDialog from '@/components/newService/RequestSystemDialog';
 import { usePersistentRequest } from '@/hooks/usePersistentRequest';
 
 const SimulationDashboard: React.FC = () => {
-  const navigate = useNavigate();
-  const { user, logout, language, setLanguage } = useApp();
+  const { user, logout, language } = useApp();
   const t = useTranslation(language);
-  const [selectedService, setSelectedService] = useState<string | null>(null);
-  const [showRequestDialog, setShowRequestDialog] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
-  
+  const navigate = useNavigate();
+  const isMobile = useIsMobile();
+
+  // Service request state
+  const [selectedService, setSelectedService] = useState<"Flat Tyre" | "Out of Fuel" | "Car Battery" | "Other Car Problems" | "Tow Truck" | null>(null);
+  const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
+
+  // Persistent request state
   const {
-    request: activeRequest,
-    step: activeStep,
-    serviceType: activeServiceType,
+    request: persistentRequest,
+    step: persistentStep,
+    serviceType: persistentServiceType,
+    isMinimized,
     hasActiveRequest,
     setActiveRequest,
     minimizeRequest,
@@ -31,186 +35,139 @@ const SimulationDashboard: React.FC = () => {
     clearRequest
   } = usePersistentRequest();
 
+  React.useEffect(() => {
+    if (isMinimized && persistentRequest && persistentStep && persistentServiceType) {
+      console.log('Restoring minimized request on dashboard');
+    }
+  }, [isMinimized, persistentRequest, persistentStep, persistentServiceType]);
+
   const handleLogout = () => {
     logout();
-    navigate('/user/simulation-auth');
-    toast({
-      title: t('logged-out'),
-      description: t('logged-out-msg')
-    });
-  };
-
-  const handleBackToHome = () => {
     navigate('/');
   };
 
-  const handleServiceClick = (serviceType: string) => {
-    const serviceTypeMap: Record<string, string> = {
-      'flat-tyre': 'Flat Tyre',
-      'out-of-fuel': 'Out of Fuel',
-      'car-battery': 'Car Battery',
-      'other-car-problems': 'Other Car Problems',
-      'tow-truck': 'Tow Truck',
-      'support': 'Support'
-    };
+  const serviceTypes = [
+    "Flat Tyre",
+    "Out of Fuel",
+    "Car Battery",
+    "Other Car Problems",
+    "Tow Truck"
+  ];
 
-    if (serviceType === 'support') {
-      toast({
-        title: "Contact Support",
-        description: "Opening support contact options..."
-      });
-      return;
-    }
-
-    const mappedServiceType = serviceTypeMap[serviceType];
-    if (mappedServiceType) {
-      setSelectedService(mappedServiceType);
-      setShowRequestDialog(true);
-    }
+  const handleServiceClick = (serviceType: "Flat Tyre" | "Out of Fuel" | "Car Battery" | "Other Car Problems" | "Tow Truck") => {
+    console.log('Service clicked:', serviceType);
+    setSelectedService(serviceType);
+    setIsRequestDialogOpen(true);
   };
 
-  const handleCloseDialog = () => {
-    setShowRequestDialog(false);
+  const handleCloseRequest = () => {
+    console.log('Closing request dialog');
+    setIsRequestDialogOpen(false);
     setSelectedService(null);
     clearRequest();
   };
 
-  const handleMinimizeDialog = () => {
-    setShowRequestDialog(false);
+  const handleMinimizeRequest = () => {
+    console.log('Minimizing request');
     minimizeRequest();
-  };
-
-  const handleActiveRequestClick = () => {
-    if (hasActiveRequest) {
-      setSelectedService(activeServiceType);
-      restoreRequest();
-      setShowRequestDialog(true);
-    }
+    setIsRequestDialogOpen(false);
   };
 
   const handleRequestChange = (request: any, step: any) => {
+    console.log('Request changed:', { request, step });
     if (request && step) {
-      setActiveRequest(request, step, selectedService);
+      setActiveRequest(request, step, selectedService || persistentServiceType || undefined);
     }
   };
 
-  const handleSettingsClick = () => {
-    setShowSettings(true);
+  const handleRestoreRequest = () => {
+    console.log('Restoring minimized request');
+    if (persistentRequest && persistentStep && persistentServiceType) {
+      setSelectedService(persistentServiceType as "Flat Tyre" | "Out of Fuel" | "Car Battery" | "Other Car Problems" | "Tow Truck");
+      setIsRequestDialogOpen(true);
+      restoreRequest();
+    }
   };
 
-  const handleCloseSettings = () => {
-    setShowSettings(false);
-  };
-
-  const services = [
-    'flat-tyre',
-    'out-of-fuel',
-    'car-battery',
-    'other-car-problems',
-    'tow-truck',
-    'support'
-  ];
+  const cardStyle = "p-4 rounded-lg shadow-md hover:shadow-lg transition duration-300 ease-in-out";
+  const buttonStyle = "w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline";
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Green Header */}
-      <div className="bg-green-500 text-white px-4 py-3 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">RoadSaver</h1>
-        <div className="flex items-center gap-3">
-          <Bell className="h-5 w-5 cursor-pointer hover:text-green-200" />
-          <MapPin className="h-5 w-5 cursor-pointer hover:text-green-200" />
-          <Settings 
-            className="h-5 w-5 cursor-pointer hover:text-green-200" 
-            onClick={handleSettingsClick}
-          />
-          <div className="relative">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => setLanguage(language === 'en' ? 'bg' : 'en')}
-              className="h-8 w-8 bg-white/20 text-white hover:bg-white/30"
-            >
-              <Globe className="h-4 w-4" />
-            </Button>
-            <span className="absolute -bottom-1 -right-1 text-xs bg-yellow-400 text-black px-1 rounded text-[10px] font-medium">
-              {language.toUpperCase()}
-            </span>
-          </div>
-          <div className="h-8 w-8 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white font-clash">
+      {/* Header */}
+      <header className="bg-white shadow-md">
+        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+          <h1 className="text-3xl font-bold text-blue-600">RoadSaver - Simulation</h1>
+
+          <div className="flex items-center gap-4">
             <ThemeToggle showLabels={false} size="sm" />
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  const newLanguage = language === 'en' ? 'bg' : 'en';
+                  console.log(`Switching language to ${newLanguage}`);
+                  useApp.setState({ language: newLanguage });
+                }}
+                aria-label={t(language === 'en' ? 'switch-to-bulgarian' : 'switch-to-english')}
+                className="h-10 w-10 bg-blue-600 text-white hover:bg-blue-700"
+              >
+                <Globe className="h-4 w-4" />
+              </Button>
+              <span className="absolute -bottom-1 -right-1 text-xs bg-white text-blue-600 px-1 rounded">
+                {language.toUpperCase()}
+              </span>
+            </div>
+            <Button onClick={handleLogout} variant="outline">{t("logout")}</Button>
           </div>
         </div>
-      </div>
-      
-      {/* Services Section */}
-      <div className="px-4 py-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Services</h2>
-          <Button 
-            variant="outline" 
-            className={`flex items-center gap-2 border-gray-300 ${
-              hasActiveRequest 
-                ? 'text-green-600 border-green-300 bg-green-50 hover:bg-green-100' 
-                : 'text-gray-600'
-            }`}
-            onClick={handleActiveRequestClick}
-            disabled={!hasActiveRequest}
-          >
-            <Clock className="h-4 w-4" />
-            Active Request
-          </Button>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-4 max-w-2xl mx-auto">
-          {services.map((serviceType, index) => {
-            const serviceData = getServiceIconAndTitle(serviceType as any, t, null, 'w-8 h-8');
-            
-            return (
-              <Card 
-                key={index} 
-                className="border border-gray-200 hover:shadow-md transition-shadow cursor-pointer bg-white"
-                onClick={() => handleServiceClick(serviceType)}
-              >
-                <CardHeader className="text-center pb-2">
-                  <div className="mx-auto w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-3">
-                    {serviceData.icon}
-                  </div>
-                  <CardTitle className="text-lg font-semibold text-gray-900">{serviceData.title}</CardTitle>
-                </CardHeader>
-                <CardContent className="text-center pt-0">
-                  <CardDescription className="text-sm text-gray-500">
-                    {serviceData.description}
-                  </CardDescription>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      </div>
+      </header>
 
-      {/* Request Dialog */}
-      {showRequestDialog && (
-        <RequestSystemDialog
-          open={showRequestDialog}
-          type={(selectedService || activeRequest?.type) as any}
-          onClose={handleCloseDialog}
-          onMinimize={handleMinimizeDialog}
-          userId={user?.username || 'simulation-user'}
-          maxDeclines={2}
-          isRealLife={false}
-          initialRequest={activeRequest}
-          initialStep={activeStep}
-          onRequestChange={handleRequestChange}
-        />
-      )}
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        {/* Welcome Section */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-2">{t("welcome-back")}, {user?.username}!</h2>
+          <p className="text-gray-600">{t("simulation-dashboard-subtitle")}</p>
+        </div>
 
-      {/* Settings Menu */}
-      <SettingsMenu
-        open={showSettings}
-        onClose={handleCloseSettings}
-        onLanguageChange={setLanguage}
-        currentLanguage={language}
-      />
+        {/* Services List */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {serviceTypes.map((type) => (
+            <Card key={type} className={cardStyle}>
+              <CardContent>
+                <h3 className="text-xl font-semibold text-blue-700 mb-2">{type}</h3>
+                <p className="text-gray-500">{t('simulation-service-description')}</p>
+                <Button className={buttonStyle} onClick={() => handleServiceClick(type as "Flat Tyre" | "Out of Fuel" | "Car Battery" | "Other Car Problems" | "Tow Truck")}>
+                  {t("request-service")}
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Service Request Dialog */}
+        {selectedService && (
+          <RequestSystemDialog
+            open={isRequestDialogOpen}
+            type={selectedService}
+            onClose={handleCloseRequest}
+            onMinimize={handleMinimizeRequest}
+            userId={user?.username || 'simulation_user'}
+            isRealLife={false}
+            initialRequest={isMinimized ? persistentRequest : undefined}
+            initialStep={isMinimized ? persistentStep : undefined}
+            onRequestChange={handleRequestChange}
+          />
+        )}
+
+        {/* Minimized Request Indicator */}
+        {isMinimized && persistentRequest && persistentStep && (
+          <div className="fixed bottom-4 left-4 bg-blue-600 text-white p-3 rounded-md shadow-lg cursor-pointer hover:bg-blue-700 transition duration-300 ease-in-out" onClick={handleRestoreRequest}>
+            {t("minimized-request")} ({persistentServiceType}) - {t(persistentStep)}
+          </div>
+        )}
+      </main>
     </div>
   );
 };

@@ -1,12 +1,9 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { MapPin, Phone, Clock, Car, Minimize2 } from 'lucide-react';
 import { ServiceRequest } from '@/types/newServiceRequest';
-import { useApp } from '@/contexts/AppContext';
-import { useTranslation } from '@/utils/translations';
+import { MapPin, Clock, User, Minimize2 } from 'lucide-react';
 
 interface TrackingScreenProps {
   request: ServiceRequest;
@@ -19,24 +16,41 @@ const TrackingScreen: React.FC<TrackingScreenProps> = ({
   onComplete,
   onMinimize
 }) => {
-  const { language } = useApp();
-  const t = useTranslation(language);
+  const [timeRemaining, setTimeRemaining] = useState(300); // 5 minutes in seconds
+  const [progress, setProgress] = useState(0);
 
-  // Simulate completion after 3 seconds
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      onComplete();
-    }, 3000);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeRemaining(prev => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          // Auto-complete when timer reaches 0
+          setTimeout(() => {
+            onComplete();
+          }, 1000);
+          return 0;
+        }
+        return prev - 1;
+      });
+      
+      setProgress(prev => Math.min(100, prev + (100 / 300))); // Progress increases over 5 minutes
+    }, 1000);
 
-    return () => clearTimeout(timer);
+    return () => clearInterval(interval);
   }, [onComplete]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   return (
     <>
       <DialogHeader>
         <div className="flex items-center justify-between">
           <DialogTitle className="flex items-center gap-2">
-            <Car className="h-5 w-5 text-blue-600" />
+            <MapPin className="h-5 w-5 text-blue-600" />
             Technician En Route
           </DialogTitle>
           {onMinimize && (
@@ -52,48 +66,65 @@ const TrackingScreen: React.FC<TrackingScreenProps> = ({
         </div>
       </DialogHeader>
 
-      <div className="space-y-4">
-        <Card>
-          <CardContent className="p-4">
-            <h4 className="font-medium mb-3">Live Tracking</h4>
-            
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-green-500" />
-                <span className="text-sm font-medium text-green-700">Technician is on the way</span>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-gray-400" />
-                <span className="text-sm">ETA: 5-10 minutes</span>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Car className="h-4 w-4 text-gray-400" />
-                <span className="text-sm">{request.assignedEmployeeName || "Technician"}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
-            <span className="text-sm font-medium text-blue-800">Service in Progress</span>
+      <div className="space-y-6">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <User className="h-8 w-8 text-green-600" />
           </div>
-          <p className="text-sm text-blue-700">
-            Your technician is currently traveling to your location. You can track their progress in real-time.
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            {request.assignedEmployeeName || 'Your Technician'} is on the way!
+          </h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Your service request has been accepted and the technician is heading to your location.
           </p>
         </div>
 
-        <Button 
-          variant="outline" 
-          className="w-full"
-          onClick={() => window.location.href = 'tel:+359888123456'}
-        >
-          <Phone className="h-4 w-4 mr-2" />
-          Call Technician
-        </Button>
+        <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-700">Service Type:</span>
+            <span className="text-sm text-gray-900">{request.type}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-700">Price Quote:</span>
+            <span className="text-sm text-gray-900">${request.priceQuote}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
+              <Clock className="h-4 w-4" />
+              ETA:
+            </span>
+            <span className="text-sm font-semibold text-blue-600">
+              {formatTime(timeRemaining)}
+            </span>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span>Progress</span>
+            <span>{Math.round(progress)}%</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div 
+              className="bg-blue-600 h-2 rounded-full transition-all duration-1000"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+
+        {timeRemaining <= 0 && (
+          <div className="text-center">
+            <p className="text-green-600 font-medium mb-3">
+              ✅ Service completed!
+            </p>
+            <Button 
+              onClick={onComplete}
+              className="w-full"
+            >
+              Mark as Complete
+            </Button>
+          </div>
+        )}
       </div>
     </>
   );
