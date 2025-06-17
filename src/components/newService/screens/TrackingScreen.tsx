@@ -3,7 +3,7 @@ import React from 'react';
 import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { MapPin, Phone, Clock, Car } from 'lucide-react';
+import { MapPin, Phone, Clock, Car, Minimize2 } from 'lucide-react';
 import { ServiceRequest } from '@/types/newServiceRequest';
 import { useApp } from '@/contexts/AppContext';
 import { useTranslation } from '@/utils/translations';
@@ -11,11 +11,13 @@ import { useTranslation } from '@/utils/translations';
 interface TrackingScreenProps {
   request: ServiceRequest;
   onComplete: () => void;
+  onMinimize?: () => void;
 }
 
 const TrackingScreen: React.FC<TrackingScreenProps> = ({
   request,
-  onComplete
+  onComplete,
+  onMinimize
 }) => {
   const { language } = useApp();
   const t = useTranslation(language);
@@ -32,10 +34,22 @@ const TrackingScreen: React.FC<TrackingScreenProps> = ({
   return (
     <>
       <DialogHeader>
-        <DialogTitle className="flex items-center gap-2">
-          <Car className="h-5 w-5 text-blue-600" />
-          Technician En Route
-        </DialogTitle>
+        <div className="flex items-center justify-between">
+          <DialogTitle className="flex items-center gap-2">
+            <Car className="h-5 w-5 text-blue-600" />
+            Technician En Route
+          </DialogTitle>
+          {onMinimize && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onMinimize}
+              className="h-8 w-8"
+            >
+              <Minimize2 className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </DialogHeader>
 
       <div className="space-y-4">

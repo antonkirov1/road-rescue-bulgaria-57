@@ -2,25 +2,38 @@
 import React from 'react';
 import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Minimize2 } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { useTranslation } from '@/utils/translations';
 
 interface SearchingScreenProps {
   onCancel: () => void;
+  onMinimize?: () => void;
 }
 
-const SearchingScreen: React.FC<SearchingScreenProps> = ({ onCancel }) => {
+const SearchingScreen: React.FC<SearchingScreenProps> = ({ onCancel, onMinimize }) => {
   const { language } = useApp();
   const t = useTranslation(language);
 
   return (
     <>
       <DialogHeader>
-        <DialogTitle className="flex items-center gap-2">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          Searching for Technician
-        </DialogTitle>
+        <div className="flex items-center justify-between">
+          <DialogTitle className="flex items-center gap-2">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            Searching for Technician
+          </DialogTitle>
+          {onMinimize && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onMinimize}
+              className="h-8 w-8"
+            >
+              <Minimize2 className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </DialogHeader>
 
       <div className="space-y-4">

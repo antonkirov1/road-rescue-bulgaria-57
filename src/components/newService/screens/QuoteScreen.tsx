@@ -3,7 +3,7 @@ import React from 'react';
 import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { User, Clock, MapPin } from 'lucide-react';
+import { User, Clock, MapPin, Minimize2 } from 'lucide-react';
 import { ServiceRequest } from '@/types/newServiceRequest';
 import { useApp } from '@/contexts/AppContext';
 import { useTranslation } from '@/utils/translations';
@@ -13,13 +13,15 @@ interface QuoteScreenProps {
   onAccept: () => void;
   onDecline: () => void;
   onCancel: () => void;
+  onMinimize?: () => void;
 }
 
 const QuoteScreen: React.FC<QuoteScreenProps> = ({
   request,
   onAccept,
   onDecline,
-  onCancel
+  onCancel,
+  onMinimize
 }) => {
   const { language } = useApp();
   const t = useTranslation(language);
@@ -27,9 +29,21 @@ const QuoteScreen: React.FC<QuoteScreenProps> = ({
   return (
     <>
       <DialogHeader>
-        <DialogTitle>
-          Price Quote Received
-        </DialogTitle>
+        <div className="flex items-center justify-between">
+          <DialogTitle>
+            Price Quote Received
+          </DialogTitle>
+          {onMinimize && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onMinimize}
+              className="h-8 w-8"
+            >
+              <Minimize2 className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </DialogHeader>
 
       <div className="space-y-4">
