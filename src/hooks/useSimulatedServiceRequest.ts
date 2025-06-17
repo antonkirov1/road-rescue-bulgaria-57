@@ -30,7 +30,7 @@ export const useSimulatedServiceRequest = () => {
   const { getRandomEmployee } = useEmployeeSimulation();
 
   const createRequest = useCallback(async (
-    type: string,
+    type: "Flat Tyre" | "Out of Fuel" | "Car Battery" | "Other Car Problems" | "Tow Truck",
     description: string,
     userId: string,
     isRealLife: boolean = false
