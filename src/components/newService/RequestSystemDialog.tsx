@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useServiceRequestFlow } from "./hooks/useServiceRequestFlow";
@@ -112,7 +113,7 @@ const RequestSystemDialog: React.FC<Props> = ({
   };
 
   const handleFinalDecline = () => {
-    finalDeclineQuote(isRealLife);
+    finalDeclineQuote();
   };
 
   if (!open || !currentStep) return null;
