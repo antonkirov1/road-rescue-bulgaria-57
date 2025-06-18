@@ -45,7 +45,11 @@ export const useServiceRequestFlow = () => {
         description: string,
         userId: string,
         isRealLife: boolean = false
-      ) => realLifeFlow.createRequest(mapDisplayTypeToServiceType(type), description, { lat: 0, lng: 0 }),
+      ) => {
+        // Pass the correct location object instead of userId
+        const location = { lat: 0, lng: 0 };
+        return realLifeFlow.createRequest(mapDisplayTypeToServiceType(type), description, location);
+      },
       acceptQuote: realLifeFlow.acceptQuote,
       acceptRevisedQuote: realLifeFlow.acceptQuote, // Map to same function
       declineQuote: realLifeFlow.declineQuote,
