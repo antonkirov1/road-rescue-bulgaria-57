@@ -37,6 +37,8 @@ export const useServiceRequestFlow = () => {
   if (isSimulationMode) {
     return simulatedFlow;
   } else {
+    const location = { lat: 0, lng: 0 };
+    
     return {
       step: realLifeFlow.currentRequest?.status as any,
       request: realLifeFlow.currentRequest as any,
@@ -46,14 +48,12 @@ export const useServiceRequestFlow = () => {
         userId: string,
         isRealLife: boolean = false
       ) => {
-        // Pass the correct location object instead of userId
-        const location = { lat: 0, lng: 0 };
         return realLifeFlow.createRequest(mapDisplayTypeToServiceType(type), description, location);
       },
       acceptQuote: realLifeFlow.acceptQuote,
       acceptRevisedQuote: realLifeFlow.acceptQuote, // Map to same function
-      declineQuote: realLifeFlow.declineQuote,
-      finalDeclineQuote: () => realLifeFlow.declineQuote(),
+      declineQuote: () => realLifeFlow.declineQuote(location),
+      finalDeclineQuote: () => realLifeFlow.declineQuote(location),
       cancelRequest: realLifeFlow.cancelRequest,
       closeAll: () => {},
       handleNoTechnicianOk: () => {},
