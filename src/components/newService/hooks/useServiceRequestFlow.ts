@@ -48,7 +48,7 @@ export const useServiceRequestFlow = () => {
         userId: string,
         isRealLife: boolean = false
       ) => {
-        return realLifeFlow.createRequest(mapDisplayTypeToServiceType(type), location, description);
+        return realLifeFlow.createRequest(mapDisplayTypeToServiceType(type), description, location);
       },
       acceptQuote: realLifeFlow.acceptQuote,
       acceptRevisedQuote: realLifeFlow.acceptQuote, // Map to same function
