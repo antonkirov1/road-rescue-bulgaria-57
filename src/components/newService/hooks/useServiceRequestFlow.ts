@@ -30,9 +30,15 @@ export const useServiceRequestFlow = () => {
   // Use real-life system for real-life mode  
   const realLifeFlow = useServiceRequestManagerRealLife();
 
-  // For now, always use simulated flow in simulation dashboard
-  // This can be made conditional based on context if needed
-  const isSimulationMode = true; // This should be determined by context
+  // Always use simulated flow in simulation dashboard context
+  const isSimulationMode = true;
+  
+  console.log('useServiceRequestFlow - current state:', {
+    isSimulationMode,
+    simulatedStep: simulatedFlow.step,
+    simulatedRequest: simulatedFlow.request?.id,
+    simulatedRequestType: simulatedFlow.request?.type
+  });
   
   if (isSimulationMode) {
     return {

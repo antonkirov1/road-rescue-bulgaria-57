@@ -55,6 +55,14 @@ const RequestSystemDialog: React.FC<Props> = ({
   const currentStep = initialStep || step;
   const currentRequest = initialRequest || request;
 
+  console.log('RequestSystemDialog render:', {
+    open,
+    currentStep,
+    hasRequest: !!currentRequest,
+    type,
+    userId
+  });
+
   // Notify parent about request changes
   React.useEffect(() => {
     if (onRequestChange && (request || initialRequest) && (step || initialStep)) {
@@ -63,15 +71,23 @@ const RequestSystemDialog: React.FC<Props> = ({
   }, [request, step, initialRequest, initialStep, onRequestChange, currentRequest, currentStep]);
 
   React.useEffect(() => {
+    console.log('RequestSystemDialog useEffect:', {
+      open,
+      hasCurrentRequest: !!currentRequest,
+      hasInitialRequest: !!initialRequest,
+      type,
+      userId,
+      isRealLife
+    });
+
     if (open && !currentRequest && !initialRequest) {
-      console.log('Creating new request with isRealLife:', isRealLife, 'type:', type);
+      console.log('Creating new request with type:', type);
       createRequest(type, `Service for ${type}`, userId, isRealLife);
     }
     if (!open && !initialRequest) {
       closeAll();
     }
-    // eslint-disable-next-line
-  }, [open, isRealLife, type]);
+  }, [open, isRealLife, type, userId, currentRequest, initialRequest, createRequest, closeAll]);
 
   const handleClose = () => {
     if (!initialRequest) {
@@ -116,9 +132,28 @@ const RequestSystemDialog: React.FC<Props> = ({
     finalDeclineQuote();
   };
 
-  if (!open || !currentStep) return null;
+  if (!open) {
+    console.log('Dialog not open, returning null');
+    return null;
+  }
+
+  if (!currentStep) {
+    console.log('No current step, showing searching as fallback');
+    return (
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-md">
+          <SearchingScreen 
+            onCancel={handleCancelRequest} 
+            onMinimize={handleMinimize} 
+          />
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   const renderScreen = () => {
+    console.log('Rendering screen for step:', currentStep);
+    
     switch (currentStep) {
       case "searching":
         return (
@@ -130,9 +165,18 @@ const RequestSystemDialog: React.FC<Props> = ({
       case "no_technician":
         return <NoTechnicianScreen onOk={handleNoTechnicianOkAndClose} />;
       case "quote_received":
+        if (!currentRequest) {
+          console.log('No request for quote screen, showing searching');
+          return (
+            <SearchingScreen 
+              onCancel={handleCancelRequest} 
+              onMinimize={handleMinimize} 
+            />
+          );
+        }
         return (
           <QuoteScreen 
-            request={currentRequest!} 
+            request={currentRequest} 
             onAccept={acceptQuote} 
             onDecline={declineQuote} 
             onCancel={handleCancelRequest} 
@@ -140,9 +184,18 @@ const RequestSystemDialog: React.FC<Props> = ({
           />
         );
       case "revised_quote":
+        if (!currentRequest) {
+          console.log('No request for revised quote screen, showing searching');
+          return (
+            <SearchingScreen 
+              onCancel={handleCancelRequest} 
+              onMinimize={handleMinimize} 
+            />
+          );
+        }
         return (
           <RevisedPriceQuoteScreen 
-            request={currentRequest!} 
+            request={currentRequest} 
             onAccept={acceptRevisedQuote} 
             onDecline={declineQuote} 
             onFinalDecline={handleFinalDecline} 
@@ -151,21 +204,44 @@ const RequestSystemDialog: React.FC<Props> = ({
           />
         );
       case "live_tracking":
+        if (!currentRequest) {
+          console.log('No request for tracking screen, showing searching');
+          return (
+            <SearchingScreen 
+              onCancel={handleCancelRequest} 
+              onMinimize={handleMinimize} 
+            />
+          );
+        }
         return (
           <TrackingScreen 
-            request={currentRequest!} 
+            request={currentRequest} 
             onComplete={handleCompleteRequest} 
             onMinimize={handleMinimize} 
           />
         );
       case "completed":
-        return <CompletedScreen request={currentRequest!} onClose={handleCompleteRequest} />;
+        if (!currentRequest) {
+          console.log('No request for completed screen');
+          return null;
+        }
+        return <CompletedScreen request={currentRequest} onClose={handleCompleteRequest} />;
       case "rate_employee":
-        return <RateEmployeeScreen request={currentRequest!} onRate={handleRateEmployee} />;
+        if (!currentRequest) {
+          console.log('No request for rate employee screen');
+          return null;
+        }
+        return <RateEmployeeScreen request={currentRequest} onRate={handleRateEmployee} />;
       case "cancelled":
         return <CancelledScreen onClose={handleCloseAll} />;
       default:
-        return null;
+        console.log('Unknown step, showing searching as fallback:', currentStep);
+        return (
+          <SearchingScreen 
+            onCancel={handleCancelRequest} 
+            onMinimize={handleMinimize} 
+          />
+        );
     }
   };
 
