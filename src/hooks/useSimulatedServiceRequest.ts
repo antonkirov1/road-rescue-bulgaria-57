@@ -54,64 +54,73 @@ export const useSimulatedServiceRequest = () => {
     setRequest(newRequest);
     setStep('searching');
 
-    // Always use a timeout to simulate the search process
-    setTimeout(async () => {
-      try {
-        console.log('⏰ Search timeout triggered, starting employee search...');
+    // Always ensure we progress after maximum 5 seconds
+    const timeoutId = setTimeout(() => {
+      console.log('⏰ GUARANTEED TIMEOUT: Moving to quote regardless of employee status');
+      
+      // Use guaranteed fallback employee names
+      const fallbackEmployees = [
+        'John Smith', 'Maria Garcia', 'Alex Johnson', 
+        'Sarah Wilson', 'Michael Brown', 'Emily Davis',
+        'David Rodriguez', 'Lisa Chen', 'Robert Taylor'
+      ];
+      const randomEmployee = fallbackEmployees[Math.floor(Math.random() * fallbackEmployees.length)];
+      
+      const completedRequest = {
+        ...newRequest,
+        assignedEmployeeName: randomEmployee,
+        priceQuote: Math.floor(Math.random() * 100) + 50,
+        status: 'quote_received' as const
+      };
+      
+      console.log('✅ GUARANTEED: Moving to quote_received with employee:', randomEmployee);
+      setRequest(completedRequest);
+      setStep('quote_received');
+    }, 5000); // 5 second maximum wait
+
+    // Try to use database employees first
+    try {
+      console.log('🔄 Starting employee search process...');
+      
+      // Try to load employees if not already loaded
+      if (employees.length === 0) {
+        console.log('📋 Loading employees from database...');
+        await loadEmployees();
+      }
+      
+      // Wait a bit for employees to load
+      setTimeout(() => {
+        console.log('👥 Current employees loaded:', employees.length);
         
-        // Try to load employees if they haven't been loaded
-        if (employees.length === 0) {
-          console.log('📋 No employees loaded, attempting to load...');
-          await loadEmployees();
+        let selectedEmployee = null;
+        
+        if (employees.length > 0) {
+          console.log('🎯 Trying to get random employee from database...');
+          selectedEmployee = getRandomEmployee([]);
+          console.log('🎯 Selected employee from database:', selectedEmployee);
         }
         
-        console.log('👥 Available employees:', employees.length);
-        
-        // Get a random employee
-        const employee = getRandomEmployee([]);
-        console.log('🎯 Selected employee:', employee);
-        
-        if (employee && employee.full_name) {
-          console.log('✅ Assigning employee:', employee.full_name);
-          const updatedRequest = {
-            ...newRequest,
-            assignedEmployeeName: employee.full_name,
-            priceQuote: Math.floor(Math.random() * 100) + 50,
-            status: 'quote_received' as const
-          };
-          setRequest(updatedRequest);
-          setStep('quote_received');
-          console.log('🎉 Successfully moved to quote_received step');
-        } else {
-          console.log('⚠️ No suitable employee found, using fallback');
-          // Use fallback employee names
-          const fallbackEmployees = ['John Smith', 'Maria Garcia', 'Alex Johnson', 'Sarah Wilson', 'Michael Brown'];
-          const randomEmployee = fallbackEmployees[Math.floor(Math.random() * fallbackEmployees.length)];
+        if (selectedEmployee && selectedEmployee.full_name) {
+          console.log('✅ Success! Using database employee:', selectedEmployee.full_name);
+          clearTimeout(timeoutId); // Cancel the guaranteed timeout
           
           const updatedRequest = {
             ...newRequest,
-            assignedEmployeeName: randomEmployee,
+            assignedEmployeeName: selectedEmployee.full_name,
             priceQuote: Math.floor(Math.random() * 100) + 50,
             status: 'quote_received' as const
           };
           setRequest(updatedRequest);
           setStep('quote_received');
-          console.log('🎉 Successfully moved to quote_received step with fallback employee:', randomEmployee);
+        } else {
+          console.log('⚠️ No database employee available, letting guaranteed timeout handle it');
         }
-      } catch (error) {
-        console.error('❌ Error during employee assignment:', error);
-        // Ultimate fallback
-        const updatedRequest = {
-          ...newRequest,
-          assignedEmployeeName: 'John Smith',
-          priceQuote: 75,
-          status: 'quote_received' as const
-        };
-        setRequest(updatedRequest);
-        setStep('quote_received');
-        console.log('🎉 Successfully moved to quote_received step with ultimate fallback');
-      }
-    }, 3000); // Fixed 3 second delay for testing
+      }, 2000); // 2 second delay to try database first
+      
+    } catch (error) {
+      console.error('❌ Error in employee search:', error);
+      // Let the guaranteed timeout handle the fallback
+    }
   }, [getRandomEmployee, loadEmployees, employees]);
 
   const acceptQuote = useCallback(() => {
@@ -136,9 +145,12 @@ export const useSimulatedServiceRequest = () => {
     
     // Simulate finding another technician
     setTimeout(() => {
+      const fallbackEmployees = ['Alternative Technician', 'Backup Service', 'Secondary Tech'];
+      const randomEmployee = fallbackEmployees[Math.floor(Math.random() * fallbackEmployees.length)];
+      
       const updatedRequest = {
         ...request,
-        assignedEmployeeName: 'Alternative Technician',
+        assignedEmployeeName: randomEmployee,
         priceQuote: Math.floor(Math.random() * 80) + 60,
         status: 'quote_received' as const
       };
