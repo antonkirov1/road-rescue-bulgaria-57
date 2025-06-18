@@ -27,7 +27,7 @@ export interface SimulatedServiceRequest {
 export const useSimulatedServiceRequest = () => {
   const [step, setStep] = useState<SimulatedRequestStep | null>(null);
   const [request, setRequest] = useState<SimulatedServiceRequest | null>(null);
-  const { getRandomEmployee } = useEmployeeSimulation();
+  const { getRandomEmployee, loadEmployees } = useEmployeeSimulation();
 
   const createRequest = useCallback(async (
     type: "Flat Tyre" | "Out of Fuel" | "Car Battery" | "Other Car Problems" | "Tow Truck",
@@ -50,24 +50,46 @@ export const useSimulatedServiceRequest = () => {
     setRequest(newRequest);
     setStep('searching');
 
-    // Simulate finding a technician after 2-4 seconds
-    setTimeout(() => {
-      const employee = getRandomEmployee([]);
-      if (employee) {
+    // Load employees first, then simulate finding a technician
+    try {
+      await loadEmployees();
+      
+      // Simulate finding a technician after 2-4 seconds
+      setTimeout(() => {
+        console.log('Attempting to find simulated employee...');
+        const employee = getRandomEmployee([]);
+        
+        if (employee) {
+          console.log('Found simulated employee:', employee.full_name, 'Employee ID:', employee.id);
+          const updatedRequest = {
+            ...newRequest,
+            assignedEmployeeName: employee.full_name,
+            priceQuote: Math.floor(Math.random() * 100) + 50,
+            status: 'quote_received'
+          };
+          setRequest(updatedRequest);
+          setStep('quote_received');
+        } else {
+          console.log('No simulated employees available');
+          setStep('no_technician');
+        }
+      }, 2000 + Math.random() * 2000);
+    } catch (error) {
+      console.error('Error in createRequest:', error);
+      // Fallback: still try to assign an employee even if loading fails
+      setTimeout(() => {
+        console.log('Fallback: Using default employee');
         const updatedRequest = {
           ...newRequest,
-          assignedEmployeeName: employee.full_name,
+          assignedEmployeeName: 'John Smith',
           priceQuote: Math.floor(Math.random() * 100) + 50,
           status: 'quote_received'
         };
         setRequest(updatedRequest);
         setStep('quote_received');
-        console.log('Simulated employee assigned:', employee.full_name);
-      } else {
-        setStep('no_technician');
-      }
-    }, 2000 + Math.random() * 2000);
-  }, [getRandomEmployee]);
+      }, 3000);
+    }
+  }, [getRandomEmployee, loadEmployees]);
 
   const acceptQuote = useCallback(() => {
     if (!request) return;
