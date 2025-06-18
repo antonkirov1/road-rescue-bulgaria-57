@@ -35,7 +35,28 @@ export const useServiceRequestFlow = () => {
   const isSimulationMode = true; // This should be determined by context
   
   if (isSimulationMode) {
-    return simulatedFlow;
+    return {
+      step: simulatedFlow.step,
+      request: simulatedFlow.request,
+      createRequest: (
+        type: "Flat Tyre" | "Out of Fuel" | "Car Battery" | "Other Car Problems" | "Tow Truck",
+        description: string,
+        userId: string,
+        isRealLife: boolean = false
+      ) => {
+        console.log('useServiceRequestFlow.createRequest called:', { type, description, userId, isRealLife });
+        return simulatedFlow.createRequest(type, description, userId);
+      },
+      acceptQuote: simulatedFlow.acceptQuote,
+      acceptRevisedQuote: simulatedFlow.acceptQuote, // Map to same function for now
+      declineQuote: simulatedFlow.declineQuote,
+      finalDeclineQuote: simulatedFlow.declineQuote,
+      cancelRequest: simulatedFlow.cancelRequest,
+      closeAll: simulatedFlow.closeAll,
+      handleNoTechnicianOk: simulatedFlow.handleNoTechnicianOk,
+      completeRequest: simulatedFlow.completeRequest,
+      rateEmployee: simulatedFlow.rateEmployee,
+    };
   } else {
     const location = { lat: 0, lng: 0 };
     
