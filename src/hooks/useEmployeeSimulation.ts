@@ -25,7 +25,7 @@ export const useEmployeeSimulation = () => {
 
       if (error) {
         console.error('❌ Error loading simulated employees:', error);
-        // Set immediate fallback employees
+        // Use fallback employees if database fails
         const fallbackEmployees = [
           { id: 1, employee_number: 1, full_name: 'John Smith', created_at: new Date().toISOString() },
           { id: 2, employee_number: 2, full_name: 'Maria Garcia', created_at: new Date().toISOString() },
@@ -33,36 +33,33 @@ export const useEmployeeSimulation = () => {
           { id: 4, employee_number: 4, full_name: 'Sarah Wilson', created_at: new Date().toISOString() },
           { id: 5, employee_number: 5, full_name: 'Michael Brown', created_at: new Date().toISOString() }
         ];
-        console.log('✅ Setting fallback employees due to database error:', fallbackEmployees.length);
+        console.log('✅ Using fallback employees due to database error:', fallbackEmployees.length);
         setEmployees(fallbackEmployees);
         return;
       }
 
       if (!data || data.length === 0) {
-        console.log('⚠️ No employees found in database, using fallback employees');
+        console.log('⚠️ No employees found in database, this should not happen after migration');
+        // Still provide fallback just in case
         const fallbackEmployees = [
           { id: 1, employee_number: 1, full_name: 'John Smith', created_at: new Date().toISOString() },
           { id: 2, employee_number: 2, full_name: 'Maria Garcia', created_at: new Date().toISOString() },
-          { id: 3, employee_number: 3, full_name: 'Alex Johnson', created_at: new Date().toISOString() },
-          { id: 4, employee_number: 4, full_name: 'Sarah Wilson', created_at: new Date().toISOString() },
-          { id: 5, employee_number: 5, full_name: 'Michael Brown', created_at: new Date().toISOString() }
+          { id: 3, employee_number: 3, full_name: 'Alex Johnson', created_at: new Date().toISOString() }
         ];
         setEmployees(fallbackEmployees);
       } else {
-        console.log('✅ Successfully loaded simulated employees:', data.length, data);
+        console.log('✅ Successfully loaded simulated employees from database:', data.length, data);
         setEmployees(data);
       }
     } catch (error) {
       console.error('❌ Catch error in loadEmployees:', error);
-      // Set ultimate fallback employees on any error
+      // Ultimate fallback employees
       const fallbackEmployees = [
         { id: 1, employee_number: 1, full_name: 'John Smith', created_at: new Date().toISOString() },
         { id: 2, employee_number: 2, full_name: 'Maria Garcia', created_at: new Date().toISOString() },
-        { id: 3, employee_number: 3, full_name: 'Alex Johnson', created_at: new Date().toISOString() },
-        { id: 4, employee_number: 4, full_name: 'Sarah Wilson', created_at: new Date().toISOString() },
-        { id: 5, employee_number: 5, full_name: 'Michael Brown', created_at: new Date().toISOString() }
+        { id: 3, employee_number: 3, full_name: 'Alex Johnson', created_at: new Date().toISOString() }
       ];
-      console.log('✅ Setting ultimate fallback employees due to catch error:', fallbackEmployees.length);
+      console.log('✅ Using ultimate fallback employees:', fallbackEmployees.length);
       setEmployees(fallbackEmployees);
     } finally {
       setIsLoading(false);

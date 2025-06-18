@@ -29,7 +29,7 @@ export interface SimulatedServiceRequest {
 export const useSimulatedServiceRequest = () => {
   const [step, setStep] = useState<SimulatedRequestStep | null>(null);
   const [request, setRequest] = useState<SimulatedServiceRequest | null>(null);
-  const { getRandomEmployee, loadEmployees, employees } = useEmployeeSimulation();
+  const { getRandomEmployee, employees } = useEmployeeSimulation();
 
   const createRequest = useCallback(async (
     type: "Flat Tyre" | "Out of Fuel" | "Car Battery" | "Other Car Problems" | "Tow Truck",
@@ -37,6 +37,7 @@ export const useSimulatedServiceRequest = () => {
     userId: string
   ) => {
     console.log('🚀 createRequest called:', { type, description, userId });
+    console.log('👥 Available employees at request time:', employees.length);
     
     const newRequest: SimulatedServiceRequest = {
       id: `sim_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -54,74 +55,63 @@ export const useSimulatedServiceRequest = () => {
     setRequest(newRequest);
     setStep('searching');
 
-    // Always ensure we progress after maximum 5 seconds
-    const timeoutId = setTimeout(() => {
-      console.log('⏰ GUARANTEED TIMEOUT: Moving to quote regardless of employee status');
+    // Simulate technician search process
+    setTimeout(() => {
+      console.log('🎯 Starting employee assignment process...');
       
-      // Use guaranteed fallback employee names
-      const fallbackEmployees = [
-        'John Smith', 'Maria Garcia', 'Alex Johnson', 
-        'Sarah Wilson', 'Michael Brown', 'Emily Davis',
-        'David Rodriguez', 'Lisa Chen', 'Robert Taylor'
-      ];
-      const randomEmployee = fallbackEmployees[Math.floor(Math.random() * fallbackEmployees.length)];
+      // Try to get a random employee
+      const selectedEmployee = getRandomEmployee([]);
+      console.log('🎯 Selected employee result:', selectedEmployee);
       
-      const completedRequest = {
-        ...newRequest,
-        assignedEmployeeName: randomEmployee,
-        priceQuote: Math.floor(Math.random() * 100) + 50,
-        status: 'quote_received' as const
-      };
-      
-      console.log('✅ GUARANTEED: Moving to quote_received with employee:', randomEmployee);
-      setRequest(completedRequest);
-      setStep('quote_received');
-    }, 5000); // 5 second maximum wait
-
-    // Try to use database employees first
-    try {
-      console.log('🔄 Starting employee search process...');
-      
-      // Try to load employees if not already loaded
-      if (employees.length === 0) {
-        console.log('📋 Loading employees from database...');
-        await loadEmployees();
+      if (selectedEmployee && selectedEmployee.full_name) {
+        console.log('✅ Successfully assigned employee:', selectedEmployee.full_name);
+        
+        // Generate price quote based on service type
+        const priceRanges = {
+          'Flat Tyre': { min: 40, max: 80 },
+          'Out of Fuel': { min: 30, max: 60 },
+          'Car Battery': { min: 60, max: 120 },
+          'Other Car Problems': { min: 50, max: 150 },
+          'Tow Truck': { min: 80, max: 200 }
+        };
+        
+        const range = priceRanges[type];
+        const priceQuote = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
+        
+        const completedRequest = {
+          ...newRequest,
+          assignedEmployeeName: selectedEmployee.full_name,
+          priceQuote: priceQuote,
+          status: 'quote_received' as const
+        };
+        
+        console.log('✅ Moving to quote_received with:', {
+          employee: selectedEmployee.full_name,
+          quote: priceQuote
+        });
+        
+        setRequest(completedRequest);
+        setStep('quote_received');
+      } else {
+        console.log('❌ No employee available, but this should not happen after DB migration');
+        // Fallback to guaranteed employee name
+        const fallbackEmployee = 'Emergency Technician';
+        const priceQuote = Math.floor(Math.random() * 100) + 50;
+        
+        const completedRequest = {
+          ...newRequest,
+          assignedEmployeeName: fallbackEmployee,
+          priceQuote: priceQuote,
+          status: 'quote_received' as const
+        };
+        
+        console.log('✅ Using fallback employee:', fallbackEmployee);
+        setRequest(completedRequest);
+        setStep('quote_received');
       }
-      
-      // Wait a bit for employees to load
-      setTimeout(() => {
-        console.log('👥 Current employees loaded:', employees.length);
-        
-        let selectedEmployee = null;
-        
-        if (employees.length > 0) {
-          console.log('🎯 Trying to get random employee from database...');
-          selectedEmployee = getRandomEmployee([]);
-          console.log('🎯 Selected employee from database:', selectedEmployee);
-        }
-        
-        if (selectedEmployee && selectedEmployee.full_name) {
-          console.log('✅ Success! Using database employee:', selectedEmployee.full_name);
-          clearTimeout(timeoutId); // Cancel the guaranteed timeout
-          
-          const updatedRequest = {
-            ...newRequest,
-            assignedEmployeeName: selectedEmployee.full_name,
-            priceQuote: Math.floor(Math.random() * 100) + 50,
-            status: 'quote_received' as const
-          };
-          setRequest(updatedRequest);
-          setStep('quote_received');
-        } else {
-          console.log('⚠️ No database employee available, letting guaranteed timeout handle it');
-        }
-      }, 2000); // 2 second delay to try database first
-      
-    } catch (error) {
-      console.error('❌ Error in employee search:', error);
-      // Let the guaranteed timeout handle the fallback
-    }
-  }, [getRandomEmployee, loadEmployees, employees]);
+    }, 2000); // 2 second simulation delay
+    
+  }, [getRandomEmployee, employees]);
 
   const acceptQuote = useCallback(() => {
     if (!request) return;
@@ -130,7 +120,10 @@ export const useSimulatedServiceRequest = () => {
     const updatedRequest = {
       ...request,
       status: 'accepted' as const,
-      employeeLocation: { lat: 42.6977 + (Math.random() - 0.5) * 0.01, lng: 23.3219 + (Math.random() - 0.5) * 0.01 },
+      employeeLocation: { 
+        lat: 42.6977 + (Math.random() - 0.5) * 0.01, 
+        lng: 23.3219 + (Math.random() - 0.5) * 0.01 
+      },
       etaSeconds: 300 + Math.floor(Math.random() * 600) // 5-15 minutes
     };
     setRequest(updatedRequest);
@@ -145,8 +138,8 @@ export const useSimulatedServiceRequest = () => {
     
     // Simulate finding another technician
     setTimeout(() => {
-      const fallbackEmployees = ['Alternative Technician', 'Backup Service', 'Secondary Tech'];
-      const randomEmployee = fallbackEmployees[Math.floor(Math.random() * fallbackEmployees.length)];
+      const alternativeEmployees = ['Alternative Technician', 'Backup Service', 'Secondary Tech'];
+      const randomEmployee = alternativeEmployees[Math.floor(Math.random() * alternativeEmployees.length)];
       
       const updatedRequest = {
         ...request,
