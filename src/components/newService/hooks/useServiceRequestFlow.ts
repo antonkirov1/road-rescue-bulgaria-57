@@ -1,5 +1,4 @@
 
-
 import { useSimulatedServiceRequest } from '@/hooks/useSimulatedServiceRequest';
 import { useServiceRequestManagerRealLife } from '@/hooks/useServiceRequestManagerRealLife';
 import { ServiceType } from '@/components/service/types/serviceRequestState';
@@ -59,4 +58,3 @@ export const useServiceRequestFlow = () => {
     };
   }
 };
-
