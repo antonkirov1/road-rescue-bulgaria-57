@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { useEmployeeSimulation } from '@/hooks/useEmployeeSimulation';
 
@@ -27,7 +26,7 @@ export interface SimulatedServiceRequest {
 export const useSimulatedServiceRequest = () => {
   const [step, setStep] = useState<SimulatedRequestStep | null>(null);
   const [request, setRequest] = useState<SimulatedServiceRequest | null>(null);
-  const { getRandomEmployee, loadEmployees } = useEmployeeSimulation();
+  const { getRandomEmployee, loadEmployees, employees } = useEmployeeSimulation();
 
   const createRequest = useCallback(async (
     type: "Flat Tyre" | "Out of Fuel" | "Car Battery" | "Other Car Problems" | "Tow Truck",
@@ -50,17 +49,25 @@ export const useSimulatedServiceRequest = () => {
     setRequest(newRequest);
     setStep('searching');
 
-    // Load employees first, then simulate finding a technician
-    try {
-      await loadEmployees();
-      
-      // Simulate finding a technician after 2-4 seconds
-      setTimeout(() => {
-        console.log('Attempting to find simulated employee...');
-        const employee = getRandomEmployee([]);
+    // Always use a timeout to simulate the search process
+    setTimeout(async () => {
+      try {
+        console.log('Starting employee search simulation...');
         
-        if (employee) {
-          console.log('Found simulated employee:', employee.full_name, 'Employee ID:', employee.id);
+        // Try to load employees if they haven't been loaded
+        if (employees.length === 0) {
+          console.log('No employees loaded, attempting to load...');
+          await loadEmployees();
+        }
+        
+        console.log('Available employees:', employees.length);
+        
+        // Get a random employee
+        const employee = getRandomEmployee([]);
+        console.log('Selected employee:', employee);
+        
+        if (employee && employee.full_name) {
+          console.log('Assigning employee:', employee.full_name);
           const updatedRequest = {
             ...newRequest,
             assignedEmployeeName: employee.full_name,
@@ -70,26 +77,34 @@ export const useSimulatedServiceRequest = () => {
           setRequest(updatedRequest);
           setStep('quote_received');
         } else {
-          console.log('No simulated employees available');
-          setStep('no_technician');
+          console.log('No suitable employee found, using fallback');
+          // Use fallback employee names
+          const fallbackEmployees = ['John Smith', 'Maria Garcia', 'Alex Johnson', 'Sarah Wilson', 'Michael Brown'];
+          const randomEmployee = fallbackEmployees[Math.floor(Math.random() * fallbackEmployees.length)];
+          
+          const updatedRequest = {
+            ...newRequest,
+            assignedEmployeeName: randomEmployee,
+            priceQuote: Math.floor(Math.random() * 100) + 50,
+            status: 'quote_received'
+          };
+          setRequest(updatedRequest);
+          setStep('quote_received');
         }
-      }, 2000 + Math.random() * 2000);
-    } catch (error) {
-      console.error('Error in createRequest:', error);
-      // Fallback: still try to assign an employee even if loading fails
-      setTimeout(() => {
-        console.log('Fallback: Using default employee');
+      } catch (error) {
+        console.error('Error during employee assignment:', error);
+        // Ultimate fallback
         const updatedRequest = {
           ...newRequest,
           assignedEmployeeName: 'John Smith',
-          priceQuote: Math.floor(Math.random() * 100) + 50,
+          priceQuote: 75,
           status: 'quote_received'
         };
         setRequest(updatedRequest);
         setStep('quote_received');
-      }, 3000);
-    }
-  }, [getRandomEmployee, loadEmployees]);
+      }
+    }, 2000 + Math.random() * 2000); // 2-4 seconds delay
+  }, [getRandomEmployee, loadEmployees, employees]);
 
   const acceptQuote = useCallback(() => {
     if (!request) return;
