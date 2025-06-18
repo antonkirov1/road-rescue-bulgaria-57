@@ -52,8 +52,8 @@ export const useServiceRequestFlow = () => {
       },
       acceptQuote: realLifeFlow.acceptQuote,
       acceptRevisedQuote: realLifeFlow.acceptQuote, // Map to same function
-      declineQuote: () => realLifeFlow.declineQuote(location),
-      finalDeclineQuote: () => realLifeFlow.declineQuote(location),
+      declineQuote: () => realLifeFlow.declineQuote(),
+      finalDeclineQuote: () => realLifeFlow.declineQuote(),
       cancelRequest: realLifeFlow.cancelRequest,
       closeAll: () => {},
       handleNoTechnicianOk: () => {},
