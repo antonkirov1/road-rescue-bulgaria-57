@@ -1,4 +1,5 @@
 
+
 import { useSimulatedServiceRequest } from '@/hooks/useSimulatedServiceRequest';
 import { useServiceRequestManagerRealLife } from '@/hooks/useServiceRequestManagerRealLife';
 import { ServiceType } from '@/components/service/types/serviceRequestState';
@@ -45,7 +46,7 @@ export const useServiceRequestFlow = () => {
         description: string,
         userId: string,
         isRealLife: boolean = false
-      ) => realLifeFlow.createRequest(mapDisplayTypeToServiceType(type), description, userId),
+      ) => realLifeFlow.createRequest(mapDisplayTypeToServiceType(type), description, { lat: 0, lng: 0 }),
       acceptQuote: realLifeFlow.acceptQuote,
       acceptRevisedQuote: realLifeFlow.acceptQuote, // Map to same function
       declineQuote: realLifeFlow.declineQuote,
@@ -58,3 +59,4 @@ export const useServiceRequestFlow = () => {
     };
   }
 };
+
