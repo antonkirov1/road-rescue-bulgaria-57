@@ -1,6 +1,27 @@
 
 import { useSimulatedServiceRequest } from '@/hooks/useSimulatedServiceRequest';
 import { useServiceRequestManagerRealLife } from '@/hooks/useServiceRequestManagerRealLife';
+import { ServiceType } from '@/components/service/types/serviceRequestState';
+
+// Helper function to map display format to ServiceType
+const mapDisplayTypeToServiceType = (
+  displayType: "Flat Tyre" | "Out of Fuel" | "Car Battery" | "Other Car Problems" | "Tow Truck"
+): ServiceType => {
+  switch (displayType) {
+    case "Flat Tyre":
+      return "flat-tyre";
+    case "Out of Fuel":
+      return "out-of-fuel";
+    case "Car Battery":
+      return "car-battery";
+    case "Other Car Problems":
+      return "other-car-problems";
+    case "Tow Truck":
+      return "tow-truck";
+    default:
+      return "other-car-problems"; // fallback
+  }
+};
 
 export const useServiceRequestFlow = () => {
   // Use simulated system for simulation mode
@@ -24,7 +45,7 @@ export const useServiceRequestFlow = () => {
         description: string,
         userId: string,
         isRealLife: boolean = false
-      ) => realLifeFlow.createRequest(type, description, userId),
+      ) => realLifeFlow.createRequest(mapDisplayTypeToServiceType(type), description, userId),
       acceptQuote: realLifeFlow.acceptQuote,
       acceptRevisedQuote: realLifeFlow.acceptQuote, // Map to same function
       declineQuote: realLifeFlow.declineQuote,
